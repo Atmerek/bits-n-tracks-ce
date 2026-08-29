@@ -1,0 +1,96 @@
+name: Bug report
+description: Something crashes, breaks, or behaves differently than it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most crashes on startup come from a version mismatch with Create, Bits 'n' Bobs or Sable, so please fill in the versions section carefully.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: What part of the mod is affected?
+      options:
+        - Crash on startup or when loading a world
+        - Physics and movement
+        - Cogwheel placement, alignment or the Cog Alignment Lever
+        - Chains and how cogwheels connect
+        - Rendering or models
+        - Configuration
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: area-other
+    attributes:
+      label: If you picked "Something else", what is it?
+      description: Leave this empty otherwise.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happens
+      description: Describe the behaviour you are seeing. Screenshots and short clips help a lot for anything involving movement.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce it
+      description: A build that reliably shows the problem is the fastest route to a fix. Cogwheel sizes, chain layout and which cogwheels have physics enabled all matter.
+      placeholder: |
+        1. Place a large flanged cogwheel driven by a gearbox at 32 RPM.
+        2. Chain it to four tiny flanged cogwheels with physics enabled.
+        3. Power it and the vehicle turns to the left on its own.
+    validations:
+      required: true
+
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions
+      description: NeoForge, Create, Bits 'n' Bobs, Sable, and any other mod that moves or simulates blocks.
+      value: |
+        NeoForge:
+        Create:
+        Bits 'n' Bobs:
+        Sable:
+        Other physics or contraption mods:
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log or crash report
+      description: Attach `logs/latest.log`, and the file from `crash-reports/` if the game crashed. Drag the files into this box rather than pasting their contents.
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Changed config values
+      description: If you edited anything in `bits_n_tracks-server.toml` or `bits_n_tracks-client.toml`, list what you changed. Leave empty if everything is at its default.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file this
+      options:
+        - label: I searched the existing issues and this has not been reported.
+          required: true
+        - label: I am running the latest release of Bits 'n' Tracks CE.
+          required: true
+        - label: The problem still happens with only Create, Bits 'n' Bobs, Sable and this mod installed. If it does not, name the mod that brings it back under "Other physics or contraption mods" above.
+          required: false

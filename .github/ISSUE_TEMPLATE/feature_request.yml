@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest a cogwheel, a tool, a config option or a behaviour change.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+      description: Describe the feature as a player would use it, not as code.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What it would let you build
+      description: The build or the situation that made you want this. Concrete examples carry far more weight than general requests.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Existing cogwheel sizes, config values or other mods you already tried, and why they fall short.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file this
+      options:
+        - label: I searched the existing issues and this has not been suggested.
+          required: true
+        - label: This belongs in Bits 'n' Tracks rather than in Create, Bits 'n' Bobs or Sable.
+          required: true

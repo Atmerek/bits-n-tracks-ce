@@ -1,0 +1,63 @@
+name: Mod compatibility report
+description: Bits 'n' Tracks and another mod do not work together.
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for conflicts with a third mod. If the problem happens with only Create, Bits 'n' Bobs and Sable installed, file a bug report instead.
+
+  - type: input
+    id: other-mod
+    attributes:
+      label: The other mod
+      description: Its name, version and a link to its page.
+      placeholder: "Create: Aeronautics 1.3.1+mc1.21.1, https://modrinth.com/mod/create-aeronautics"
+    validations:
+      required: true
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: What goes wrong
+      description: A crash, a visual glitch, a physics oddity, or a feature of either mod that stops working.
+    validations:
+      required: true
+
+  - type: textarea
+    id: isolation
+    attributes:
+      label: What happens with each mod alone
+      description: Confirm that both mods behave correctly on their own, and that the problem only appears when both are loaded.
+    validations:
+      required: true
+
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions
+      value: |
+        NeoForge:
+        Create:
+        Bits 'n' Bobs:
+        Sable:
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log or crash report
+      description: Attach `logs/latest.log`, and the file from `crash-reports/` if the game crashed. Mixin failures are reported there and usually name both mods.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file this
+      options:
+        - label: I searched the existing issues and this has not been reported.
+          required: true
+        - label: I am running the latest release of Bits 'n' Tracks CE.
+          required: true
