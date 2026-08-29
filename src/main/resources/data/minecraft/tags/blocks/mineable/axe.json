@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "bits_n_tracks:tiny_flanged_cogwheel",
+    "bits_n_tracks:flanged_cogwheel",
+    "bits_n_tracks:medium_flanged_cogwheel",
+    "bits_n_tracks:large_flanged_cogwheel",
+    "bits_n_tracks:industrial_tiny_flanged_cogwheel",
+    "bits_n_tracks:industrial_flanged_cogwheel",
+    "bits_n_tracks:medium_industrial_flanged_cogwheel",
+    "bits_n_tracks:large_industrial_flanged_cogwheel",
+    "bits_n_tracks:tiny_hidden_flanged_cogwheel",
+    "bits_n_tracks:small_hidden_flanged_cogwheel",
+    "bits_n_tracks:medium_hidden_flanged_cogwheel",
+    "bits_n_tracks:large_hidden_flanged_cogwheel"
+  ]
+}

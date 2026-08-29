@@ -1,0 +1,17 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "bits_n_tracks:block/medium_industrial_flanged_cogwheel",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "bits_n_tracks:block/medium_industrial_flanged_cogwheel"
+    },
+    "axis=z": {
+      "model": "bits_n_tracks:block/medium_industrial_flanged_cogwheel",
+      "x": 90,
+      "y": 180
+    }
+  }
+}

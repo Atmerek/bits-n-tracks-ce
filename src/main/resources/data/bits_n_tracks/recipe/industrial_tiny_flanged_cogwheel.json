@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "create:andesite_alloy"
+    },
+    "I": {
+      "item": "create:industrial_iron_block"
+    }
+  },
+  "pattern": [
+    "A",
+    "I",
+    "A"
+  ],
+  "result": {
+    "count": 8,
+    "id": "bits_n_tracks:industrial_tiny_flanged_cogwheel"
+  }
+}

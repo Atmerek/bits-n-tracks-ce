@@ -1,0 +1,35 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "dev.qwxon.bitsntracks.mixin",
+    "refmap": "bits_n_tracks.refmap.json",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "KineticBlockEntityPhysicsMixin",
+        "PlacingCogwheelChainMixin",
+        "PlaceCogwheelChainPacketMixin",
+        "CogwheelChainBehaviourMixin",
+        "CogwheelChainCandidateMixin",
+        "CogwheelChainTypeMixin",
+        "CogwheelChainGeometryBuilderMixin",
+        "CogwheelChainPathfinderMixin",
+        "RotationPropagatorMixin",
+        "PathedCogwheelNodeMixin",
+        "BntCreativeModeTabMixin",
+        "BracketedKineticBlockEntityMixin"
+    ],
+    "client": [
+        "CogwheelChainPlacementInteractionMixin",
+        "CogwheelChainBehaviourRendererMixin",
+        "CogwheelChainBehaviourVisualMixin",
+        "CogwheelChainInteractionHandlerMixin",
+        "VisualizationManagerMixin",
+        "BntCreativeModeInventoryScreenMixin",
+        "BntItemPickerMenuMixin",
+        "accessor.CreativeModeInventoryScreenAccessor"
+    ],
+    "server": [],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

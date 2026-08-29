@@ -1,0 +1,67 @@
+{
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
+	"parent": "bits_n_tracks:item/cog_alignment_lever/item",
+	"textures": {
+		"5": "bits_n_tracks:item/cog_alignment_lever/tool",
+		"particle": "bits_n_tracks:item/cog_alignment_lever/tool"
+	},
+	"elements": [
+		{
+			"name": "Cog",
+			"from": [7.5, 6.7, 6],
+			"to": [8.5, 7.5, 10],
+			"rotation": {"angle": 45, "axis": "y", "origin": [8, 7.1, 8]},
+			"faces": {
+				"north": {"uv": [7.5, 12, 6.5, 12.45], "texture": "#5"},
+				"east": {"uv": [4.5, 16, 5.5, 12], "rotation": 90, "texture": "#5"},
+				"south": {"uv": [7.5, 12, 6.5, 12.45], "texture": "#5"},
+				"west": {"uv": [5.5, 12, 6.5, 16], "rotation": 90, "texture": "#5"},
+				"up": {"uv": [6.5, 12, 7.5, 16], "texture": "#5"},
+				"down": {"uv": [7.5, 12, 6.5, 16], "rotation": 180, "texture": "#5"}
+			}
+		},
+		{
+			"name": "Cog",
+			"from": [6, 6.7, 7.5],
+			"to": [10, 7.5, 8.5],
+			"rotation": {"angle": 45, "axis": "y", "origin": [8, 7.1, 8]},
+			"faces": {
+				"north": {"uv": [4.5, 16, 5.5, 12], "rotation": 90, "texture": "#5"},
+				"east": {"uv": [7.5, 12, 6.5, 12.45], "texture": "#5"},
+				"south": {"uv": [5.5, 12, 6.5, 16], "rotation": 90, "texture": "#5"},
+				"west": {"uv": [7.5, 12, 6.5, 12.45], "texture": "#5"},
+				"up": {"uv": [6.5, 12, 7.5, 16], "rotation": 270, "texture": "#5"},
+				"down": {"uv": [7.5, 12, 6.5, 16], "rotation": 270, "texture": "#5"}
+			}
+		},
+		{
+			"name": "Cog",
+			"from": [6, 6.6, 7.5],
+			"to": [10, 7.6, 8.5],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 7.1, 8]},
+			"faces": {
+				"north": {"uv": [5.5, 12, 6.5, 16], "rotation": 90, "texture": "#5"},
+				"east": {"uv": [7.5, 12, 6.5, 12.4], "texture": "#5"},
+				"south": {"uv": [4.5, 12, 5.5, 16], "rotation": 90, "texture": "#5"},
+				"west": {"uv": [7.5, 12, 6.5, 13], "texture": "#5"},
+				"up": {"uv": [6.5, 12, 7.5, 16], "rotation": 270, "texture": "#5"},
+				"down": {"uv": [7.5, 12, 6.5, 16], "rotation": 270, "texture": "#5"}
+			}
+		},
+		{
+			"name": "Cog",
+			"from": [7.5, 6.6, 6],
+			"to": [8.5, 7.6, 10],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 7.1, 8]},
+			"faces": {
+				"north": {"uv": [7.5, 12, 6.5, 13], "texture": "#5"},
+				"east": {"uv": [5.5, 12, 6.5, 16], "rotation": 90, "texture": "#5"},
+				"south": {"uv": [7.5, 12, 6.5, 12.4], "texture": "#5"},
+				"west": {"uv": [4.5, 12, 5.5, 16], "rotation": 90, "texture": "#5"},
+				"up": {"uv": [6.5, 12, 7.5, 16], "texture": "#5"},
+				"down": {"uv": [7.5, 12, 6.5, 16], "rotation": 180, "texture": "#5"}
+			}
+		}
+	]
+}

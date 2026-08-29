@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "bits_n_tracks:small_hidden_flanged_cogwheel",
+    "bits_n_tracks:medium_hidden_flanged_cogwheel",
+    "bits_n_tracks:large_hidden_flanged_cogwheel",
+    "dndecor:industrial_cogwheel",
+    "dndecor:large_industrial_cogwheel"
+  ]
+}

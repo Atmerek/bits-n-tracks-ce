@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "create:cogwheel"
+    },
+    {
+      "item": "create:industrial_iron_block"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "bits_n_tracks:industrial_flanged_cogwheel"
+  }
+}

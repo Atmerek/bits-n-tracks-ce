@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "bits_n_tracks:industrial_belt"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "S": {
+      "tag": "c:rods/wooden"
+    }
+  },
+  "pattern": [
+    "II",
+    "IB",
+    " S"
+  ],
+  "result": {
+    "count": 1,
+    "id": "bits_n_tracks:cog_alignment_lever"
+  }
+}

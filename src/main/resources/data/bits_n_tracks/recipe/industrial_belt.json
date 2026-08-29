@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:belt_connector"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    }
+  },
+  "pattern": [
+    "II",
+    "BB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "bits_n_tracks:industrial_belt"
+  }
+}

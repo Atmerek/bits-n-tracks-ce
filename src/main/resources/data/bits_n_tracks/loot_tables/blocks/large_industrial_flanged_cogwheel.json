@@ -1,0 +1,1 @@
+{"type": "minecraft:block","pools": [{"rolls": 1,"entries": [{"type": "minecraft:item","name": "bits_n_tracks:large_industrial_flanged_cogwheel"}],"conditions": [{"condition": "minecraft:survives_explosion"}]}]}

@@ -1,0 +1,156 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'eclipse'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.144'
+}
+
+version = "${mod_version}"
+group = "${mod_group_id}"
+
+base {
+    archivesName = "${mod_id}"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    withSourcesJar()
+}
+
+neoForge {
+    version = "${neo_version}"
+
+    parchment {
+        minecraftVersion = "${parchment_minecraft_version}"
+        mappingsVersion = "${parchment_mappings_version}"
+    }
+
+    runs {
+        client {
+            client()
+            gameDirectory = project.file('run/client')
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            gameDirectory = project.file('run/server')
+        }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+            jvmArgument '-Xmx4G'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { name = 'NeoForged'; url = 'https://maven.neoforged.net/releases' }
+    exclusiveContent {
+        forRepository {
+            maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' }
+        }
+        filter { includeGroup 'maven.modrinth' }
+    }
+}
+
+configurations {
+    jarInJar
+}
+
+dependencies {
+    implementation "maven.modrinth:create:${create_version}"
+    implementation "maven.modrinth:sable:${sable_version}"
+    implementation "maven.modrinth:create-bits-n-bobs:${bits_n_bobs_version}"
+    implementation "maven.modrinth:azimuth-api:${azimuth_version}"
+    implementation "maven.modrinth:strut-your-stuff:${struts_version}"
+
+    jarInJar "maven.modrinth:create:${create_version}"
+    jarInJar "maven.modrinth:sable:${sable_version}"
+}
+
+def jarInJarDir = layout.buildDirectory.dir('unpacked-jij')
+
+def unpackJarInJar = tasks.register('unpackJarInJar', Sync) {
+    group = 'build setup'
+    description = 'Unpacks bundled jar-in-jar libraries onto the compile classpath.'
+    from({
+        configurations.jarInJar.collect { jar ->
+            zipTree(jar).matching { include 'META-INF/jarjar/*.jar' }
+        }
+    })
+    into jarInJarDir
+    eachFile { it.relativePath = new RelativePath(true, it.name) }
+    includeEmptyDirs = false
+}
+
+dependencies {
+    implementation fileTree(dir: jarInJarDir, include: '*.jar').builtBy(unpackJarInJar)
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes([
+            'FMLModType'            : 'GAMELIBRARY',
+            'Specification-Title'   : "${mod_id}",
+            'Specification-Vendor'  : "${mod_authors}",
+            'Specification-Version' : '1',
+            'Implementation-Title'  : "${mod_name}",
+            'Implementation-Version': "${mod_version}",
+            'Implementation-Vendor' : "${mod_authors}"
+        ])
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+    options.compilerArgs << '-Xlint:deprecation,removal'
+}
+
+tasks.named('processResources', ProcessResources) {
+    def expandProps = [
+        minecraft_version      : minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version            : neo_version,
+        neo_version_range      : neo_version_range,
+        loader_version_range   : loader_version_range,
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_license            : mod_license,
+        mod_version            : mod_version,
+        mod_authors            : mod_authors,
+        mod_credits            : mod_credits,
+        mod_description        : mod_description
+    ]
+    inputs.properties(expandProps)
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand expandProps
+    }
+}
+
+configurations {
+    testMods
+}
+
+dependencies {
+    testMods "maven.modrinth:create-aeronautics:${aeronautics_version}"
+}
+
+def installTestMods = tasks.register('installTestMods', Sync) {
+    group = 'build setup'
+    description = 'Installs extra mods into the dev client for manual testing.'
+    from configurations.testMods
+    into layout.projectDirectory.dir('run/client/mods')
+}
+
+tasks.matching { it.name == 'runClient' }.configureEach {
+    dependsOn installTestMods
+}

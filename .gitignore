@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# NeoForge / ModDevGradle
+run/
+runs/
+repo/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+out/
+
+# Decompilation working area
+work/
+tools/
+libs/
+scripts/
+
+jar/
