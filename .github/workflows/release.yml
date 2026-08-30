@@ -64,12 +64,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "${{ steps.version.outputs.version }}" \
-            --notes-file release-notes.md \
-            --prerelease="${{ steps.version.outputs.prerelease }}" \
-            build/libs/bits_n_tracks-${{ steps.version.outputs.version }}.jar \
-            build/libs/bits_n_tracks-${{ steps.version.outputs.version }}-sources.jar
+          jars="build/libs/bits_n_tracks-${{ steps.version.outputs.version }}.jar build/libs/bits_n_tracks-${{ steps.version.outputs.version }}-sources.jar"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" \
+              --title "${{ steps.version.outputs.version }}" \
+              --notes-file release-notes.md \
+              --prerelease="${{ steps.version.outputs.prerelease }}"
+            gh release upload "$GITHUB_REF_NAME" --clobber $jars
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --title "${{ steps.version.outputs.version }}" \
+              --notes-file release-notes.md \
+              --prerelease="${{ steps.version.outputs.prerelease }}" \
+              $jars
+          fi
 
       - name: Publish to Modrinth
         env:
