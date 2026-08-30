@@ -54,6 +54,7 @@ import org.joml.Vector3dc;
 public final class BntPhysicsEvents {
     private static final double BLOCKS_PER_SECOND_PER_RPM_RADIUS = Math.PI * 2.0 / 60.0;
     private static final int TRACTION_ITERATIONS = 8;
+    private static final double MAX_COMMANDED_YAW_RATE = 20.0;
 
     private BntPhysicsEvents() {
     }
@@ -306,6 +307,7 @@ public final class BntPhysicsEvents {
 
         double loadShare = massData.getMass() / contacts.size();
         double response = BntPhysicsTuning.getTractionResponse();
+        double pivotScrub = BntPhysicsTuning.getPivotScrub();
         boolean anyTraction = false;
 
         for (BntPhysicsEvents.WheelContact contact : contacts) {
@@ -323,15 +325,26 @@ public final class BntPhysicsEvents {
                 ? BntPhysicsTuning.getDriveTraction() + contact.brakeStrength * BntPhysicsTuning.getBrakeTraction()
                 : BntPhysicsTuning.getRollingResistance();
             double longitudinalSpeed = contact.localVelocity.dot(contact.normalD);
-            double lateralSpeed = contact.localVelocity.dot(contact.sideD);
+            contact.targetSpeed = targetSpeed;
             contact.goalLongitudinal = longitudinalSpeed + response * (targetSpeed - longitudinalSpeed);
-            contact.goalLateral = lateralSpeed - response * lateralSpeed;
             contact.limitLongitudinal = driveTraction * grip * loadShare * timeStep;
             contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * loadShare * timeStep;
         }
 
         if (!anyTraction) {
             return;
+        }
+
+        double commandedYawRate = pivotScrub > 0.0 ? solveCommandedYawRate(contacts) : 0.0;
+
+        for (BntPhysicsEvents.WheelContact contact : contacts) {
+            if (contact.hasTraction) {
+                double lateralSpeed = contact.localVelocity.dot(contact.sideD);
+                double scrubSpeed = commandedYawRate
+                    * pivotScrub
+                    * (contact.lever.z() * contact.sideD.x() - contact.lever.x() * contact.sideD.z());
+                contact.goalLateral = lateralSpeed - response * (lateralSpeed - scrubSpeed);
+            }
         }
 
         Vector3d deltaVelocity = new Vector3d();
@@ -374,6 +387,59 @@ public final class BntPhysicsEvents {
                 }
             }
         }
+    }
+
+    private static double solveCommandedYawRate(List<BntPhysicsEvents.WheelContact> contacts) {
+        double m00 = 0.0;
+        double m01 = 0.0;
+        double m02 = 0.0;
+        double m11 = 0.0;
+        double m12 = 0.0;
+        double m22 = 0.0;
+        double r0 = 0.0;
+        double r1 = 0.0;
+        double r2 = 0.0;
+        int driven = 0;
+
+        for (BntPhysicsEvents.WheelContact contact : contacts) {
+            if (!contact.hasTraction || !contact.isConnected) {
+                continue;
+            }
+
+            driven++;
+            double a0 = contact.normalD.x();
+            double a1 = contact.normalD.z();
+            double a2 = contact.lever.z() * contact.normalD.x() - contact.lever.x() * contact.normalD.z();
+            double b = contact.targetSpeed;
+            m00 += a0 * a0;
+            m01 += a0 * a1;
+            m02 += a0 * a2;
+            m11 += a1 * a1;
+            m12 += a1 * a2;
+            m22 += a2 * a2;
+            r0 += a0 * b;
+            r1 += a1 * b;
+            r2 += a2 * b;
+        }
+
+        if (driven < 2) {
+            return 0.0;
+        }
+
+        double ridge = 1.0E-6 * (m00 + m11 + m22) + 1.0E-12;
+        m00 += ridge;
+        m11 += ridge;
+        m22 += ridge;
+        double cofactor02 = m01 * m12 - m02 * m11;
+        double cofactor12 = m01 * m02 - m00 * m12;
+        double cofactor22 = m00 * m11 - m01 * m01;
+        double determinant = m00 * (m11 * m22 - m12 * m12) + m01 * (m02 * m12 - m01 * m22) + m02 * cofactor02;
+        if (!Double.isFinite(determinant) || Math.abs(determinant) < 1.0E-12) {
+            return 0.0;
+        }
+
+        double yawRate = (cofactor02 * r0 + cofactor12 * r1 + cofactor22 * r2) / determinant;
+        return Double.isFinite(yawRate) ? Mth.clamp(yawRate, -MAX_COMMANDED_YAW_RATE, MAX_COMMANDED_YAW_RATE) : 0.0;
     }
 
     private static double solveTractionAxis(
@@ -616,6 +682,7 @@ public final class BntPhysicsEvents {
         double springLength;
         double chainRadius;
         double kineticSpeed;
+        double targetSpeed;
         double touchingFriction;
         double normalMass;
         double brakeStrength;

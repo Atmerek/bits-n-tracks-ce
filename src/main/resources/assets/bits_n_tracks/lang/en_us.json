@@ -95,6 +95,7 @@
     "bits_n_tracks.configuration.cogwheelGripMultiplier": "Cogwheel Grip",
     "bits_n_tracks.configuration.trackGripMultiplier": "Track Grip",
     "bits_n_tracks.configuration.lateralTraction": "Lateral Traction",
+    "bits_n_tracks.configuration.pivotScrub": "Pivot Scrub",
     "bits_n_tracks.configuration.rollingResistance": "Rolling Resistance",
 
     "bits_n_tracks.configuration.stress": "Stress",

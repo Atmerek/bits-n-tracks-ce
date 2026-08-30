@@ -57,6 +57,7 @@ public final class BntPhysicsTuning {
     private static final DoubleValue COGWHEEL_GRIP_MULTIPLIER;
     private static final DoubleValue TRACK_GRIP_MULTIPLIER;
     private static final DoubleValue LATERAL_TRACTION;
+    private static final DoubleValue PIVOT_SCRUB;
     private static final DoubleValue ROLLING_RESISTANCE;
 
     private static final DoubleValue TINY_STRESS_IMPACT;
@@ -161,6 +162,9 @@ public final class BntPhysicsTuning {
         LATERAL_TRACTION = builder
             .comment("Strongest sideways acceleration a track at full grip can apply to stop a slide, in blocks per second squared.")
             .defineInRange("lateralTraction", 12.0, 0.0, 1000.0);
+        PIVOT_SCRUB = builder
+            .comment("How much of the turn the drive asks for the tracks may scrub through. At 0 they resist that turn as hard as any other sideways slide, which is what stops a vehicle from turning in place. At 1 the vehicle turns at exactly the rate its two track speeds work out to, which is quicker than a real tracked vehicle manages, since real tracks slip. Either way the vehicle stops turning as soon as the track speeds match again.")
+            .defineInRange("pivotScrub", 0.7, 0.0, 1.0);
         ROLLING_RESISTANCE = builder
             .comment("Deceleration applied by a cogwheel that is not driven by a chain, in blocks per second squared.")
             .defineInRange("rollingResistance", 1.0, 0.0, 1000.0);
@@ -359,6 +363,10 @@ public final class BntPhysicsTuning {
 
     public static double getLateralTraction() {
         return LATERAL_TRACTION.get();
+    }
+
+    public static double getPivotScrub() {
+        return PIVOT_SCRUB.get();
     }
 
     public static double getRollingResistance() {
