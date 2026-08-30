@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+
+- A mod icon, shown in the mod list.
+- Two settings. Suspension Speed Limit, under suspension, caps how hard a cogwheel can push off a surface, and Pivot Scrub, under friction, sets how freely the tracks let a vehicle turn.
+
+### Changed
+
+- Tracked vehicles now turn at the rate their two track speeds call for, so running one track forward and the other back turns the vehicle on the spot. Existing vehicles will steer more sharply than before.
+- Suspension is stronger by default and vehicles sit higher on it. Anyone who raised the suspension strength setting to compensate can lower it again.
+
+### Fixed
+
+- Vehicles could not turn on the spot. The tracks slid sideways and the vehicle barely rotated.
+- Breaking a vehicle into two parts could fling away the part that had a cogwheel on it.
+- A cogwheel buried in terrain could launch the vehicle it was on.
+- Enabling suspension on a cogwheel outside a vehicle dropped it by the full suspension travel.
+- A suspension cogwheel's outline and hitbox stayed on the block grid while the cogwheel hung below it.
+- Chain and belt selection, and the alignment lever's face selector, went by a cogwheel's grid position rather than where it was drawn.
+- Tiny cogwheels used the small cogwheel's hitbox, and medium cogwheels used the large cogwheel's.
+- Placing a vanilla chain or an industrial belt on a cogwheel that cannot take one showed a raw translation key instead of a message.
+
 ## 2.0.0
 
 ### Added
