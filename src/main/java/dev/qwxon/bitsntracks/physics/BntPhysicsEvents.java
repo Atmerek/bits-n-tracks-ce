@@ -147,9 +147,7 @@ public final class BntPhysicsEvents {
                     return mixin.bnt$getLerpedExtension(partialTick);
                 } else {
                     ClientSubLevel subLevel = Sable.HELPER.getContainingClient(kbe);
-                    return subLevel == null
-                        ? mixin.bnt$getLerpedExtension(partialTick)
-                        : computeRenderExtensionForPose(kbe, subLevel.renderPose(partialTick), subLevel);
+                    return subLevel == null ? 0.0 : computeRenderExtensionForPose(kbe, subLevel.renderPose(partialTick), subLevel);
                 }
             } else {
                 return mixin.bnt$getLerpedExtension(partialTick);
