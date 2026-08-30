@@ -4,6 +4,7 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.144'
+    id 'com.modrinth.minotaur' version '2.9.0'
 }
 
 version = "${mod_version}"
@@ -154,4 +155,47 @@ def installTestMods = tasks.register('installTestMods', Sync) {
 
 tasks.matching { it.name == 'runClient' }.configureEach {
     dependsOn installTestMods
+}
+
+def changelogSection = { String version ->
+    def source = rootProject.file('CHANGELOG.md')
+    if (!source.exists()) {
+        return ''
+    }
+    def collected = []
+    def inSection = false
+    source.eachLine('UTF-8') { line ->
+        if (line.startsWith('## ')) {
+            inSection = line.substring(3).trim() == version
+        } else if (inSection) {
+            collected << line
+        }
+    }
+    return collected.join('\n').trim()
+}
+
+modrinth {
+    token = System.getenv('MODRINTH_TOKEN')
+    projectId = 'bits-n-tracks-ce'
+    versionNumber = "${mod_version}"
+    versionName = "${mod_version}"
+    versionType = mod_version.contains('-') ? 'beta' : 'release'
+    uploadFile = tasks.jar
+    additionalFiles = [tasks.sourcesJar]
+    gameVersions = ["${minecraft_version}"]
+    loaders = ['neoforge']
+    changelog = provider { changelogSection(mod_version) }
+    dependencies {
+        required.project 'create'
+        required.project 'sable'
+        required.project 'create-bits-n-bobs'
+    }
+}
+
+tasks.named('modrinth') {
+    doFirst {
+        if (!changelogSection(mod_version)) {
+            throw new GradleException("CHANGELOG.md has no '## ${mod_version}' section")
+        }
+    }
 }

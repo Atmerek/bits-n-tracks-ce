@@ -70,3 +70,8 @@ jobs:
             --prerelease="${{ steps.version.outputs.prerelease }}" \
             build/libs/bits_n_tracks-${{ steps.version.outputs.version }}.jar \
             build/libs/bits_n_tracks-${{ steps.version.outputs.version }}-sources.jar
+
+      - name: Publish to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: ./gradlew modrinth
