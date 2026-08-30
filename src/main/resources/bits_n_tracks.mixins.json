@@ -23,6 +23,8 @@
         "CogwheelChainBehaviourRendererMixin",
         "CogwheelChainBehaviourVisualMixin",
         "CogwheelChainInteractionHandlerMixin",
+        "ChainDriveShapeHelperMixin",
+        "CogwheelChainWholeShapeMixin",
         "VisualizationManagerMixin",
         "BntCreativeModeInventoryScreenMixin",
         "BntItemPickerMenuMixin",
