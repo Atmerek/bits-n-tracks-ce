@@ -81,8 +81,8 @@ public final class BntPhysicsTuning {
             .comment("Apply suspension to cogwheels that are part of a track chain.")
             .define("trackSuspensionEnabled", true);
         BASE_SUSPENSION_STRENGTH = builder
-            .comment("Overall suspension gain. Scales spring, damping and the impulse ceiling together.")
-            .defineInRange("baseStrength", 2.0, 0.01, 100.0);
+            .comment("Overall suspension gain. Scales spring, damping and the impulse ceiling together. Raise it if a vehicle sags onto its belly, lower it if it bounces.")
+            .defineInRange("baseStrength", 15.0, 0.01, 100.0);
         SPRING_SCALE = builder
             .comment("Converts the suspension gain into a spring constant.")
             .defineInRange("springScale", 200.0, 0.0, 10000.0);
