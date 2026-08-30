@@ -50,7 +50,7 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
     }
 
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return super.getShape(state, level, pos, context);
+        return HiddenCogwheelCompat.offsetShapeForSuspension(super.getShape(state, level, pos, context), level, pos);
     }
 
     @SuppressWarnings("deprecation")

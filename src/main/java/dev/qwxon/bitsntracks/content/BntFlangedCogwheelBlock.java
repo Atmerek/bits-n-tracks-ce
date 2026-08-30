@@ -61,13 +61,17 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        if (this.size == CogwheelSize.LARGE) {
-            return AllShapes.LARGE_GEAR.get((Axis)state.getValue(AXIS));
-        } else {
-            return this.size == CogwheelSize.MEDIUM
-                ? AllShapes.LARGE_GEAR.get((Axis)state.getValue(AXIS))
-                : AllShapes.SMALL_GEAR.get((Axis)state.getValue(AXIS));
-        }
+        return HiddenCogwheelCompat.offsetShapeForSuspension(this.getGridShape(state), level, pos);
+    }
+
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return this.getGridShape(state);
+    }
+
+    private VoxelShape getGridShape(BlockState state) {
+        return this.size != CogwheelSize.LARGE && this.size != CogwheelSize.MEDIUM
+            ? AllShapes.SMALL_GEAR.get((Axis)state.getValue(AXIS))
+            : AllShapes.LARGE_GEAR.get((Axis)state.getValue(AXIS));
     }
 
     public Class<BntFlangedCogwheelBlockEntity> getBlockEntityClass() {

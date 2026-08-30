@@ -21,6 +21,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -28,6 +29,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class HiddenCogwheelCompat {
     private static final ThreadLocal<Integer> bnt$chainSwapDepth = ThreadLocal.withInitial(() -> 0);
@@ -262,6 +264,15 @@ public final class HiddenCogwheelCompat {
 
     public static double getVisualVerticalTranslation(BlockEntity be, float partialTick) {
         return BntClientCompat.getVisualVerticalTranslation(be, partialTick);
+    }
+
+    public static VoxelShape offsetShapeForSuspension(VoxelShape shape, BlockGetter getter, BlockPos pos) {
+        if (!(getter instanceof Level level) || !level.isClientSide) {
+            return shape;
+        }
+
+        BlockEntity be = getter.getBlockEntity(pos);
+        return isPhysicsEnabled(be) ? BntClientCompat.offsetShapeForSuspension(shape, be) : shape;
     }
 
     public static boolean isSuppressingChainDestroy() {
