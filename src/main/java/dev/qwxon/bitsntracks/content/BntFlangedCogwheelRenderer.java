@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFlangedCogwheelBlockEntity> {
     public BntFlangedCogwheelRenderer(Context context) {
@@ -21,9 +22,8 @@ public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFl
             BlockState renderState = be.getBlockState();
             SuperByteBuffer model = this.getRotatedModel(be, renderState);
             ms.pushPose();
-            if (be instanceof KineticBlockEntityPhysicsAccess accessx) {
-                ms.translate(accessx.bnt$getAlignmentOffsetX(), accessx.bnt$getAlignmentOffsetY(), accessx.bnt$getAlignmentOffsetZ());
-            }
+            Vec3 translation = HiddenCogwheelCompat.getModelTranslation(be, partialTicks);
+            ms.translate(translation.x, translation.y, translation.z);
 
             renderRotatingBuffer(be, model, ms, buffer.getBuffer(this.getRenderType(be, renderState)), light);
             ms.popPose();

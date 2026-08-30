@@ -58,6 +58,11 @@ public final class HiddenCogwheelCompat {
             || state.is((Block)BitsNTracksBlocks.LARGE_HIDDEN_FLANGED_COGWHEEL.get());
     }
 
+    public static boolean isFlangedCogwheelBlock(BlockState state) {
+        Block block = state.getBlock();
+        return block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock;
+    }
+
     public static boolean isTinyHiddenCogwheel(BlockState state) {
         return state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get());
     }
@@ -275,7 +280,7 @@ public final class HiddenCogwheelCompat {
         }
 
         double y = access.bnt$getAlignmentOffsetY();
-        if (access.bnt$isPhysicsEnabled()) {
+        if (isHiddenCogwheel(be.getBlockState())) {
             y += getVisualVerticalTranslation(be, partialTick);
         }
 
@@ -287,12 +292,7 @@ public final class HiddenCogwheelCompat {
             return shape;
         }
 
-        BlockEntity be = getter.getBlockEntity(pos);
-        if (!isPhysicsEnabled(be)) {
-            return shape;
-        }
-
-        Vec3 translation = getModelTranslation(be, BntClientCompat.getPartialTick());
+        Vec3 translation = getModelTranslation(getter.getBlockEntity(pos), BntClientCompat.getPartialTick());
         return translation.equals(Vec3.ZERO) ? shape : shape.move(translation.x, translation.y, translation.z);
     }
 

@@ -8,6 +8,7 @@ import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 public class HiddenCogwheelRenderer extends KineticBlockEntityRenderer<KineticBlockEntity> {
     public HiddenCogwheelRenderer(Context context) {
@@ -20,10 +21,8 @@ public class HiddenCogwheelRenderer extends KineticBlockEntityRenderer<KineticBl
             if (renderState != null) {
                 SuperByteBuffer model = this.getRotatedModel(be, renderState);
                 ms.pushPose();
-                double alignX = be instanceof KineticBlockEntityPhysicsAccess accessx ? accessx.bnt$getAlignmentOffsetX() : 0.0;
-                double alignY = be instanceof KineticBlockEntityPhysicsAccess accessxx ? accessxx.bnt$getAlignmentOffsetY() : 0.0;
-                double alignZ = be instanceof KineticBlockEntityPhysicsAccess accessxxx ? accessxxx.bnt$getAlignmentOffsetZ() : 0.0;
-                ms.translate(alignX, HiddenCogwheelCompat.getVisualVerticalTranslation(be, partialTicks) + alignY, alignZ);
+                Vec3 translation = HiddenCogwheelCompat.getModelTranslation(be, partialTicks);
+                ms.translate(translation.x, translation.y, translation.z);
                 renderRotatingBuffer(be, model, ms, buffer.getBuffer(this.getRenderType(be, renderState)), light);
                 ms.popPose();
             }

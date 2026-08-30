@@ -16,7 +16,8 @@
         "RotationPropagatorMixin",
         "PathedCogwheelNodeMixin",
         "BntCreativeModeTabMixin",
-        "BracketedKineticBlockEntityMixin"
+        "BracketedKineticBlockEntityMixin",
+        "BntUseItemOnRangeMixin"
     ],
     "client": [
         "CogwheelChainPlacementInteractionMixin",
@@ -28,6 +29,7 @@
         "VisualizationManagerMixin",
         "BntCreativeModeInventoryScreenMixin",
         "BntItemPickerMenuMixin",
+        "BntGameRendererPickMixin",
         "accessor.CreativeModeInventoryScreenAccessor"
     ],
     "server": [],
