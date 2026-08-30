@@ -410,15 +410,18 @@ public final class BntPhysicsEvents {
 
     private static void applyAllBatchedForces(ServerLevel level) {
         for (KineticBlockEntity kbe : BntPhysicsRegistry.getEnabled(level)) {
-            if (!kbe.isRemoved()) {
-                KineticBlockEntityPhysicsAccess mixin = (KineticBlockEntityPhysicsAccess)kbe;
-                if (mixin.bnt$consumeQueuedForForceApplication()
-                    && Sable.HELPER.getContaining(kbe) instanceof ServerSubLevel subLevel
-                    && !subLevel.isRemoved()) {
-                    RigidBodyHandle handle = RigidBodyHandle.of(subLevel);
-                    if (handle != null && handle.isValid()) {
-                        handle.applyForcesAndReset(mixin.bnt$getForceTotal());
-                    }
+            KineticBlockEntityPhysicsAccess mixin = (KineticBlockEntityPhysicsAccess)kbe;
+            if (mixin.bnt$consumeQueuedForForceApplication()) {
+                ForceTotal forceTotal = mixin.bnt$getForceTotal();
+                RigidBodyHandle handle = null;
+                if (!kbe.isRemoved() && Sable.HELPER.getContaining(kbe) instanceof ServerSubLevel subLevel && !subLevel.isRemoved()) {
+                    handle = RigidBodyHandle.of(subLevel);
+                }
+
+                if (handle != null && handle.isValid()) {
+                    handle.applyForcesAndReset(forceTotal);
+                } else {
+                    forceTotal.reset();
                 }
             }
         }
