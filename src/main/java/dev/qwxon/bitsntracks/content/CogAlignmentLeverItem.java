@@ -73,7 +73,7 @@ public class CogAlignmentLeverItem extends Item {
                         player.displayClientMessage(shiftMessage(access), true);
                         return InteractionResult.SUCCESS;
                     } else {
-                        Vec3 hitVec = context.getClickLocation();
+                        Vec3 hitVec = context.getClickLocation().subtract(HiddenCogwheelCompat.getModelTranslation(be, 1.0F));
                         double localX = hitVec.x - pos.getX();
                         double localY = hitVec.y - pos.getY();
                         double localZ = hitVec.z - pos.getZ();

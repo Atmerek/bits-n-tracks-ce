@@ -11,6 +11,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
+import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import dev.ryanhcode.sable.Sable;
@@ -259,11 +260,26 @@ public final class HiddenCogwheelCompat {
     }
 
     public static double getVisualDrop(BlockEntity be, float partialTick) {
-        return BntClientCompat.getVisualDrop(be, partialTick);
+        return be instanceof KineticBlockEntity kinetic && isPhysicsEnabled(be)
+            ? BntPhysicsEvents.getClientRenderExtension(kinetic, partialTick)
+            : 0.0;
     }
 
     public static double getVisualVerticalTranslation(BlockEntity be, float partialTick) {
-        return BntClientCompat.getVisualVerticalTranslation(be, partialTick);
+        return be == null ? 0.0 : getManualVisualVerticalOffset(be) - getVisualDrop(be, partialTick);
+    }
+
+    public static Vec3 getModelTranslation(BlockEntity be, float partialTick) {
+        if (!(be instanceof KineticBlockEntityPhysicsAccess access)) {
+            return Vec3.ZERO;
+        }
+
+        double y = access.bnt$getAlignmentOffsetY();
+        if (access.bnt$isPhysicsEnabled()) {
+            y += getVisualVerticalTranslation(be, partialTick);
+        }
+
+        return new Vec3(access.bnt$getAlignmentOffsetX(), y, access.bnt$getAlignmentOffsetZ());
     }
 
     public static VoxelShape offsetShapeForSuspension(VoxelShape shape, BlockGetter getter, BlockPos pos) {
@@ -272,7 +288,12 @@ public final class HiddenCogwheelCompat {
         }
 
         BlockEntity be = getter.getBlockEntity(pos);
-        return isPhysicsEnabled(be) ? BntClientCompat.offsetShapeForSuspension(shape, be) : shape;
+        if (!isPhysicsEnabled(be)) {
+            return shape;
+        }
+
+        Vec3 translation = getModelTranslation(be, BntClientCompat.getPartialTick());
+        return translation.equals(Vec3.ZERO) ? shape : shape.move(translation.x, translation.y, translation.z);
     }
 
     public static boolean isSuppressingChainDestroy() {

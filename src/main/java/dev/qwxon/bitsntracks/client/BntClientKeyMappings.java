@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.client;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -36,7 +37,8 @@ public final class BntClientKeyMappings {
                         if (be instanceof KineticBlockEntity && be instanceof KineticBlockEntityPhysicsAccess access) {
                             Direction face = blockHit.getDirection();
                             Axis blockAxis = (Axis)state.getValue(BlockStateProperties.AXIS);
-                            Vec3 hitVec = blockHit.getLocation();
+                            Vec3 translation = HiddenCogwheelCompat.getModelTranslation(be, BntClientCompat.getPartialTick());
+                            Vec3 hitVec = blockHit.getLocation().subtract(translation);
                             double localX = hitVec.x - pos.getX();
                             double localY = hitVec.y - pos.getY();
                             double localZ = hitVec.z - pos.getZ();
@@ -47,7 +49,7 @@ public final class BntClientKeyMappings {
                             AABB regionAABB = face.getAxis() == blockAxis
                                 ? BntClientOutliner.getHighlightAABB(pos, face, dx, dy, dz, blockAxis, radius)
                                 : BntClientOutliner.getSideDepthHighlightAABB(pos, face, dx, dy, dz, blockAxis, radius);
-                            BntClientOutliner.showFaceHighlight(pos, face, regionAABB);
+                            BntClientOutliner.showFaceHighlight(pos, face, regionAABB.move(translation));
                         }
                     }
                 }

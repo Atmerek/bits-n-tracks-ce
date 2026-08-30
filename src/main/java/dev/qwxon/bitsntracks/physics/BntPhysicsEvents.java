@@ -151,7 +151,10 @@ public final class BntPhysicsEvents {
                     return subLevel == null ? 0.0 : computeRenderExtensionForPose(kbe, subLevel.renderPose(partialTick), subLevel);
                 }
             } else {
-                return mixin.bnt$getLerpedExtension(partialTick);
+                BlockState state = kbe.getBlockState();
+                return state.hasProperty(BlockStateProperties.AXIS) && Sable.HELPER.getContaining(kbe) instanceof SubLevel subLevel
+                    ? computeRenderExtensionForPose(kbe, subLevel.logicalPose(), subLevel)
+                    : 0.0;
             }
         } else {
             return 0.0;

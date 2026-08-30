@@ -6,7 +6,6 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.render.CogwheelChainRenderG
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
-import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -14,34 +13,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class BntClientCompat {
     public static double getVisualDrop(BlockEntity be, float partialTick) {
-        return be instanceof KineticBlockEntity kinetic && be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled()
-            ? BntPhysicsEvents.getClientRenderExtension(kinetic, partialTick)
-            : 0.0;
+        return HiddenCogwheelCompat.getVisualDrop(be, partialTick);
     }
 
     public static double getVisualVerticalTranslation(BlockEntity be, float partialTick) {
-        if (be == null) {
-            return 0.0;
-        } else {
-            double drop = getVisualDrop(be, partialTick);
-            return HiddenCogwheelCompat.getManualVisualVerticalOffset(be) - drop;
-        }
+        return HiddenCogwheelCompat.getVisualVerticalTranslation(be, partialTick);
     }
 
-    public static VoxelShape offsetShapeForSuspension(VoxelShape shape, BlockEntity be) {
-        if (!(be instanceof KineticBlockEntityPhysicsAccess access)) {
-            return shape;
-        }
-
-        float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
-        double x = access.bnt$getAlignmentOffsetX();
-        double y = getVisualVerticalTranslation(be, partialTick) + access.bnt$getAlignmentOffsetY();
-        double z = access.bnt$getAlignmentOffsetZ();
-        return x == 0.0 && y == 0.0 && z == 0.0 ? shape : shape.move(x, y, z);
+    public static float getPartialTick() {
+        return Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
     }
 
     public static Vec3 getTransformedPosition(BlockEntity controllerBe, Vec3 localPos, BlockPos relativePos) {
