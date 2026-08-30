@@ -36,6 +36,9 @@
     "block.bits_n_tracks.industrial_tiny_flanged_cogwheel": "Tiny Industrial Flanged Cogwheel",
     "tab.bits_n_tracks.base": "Bits 'n' Tracks CE",
 
+    "message.bits_n_bobs.cogwheel_chain.chain_addition_aborted.invalid_cogwheel_type.cogwheel_chain_type.bits_n_bobs.chain": "Chain cogwheel drives must be placed on a flanged cogwheel",
+    "message.bits_n_bobs.cogwheel_chain.chain_addition_aborted.invalid_cogwheel_type.cogwheel_chain_type.bits_n_tracks.industrial_belt": "Industrial belt drives must be placed on a physical flanged cogwheel",
+
     "bits_n_tracks.configuration.title": "%s",
 
     "bits_n_tracks.configuration.client": "Client",
