@@ -273,7 +273,9 @@ public final class BntPhysicsEvents {
             : BntPhysicsTuning.getCogwheelMaxImpulseMultiplier();
         double bumpStopScale = contact.springLength < 0.0 ? BntPhysicsTuning.getBumpStopScale() : 1.0;
         double maxImpulseVal = maxImpulseMult * suspensionGain * BntPhysicsTuning.getImpulseScale() * timeStep * bumpStopScale;
-        double springForce = Mth.clamp(rawSpringForce, -maxImpulseVal, maxImpulseVal);
+        double speedLimitImpulse = normalMassShare * (BntPhysicsTuning.getMaxSuspensionSpeed() + Math.abs(relVelY));
+        double impulseCeiling = Math.min(maxImpulseVal, speedLimitImpulse);
+        double springForce = Mth.clamp(rawSpringForce, -impulseCeiling, impulseCeiling);
         Vec3i rayHitNormal = contact.extResult.normal.getNormal();
         Vec3 localForce = new Vec3(springForce * rayHitNormal.getX(), springForce * rayHitNormal.getY(), springForce * rayHitNormal.getZ());
         if (contact.extResult.subLevel != null) {

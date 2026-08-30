@@ -52,6 +52,7 @@
     "bits_n_tracks.configuration.dampingScale": "Damping Scale",
     "bits_n_tracks.configuration.impulseScale": "Impulse Scale",
     "bits_n_tracks.configuration.bumpStopScale": "Bump Stop Scale",
+    "bits_n_tracks.configuration.maxSuspensionSpeed": "Suspension Speed Limit",
     "bits_n_tracks.configuration.cogwheelSpringMultiplier": "Cogwheel Spring",
     "bits_n_tracks.configuration.trackSpringMultiplier": "Track Spring",
     "bits_n_tracks.configuration.cogwheelDampingMultiplier": "Cogwheel Damping",

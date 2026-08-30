@@ -16,6 +16,7 @@ public final class BntPhysicsTuning {
     private static final DoubleValue DAMPING_SCALE;
     private static final DoubleValue IMPULSE_SCALE;
     private static final DoubleValue BUMP_STOP_SCALE;
+    private static final DoubleValue MAX_SUSPENSION_SPEED;
 
     private static final DoubleValue COGWHEEL_SPRING_MULTIPLIER;
     private static final DoubleValue TRACK_SPRING_MULTIPLIER;
@@ -95,6 +96,9 @@ public final class BntPhysicsTuning {
         BUMP_STOP_SCALE = builder
             .comment("Extra impulse headroom while the suspension is fully compressed.")
             .defineInRange("bumpStopScale", 3.0, 1.0, 100.0);
+        MAX_SUSPENSION_SPEED = builder
+            .comment("Fastest a wheel may push its share of the vehicle off a surface, in blocks per second, on top of whatever it takes to stop the approach. Bounds the kick a wheel gets when it ends up buried in terrain or in another vehicle, which is what happens for a moment when a structure breaks in two.")
+            .defineInRange("maxSuspensionSpeed", 3.0, 0.0, 1000.0);
         COGWHEEL_SPRING_MULTIPLIER = builder.defineInRange("cogwheelSpringMultiplier", 0.0, 0.0, 100.0);
         TRACK_SPRING_MULTIPLIER = builder.defineInRange("trackSpringMultiplier", 0.5, 0.0, 100.0);
         COGWHEEL_DAMPING_MULTIPLIER = builder
@@ -207,6 +211,10 @@ public final class BntPhysicsTuning {
 
     public static double getBumpStopScale() {
         return BUMP_STOP_SCALE.get();
+    }
+
+    public static double getMaxSuspensionSpeed() {
+        return MAX_SUSPENSION_SPEED.get();
     }
 
     public static double getCogwheelSpringMultiplier() {
