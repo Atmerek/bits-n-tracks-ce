@@ -9,6 +9,7 @@ import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import java.util.function.Consumer;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -50,7 +51,8 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
     }
 
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return HiddenCogwheelCompat.offsetShapeForSuspension(super.getShape(state, level, pos, context), level, pos);
+        VoxelShape shape = BntCogwheelShapes.get(this.size, (Axis)state.getValue(AXIS));
+        return HiddenCogwheelCompat.offsetShapeForSuspension(shape, level, pos);
     }
 
     @SuppressWarnings("deprecation")

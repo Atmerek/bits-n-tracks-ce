@@ -2,7 +2,6 @@ package dev.qwxon.bitsntracks.content;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.block.IExclusiveCogwheelChainBlock;
 import com.simibubi.create.AllItems;
-import com.simibubi.create.AllShapes;
 import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import com.simibubi.create.foundation.block.IBE;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
@@ -69,9 +68,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     private VoxelShape getGridShape(BlockState state) {
-        return this.size != CogwheelSize.LARGE && this.size != CogwheelSize.MEDIUM
-            ? AllShapes.SMALL_GEAR.get((Axis)state.getValue(AXIS))
-            : AllShapes.LARGE_GEAR.get((Axis)state.getValue(AXIS));
+        return BntCogwheelShapes.get(this.size, (Axis)state.getValue(AXIS));
     }
 
     public Class<BntFlangedCogwheelBlockEntity> getBlockEntityClass() {
