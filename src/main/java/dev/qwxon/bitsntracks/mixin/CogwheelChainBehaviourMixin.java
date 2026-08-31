@@ -10,6 +10,7 @@ import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
@@ -105,6 +106,29 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
     private void bnt$preventBreakOnSwap(BreakEvent event, CallbackInfo ci) {
         if (HiddenCogwheelCompat.isSuppressingChainDestroy()) {
             ci.cancel();
+        }
+    }
+
+    @Inject(
+        method = {"tryTransferOnRemoval"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private void bnt$skipTransferWithoutChain(CallbackInfoReturnable<Boolean> cir) {
+        CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
+        if (self.isController() || self.getLevel() == null || self.getBlockEntity() == null) {
+            return;
+        }
+
+        Vec3i offset = self.getControllerOffset();
+        if (offset == null) {
+            return;
+        }
+
+        BlockPos controllerPos = self.getBlockEntity().getBlockPos().offset(offset);
+        if (self.getSameBehaviour(controllerPos) instanceof CogwheelChainBehaviour controllerBehaviour
+            && controllerBehaviour.getControlledChain() == null) {
+            cir.setReturnValue(false);
         }
     }
 
