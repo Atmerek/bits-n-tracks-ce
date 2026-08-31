@@ -23,6 +23,7 @@ import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.TrackModelRenderContext;
@@ -101,6 +102,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         }
 
         TrackModelRenderContext.setRenderingCustomChain(TrackModelRenderContext.isCustomOrIndustrialCogwheel(be));
+        TrackModelRenderContext.setRenderingWideChain(BntCogwheelPairing.isWide(be.getBlockState()));
         TrackModelRenderContext.setRenderingLevel(HiddenCogwheelCompat.getActualLevel(be));
 
         try {
@@ -108,6 +110,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         } finally {
             TrackModelRenderContext.setRenderingTrack(false);
             TrackModelRenderContext.setRenderingCustomChain(false);
+            TrackModelRenderContext.setRenderingWideChain(false);
             TrackModelRenderContext.setRenderingLevel(null);
         }
     }
@@ -203,12 +206,15 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             }
         }
 
+        boolean wideBelt = isCustomBeltPlacement && TrackModelRenderContext.isRenderingWideChain();
         ResourceLocation renderTexture = type.getRenderTexture();
         if (isCustomBeltPlacement) {
             if (renderTexture.getPath().contains("industrial")) {
-                renderTexture = BitsNTracks.asResource("textures/block/industrial_belt.png");
+                renderTexture = BitsNTracks.asResource(
+                    wideBelt ? "textures/block/industrial_belt_wide.png" : "textures/block/industrial_belt.png"
+                );
             } else {
-                renderTexture = BitsNTracks.asResource("textures/block/track_belt.png");
+                renderTexture = BitsNTracks.asResource(wideBelt ? "textures/block/track_belt_wide.png" : "textures/block/track_belt.png");
             }
         } else if (TrackModelRenderContext.isRenderingTrack() && !renderTexture.getPath().contains("industrial")) {
             renderTexture = BitsNTracks.asResource("textures/block/track_belt.png");
@@ -234,8 +240,9 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         List<Vec3> scaledSourcePoints = sourcePoints;
         List<Vec3> scaledDestinationPoints = destinationPoints;
         if (isCustomBeltPlacement) {
-            scaledSourcePoints = bnt$scaleChainWidth(sourcePoints, 4.666666666666667);
-            scaledDestinationPoints = bnt$scaleChainWidth(destinationPoints, 4.666666666666667);
+            double widthScale = wideBelt ? 9.333333333333334 : 4.666666666666667;
+            scaledSourcePoints = bnt$scaleChainWidth(sourcePoints, widthScale);
+            scaledDestinationPoints = bnt$scaleChainWidth(destinationPoints, widthScale);
         }
 
         if (chainRenderInfo == ChainRenderInfo.BELT && renderTexture.getNamespace().equals("bits_n_tracks")) {
@@ -252,10 +259,11 @@ public abstract class CogwheelChainBehaviourRendererMixin {
                 u1Bot = temp1;
             }
 
+            float uEdge = wideBelt ? 0.90625F : 0.9375F;
             float uLeftFace0 = 0.875F;
-            float uLeftFace1 = 0.9375F;
+            float uLeftFace1 = uEdge;
             float uRightFace0 = 0.875F;
-            float uRightFace1 = 0.9375F;
+            float uRightFace1 = uEdge;
             if (flipInsideOutside) {
                 float temp = uLeftFace0;
                 uLeftFace0 = uLeftFace1;

@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class TrackModelRenderContext {
     private static final ThreadLocal<Boolean> IS_RENDERING_TRACK = ThreadLocal.withInitial(() -> false);
     private static final ThreadLocal<Boolean> IS_RENDERING_CUSTOM_CHAIN = ThreadLocal.withInitial(() -> false);
+    private static final ThreadLocal<Boolean> IS_RENDERING_WIDE_CHAIN = ThreadLocal.withInitial(() -> false);
     private static final ThreadLocal<Level> RENDERING_LEVEL = new ThreadLocal<>();
 
     public static void setRenderingTrack(boolean isRenderingTrack) {
@@ -25,6 +26,14 @@ public class TrackModelRenderContext {
 
     public static boolean isRenderingCustomChain() {
         return IS_RENDERING_CUSTOM_CHAIN.get();
+    }
+
+    public static void setRenderingWideChain(boolean isWide) {
+        IS_RENDERING_WIDE_CHAIN.set(isWide);
+    }
+
+    public static boolean isRenderingWideChain() {
+        return IS_RENDERING_WIDE_CHAIN.get();
     }
 
     public static void setRenderingLevel(Level level) {

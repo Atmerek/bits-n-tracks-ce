@@ -9,6 +9,7 @@ import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import java.util.function.Consumer;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -17,12 +18,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -36,6 +39,18 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
     public HiddenCogwheelBlock(Properties properties, CogwheelSize size) {
         super(properties, size == CogwheelSize.LARGE || size == CogwheelSize.MEDIUM);
         this.size = size;
+    }
+
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder.add(new Property[]{BntCogwheelPairing.WIDE}));
+    }
+
+    protected BlockState updateShape(
+        BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos
+    ) {
+        return BntCogwheelPairing.unlinkBrokenPair(
+            super.updateShape(state, direction, neighbourState, level, pos, neighbourPos), direction, neighbourState
+        );
     }
 
     public Class<KineticBlockEntity> getBlockEntityClass() {

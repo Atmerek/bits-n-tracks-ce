@@ -1,16 +1,43 @@
 {
   "variants": {
-    "axis=x": {
+    "axis=x,wide=none": {
       "model": "bits_n_tracks:block/large_flanged_cogwheel",
       "x": 90,
       "y": 90
     },
-    "axis=y": {
+    "axis=x,wide=positive": {
+      "model": "bits_n_tracks:block/large_flanged_cogwheel_wide",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,wide=negative": {
+      "model": "bits_n_tracks:block/large_flanged_cogwheel_wide",
+      "x": 270,
+      "y": 90
+    },
+    "axis=y,wide=none": {
       "model": "bits_n_tracks:block/large_flanged_cogwheel"
     },
-    "axis=z": {
+    "axis=y,wide=positive": {
+      "model": "bits_n_tracks:block/large_flanged_cogwheel_wide"
+    },
+    "axis=y,wide=negative": {
+      "model": "bits_n_tracks:block/large_flanged_cogwheel_wide",
+      "x": 180
+    },
+    "axis=z,wide=none": {
       "model": "bits_n_tracks:block/large_flanged_cogwheel",
       "x": 90,
+      "y": 180
+    },
+    "axis=z,wide=positive": {
+      "model": "bits_n_tracks:block/large_flanged_cogwheel_wide",
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,wide=negative": {
+      "model": "bits_n_tracks:block/large_flanged_cogwheel_wide",
+      "x": 270,
       "y": 180
     }
   }

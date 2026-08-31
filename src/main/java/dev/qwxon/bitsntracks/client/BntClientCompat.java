@@ -5,6 +5,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.RenderedChainPathNode
 import com.kipti.bnb.content.kinetics.cogwheel_chain.render.CogwheelChainRenderGeometryBuilder.ChainSegment;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +34,13 @@ public class BntClientCompat {
             return localPos;
         } else {
             BlockPos nodePos = controllerBe.getBlockPos().offset(relativePos);
-            Vec3 localPosWithSuspension = localPos;
+            Vec3 localPosWithSuspension = localPos.add(BntCogwheelPairing.seamOffset(level.getBlockState(nodePos)));
             BlockEntity nodeBe = level.getBlockEntity(nodePos);
             if (nodeBe != null) {
                 if (nodeBe instanceof KineticBlockEntityPhysicsAccess access) {
-                    localPosWithSuspension = localPos.add(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
+                    localPosWithSuspension = localPosWithSuspension.add(
+                        access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ()
+                    );
                 }
 
                 if (level.isClientSide && HiddenCogwheelCompat.isPhysicsEnabled(nodeBe)) {

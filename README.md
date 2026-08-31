@@ -11,6 +11,7 @@ This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/m
 * **Track-focused cogwheels** in several sizes.
 * **Industrial cogwheel variants**, with models based on the Industrial Cogwheels from Create: Gears n' Kinetics.
 * **Hidden cogwheels** for cleaner builds.
+* **Two-wide track wheels**, made by placing two cogwheels of the same size side by side along their axis, with the track stretching to match; sneak while placing to keep them apart.
 * **Cog Alignment Lever** for shifting, hiding, resetting and tuning cogwheels.
 * **Suspension-style physics** for tracked vehicles.
 * **Configurable** physics and movement settings.

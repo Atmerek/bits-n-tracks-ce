@@ -421,6 +421,10 @@ public final class HiddenCogwheelCompat {
     public static boolean shouldForceDynamicRenderer(CogwheelChainBehaviour behaviour) {
         if (behaviour != null && behaviour.blockEntity != null) {
             BlockState state = behaviour.blockEntity.getBlockState();
+            if (BntCogwheelPairing.isWide(state)) {
+                return true;
+            }
+
             if (!state.is((Block)BnbKineticBlocks.SMALL_FLANGED_COGWHEEL.get())
                 && !state.is((Block)BnbKineticBlocks.LARGE_FLANGED_COGWHEEL.get())
                 && !state.is((Block)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get())

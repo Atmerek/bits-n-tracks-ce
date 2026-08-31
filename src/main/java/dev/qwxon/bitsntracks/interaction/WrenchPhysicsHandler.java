@@ -5,6 +5,7 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.ChatFormatting;
@@ -44,10 +45,10 @@ public class WrenchPhysicsHandler {
                         BlockEntity be = level.getBlockEntity(pos);
                         if (be instanceof KineticBlockEntity && be instanceof KineticBlockEntityPhysicsAccess access) {
                             boolean newState = !access.bnt$isPhysicsEnabled();
-                            if (isCogwheelVariant(block)) {
-                                swapCogwheelBlock(level, pos, state, be, newState);
-                            } else {
-                                access.bnt$setPhysicsEnabled(newState);
+                            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+                            setPhysicsAt(level, pos, newState);
+                            if (partnerPos != null) {
+                                setPhysicsAt(level, partnerPos, newState);
                             }
 
                             Component message = newState
@@ -95,6 +96,23 @@ public class WrenchPhysicsHandler {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private static void setPhysicsAt(Level level, BlockPos pos, boolean enabled) {
+        BlockState state = level.getBlockState(pos);
+        Block block = state.getBlock();
+        if (!isToggleableCogwheel(block)) {
+            return;
+        }
+
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof KineticBlockEntity && be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled() != enabled) {
+            if (isCogwheelVariant(block)) {
+                swapCogwheelBlock(level, pos, state, be, enabled);
+            } else {
+                access.bnt$setPhysicsEnabled(enabled);
             }
         }
     }

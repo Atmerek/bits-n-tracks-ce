@@ -10,15 +10,21 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -45,6 +51,28 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
 
     public static BntFlangedCogwheelBlock large(Properties properties) {
         return new BntFlangedCogwheelBlock(properties, CogwheelSize.LARGE);
+    }
+
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder.add(new Property[]{BntCogwheelPairing.WIDE}));
+    }
+
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return BntCogwheelPairing.pairOnPlacement(super.getStateForPlacement(context), context);
+    }
+
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        BntCogwheelPairing.linkPartner(level, pos, state);
+        BntCogwheelPairing.adoptPartnerSettings(level, pos);
+    }
+
+    protected BlockState updateShape(
+        BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos
+    ) {
+        return BntCogwheelPairing.unlinkBrokenPair(
+            super.updateShape(state, direction, neighbourState, level, pos, neighbourPos), direction, neighbourState
+        );
     }
 
     public RenderShape getRenderShape(BlockState state) {

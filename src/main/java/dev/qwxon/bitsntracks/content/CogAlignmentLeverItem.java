@@ -141,6 +141,7 @@ public class CogAlignmentLeverItem extends Item {
                         } else {
                             be.setChanged();
                             ((KineticBlockEntity)be).sendData();
+                            BntCogwheelPairing.pushSettingsToPartner(level, pos);
                         }
 
                         if (player != null) {
@@ -214,6 +215,23 @@ public class CogAlignmentLeverItem extends Item {
     }
 
     private static Set<BlockPos> collectChainPositions(Level level, BlockPos pos, BlockEntity be) {
+        return withWidePartners(level, collectChainNodePositions(level, pos, be));
+    }
+
+    private static Set<BlockPos> withWidePartners(Level level, Set<BlockPos> positions) {
+        Set<BlockPos> result = new LinkedHashSet<>(positions);
+
+        for (BlockPos nodePos : positions) {
+            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, nodePos);
+            if (partnerPos != null) {
+                result.add(partnerPos);
+            }
+        }
+
+        return result;
+    }
+
+    private static Set<BlockPos> collectChainNodePositions(Level level, BlockPos pos, BlockEntity be) {
         Set<BlockPos> positions = new LinkedHashSet<>();
         positions.add(pos);
         CogwheelChainBehaviour behaviour = getChainBehaviour(be);
