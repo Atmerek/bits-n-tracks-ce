@@ -625,10 +625,12 @@ public final class BntPhysicsEvents {
                     if (!(hitNormal.dot(0.0, 1.0, 0.0) < 0.5)) {
                         double dist = wheelPosCenter.y - localHitPos.y;
                         pose.transformNormalInverse(hitNormal);
-                        minExtension = Math.min(minExtension, dist);
-                        minNormal = clipResult.getDirection();
-                        minHitSubLevel = hitSubLevel;
-                        minInteractingBlock = clipResult.getBlockPos();
+                        if (dist < minExtension) {
+                            minExtension = dist;
+                            minNormal = clipResult.getDirection();
+                            minHitSubLevel = hitSubLevel;
+                            minInteractingBlock = clipResult.getBlockPos();
+                        }
                         break;
                     }
 
