@@ -85,11 +85,21 @@ public final class BntPhysicsEvents {
         }
 
         for (Map.Entry<ServerSubLevel, List<BntPhysicsEvents.WheelContact>> entry : contactsByBody.entrySet()) {
-            List<BntPhysicsEvents.WheelContact> contacts = entry.getValue();
-            solveTraction(entry.getKey(), contacts, timeStep);
+            List<BntPhysicsEvents.WheelContact> nearGround = entry.getValue();
+            List<BntPhysicsEvents.WheelContact> loaded = new ArrayList<>(nearGround.size());
+            for (BntPhysicsEvents.WheelContact contact : nearGround) {
+                if (contact.loaded) {
+                    loaded.add(contact);
+                }
+            }
+            if (loaded.isEmpty()) {
+                continue;
+            }
 
-            for (BntPhysicsEvents.WheelContact contact : contacts) {
-                applyWheelForces(contact, contacts.size(), timeStep);
+            solveTraction(entry.getKey(), loaded, timeStep);
+
+            for (BntPhysicsEvents.WheelContact contact : loaded) {
+                applyWheelForces(contact, nearGround.size(), timeStep);
             }
         }
 
@@ -224,10 +234,6 @@ public final class BntPhysicsEvents {
 
         double distance = suspensionRest / 6.0 + maxExtension;
         double springLength = Mth.clamp(distance - wheelRadius, -suspensionRest * 2.0, suspensionRest);
-        if (extResult.minInteractingBlock == null || springLength >= suspensionRest) {
-            return null;
-        }
-
         CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)kbe.getBehaviour(CogwheelChainBehaviour.TYPE);
         boolean isConnected = behaviour != null && behaviour.isPartOfChain();
         BntPhysicsEvents.WheelContact contact = new BntPhysicsEvents.WheelContact();
@@ -249,6 +255,7 @@ public final class BntPhysicsEvents {
         contact.isConnected = isConnected;
         contact.isTrackModel = isConnected || block.getDescriptionId().contains("track");
         contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
+        contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest;
         return contact;
     }
 
@@ -700,6 +707,7 @@ public final class BntPhysicsEvents {
         boolean hasTraction;
         boolean isConnected;
         boolean isTrackModel;
+        boolean loaded;
     }
 
     private static class TerrainCastResult {
