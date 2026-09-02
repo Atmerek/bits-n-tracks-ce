@@ -272,11 +272,9 @@ public final class BntPhysicsEvents {
         double dampingStrength = suspensionGain * BntPhysicsTuning.getDampingScale() * dampingMult;
         double relVelY = contact.localVelocity.y;
         double dampingImpulse = -relVelY * dampingStrength * timeStep;
-        double maxDampingImpulse = normalMassShare * Math.abs(relVelY);
-        double clampedDampingImpulse = Mth.clamp(dampingImpulse, -maxDampingImpulse, maxDampingImpulse);
         double springImpulse = (contact.suspensionRest - contact.springLength) * springStrength * timeStep;
         double denom = 1.0 + (springStrength * timeStep * timeStep + dampingStrength * timeStep) / normalMassShare;
-        double rawSpringForce = (springImpulse + clampedDampingImpulse - springStrength * timeStep * timeStep * relVelY) / denom;
+        double rawSpringForce = (springImpulse + dampingImpulse - springStrength * timeStep * timeStep * relVelY) / denom;
         double maxImpulseMult = contact.isTrackModel
             ? BntPhysicsTuning.getTrackMaxImpulseMultiplier()
             : BntPhysicsTuning.getCogwheelMaxImpulseMultiplier();
