@@ -49,4 +49,8 @@ public interface KineticBlockEntityPhysicsAccess {
     boolean bnt$isHiddenByLever();
 
     void bnt$setHiddenByLever(boolean var1);
+
+    int bnt$getTrackRouteSide();
+
+    void bnt$setTrackRouteSide(int var1);
 }

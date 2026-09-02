@@ -9,6 +9,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelCh
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
+import dev.qwxon.bitsntracks.interaction.BntNetwork;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntStressValues;
@@ -35,6 +36,7 @@ public class BitsNTracks {
         BntStressValues.register();
         BitsNTracksBlockEntityTypes.init();
         BntCogwheelChainTypes.init(modEventBus);
+        modEventBus.addListener(BntNetwork::register);
         REGISTRATE.registerEventListeners(modEventBus);
         BntPhysicsEvents.register();
     }

@@ -3,11 +3,14 @@ package dev.qwxon.bitsntracks.mixin;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -129,6 +132,59 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         if (self.getSameBehaviour(controllerPos) instanceof CogwheelChainBehaviour controllerBehaviour
             && controllerBehaviour.getControlledChain() == null) {
             cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(
+        method = {"propagateRotationTo"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private void bnt$blockDisengagedCogwheels(KineticBlockEntity target, BlockState stateFrom, BlockState stateTo, BlockPos diff,
+                                              boolean connectedViaAxes, boolean connectedViaCogs, CallbackInfoReturnable<Float> cir) {
+        CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
+        if (!bnt$isEngaged(self)) {
+            cir.setReturnValue(0.0F);
+            return;
+        }
+
+        if (target instanceof SmartBlockEntity smartBe
+            && smartBe.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour targetBehaviour
+            && !bnt$isEngaged(targetBehaviour)) {
+            cir.setReturnValue(0.0F);
+        }
+    }
+
+    @Inject(
+        method = {"propagateRotationTo"},
+        at = {@At("RETURN")},
+        cancellable = true
+    )
+    private void bnt$rejectUnusableRatio(KineticBlockEntity target, BlockState stateFrom, BlockState stateTo, BlockPos diff,
+                                         boolean connectedViaAxes, boolean connectedViaCogs, CallbackInfoReturnable<Float> cir) {
+        if (!Float.isFinite(cir.getReturnValueF())) {
+            cir.setReturnValue(0.0F);
+        }
+    }
+
+    @Unique
+    private static boolean bnt$isEngaged(CogwheelChainBehaviour behaviour) {
+        return BntChainEngagement.isEngaged(behaviour);
+    }
+
+    @Inject(
+        method = {"lazyTick"},
+        at = {@At("TAIL")}
+    )
+    private void bnt$verifyChainKinetics(CallbackInfo ci) {
+        CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
+        Level level = self.getLevel();
+        if (level == null || level.isClientSide || !self.isController() || self.getBlockEntity() == null) {
+            return;
+        }
+
+        if (self.getControlledChain() instanceof BntChainGeometryRefresh chain) {
+            chain.bnt$verifyKinetics(level, self.getBlockEntity().getBlockPos());
         }
     }
 

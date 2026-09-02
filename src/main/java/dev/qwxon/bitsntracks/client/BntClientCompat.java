@@ -32,31 +32,41 @@ public class BntClientCompat {
         Level level = HiddenCogwheelCompat.getActualLevel(controllerBe);
         if (level == null) {
             return localPos;
-        } else {
-            BlockPos nodePos = controllerBe.getBlockPos().offset(relativePos);
-            Vec3 localPosWithSuspension = localPos.add(BntCogwheelPairing.seamOffset(level.getBlockState(nodePos)));
-            BlockEntity nodeBe = level.getBlockEntity(nodePos);
-            if (nodeBe != null) {
-                if (nodeBe instanceof KineticBlockEntityPhysicsAccess access) {
-                    localPosWithSuspension = localPosWithSuspension.add(
-                        access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ()
-                    );
-                }
+        }
+        BlockPos nodePos = controllerBe.getBlockPos().offset(relativePos);
+        return localPos
+            .add(BntCogwheelPairing.seamOffset(level.getBlockState(nodePos)))
+            .add(getNodeDisplacement(controllerBe, relativePos));
+    }
 
-                if (level.isClientSide && HiddenCogwheelCompat.isPhysicsEnabled(nodeBe)) {
-                    double manualOffset = HiddenCogwheelCompat.getManualVisualVerticalOffset(nodeBe);
-                    if (manualOffset != 0.0) {
-                        localPosWithSuspension = localPosWithSuspension.add(0.0, manualOffset, 0.0);
-                    }
+    public static Vec3 getNodeDisplacement(BlockEntity controllerBe, BlockPos relativePos) {
+        Level level = HiddenCogwheelCompat.getActualLevel(controllerBe);
+        if (level == null) {
+            return Vec3.ZERO;
+        }
+        BlockEntity nodeBe = level.getBlockEntity(controllerBe.getBlockPos().offset(relativePos));
+        if (nodeBe == null) {
+            return Vec3.ZERO;
+        }
 
-                    float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
-                    double drop = getVisualDrop(nodeBe, partialTick);
-                    localPosWithSuspension = localPosWithSuspension.add(0.0, -drop, 0.0);
-                }
+        Vec3 displacement = Vec3.ZERO;
+        if (nodeBe instanceof KineticBlockEntityPhysicsAccess access) {
+            displacement = new Vec3(
+                access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ()
+            );
+        }
+
+        if (level.isClientSide && HiddenCogwheelCompat.isPhysicsEnabled(nodeBe)) {
+            double manualOffset = HiddenCogwheelCompat.getManualVisualVerticalOffset(nodeBe);
+            if (manualOffset != 0.0) {
+                displacement = displacement.add(0.0, manualOffset, 0.0);
             }
 
-            return localPosWithSuspension;
+            float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
+            displacement = displacement.add(0.0, -getVisualDrop(nodeBe, partialTick), 0.0);
         }
+
+        return displacement;
     }
 
     public static List<ChainSegment> transformChainSegments(List<ChainSegment> segments, CogwheelChain chain, KineticBlockEntity be) {

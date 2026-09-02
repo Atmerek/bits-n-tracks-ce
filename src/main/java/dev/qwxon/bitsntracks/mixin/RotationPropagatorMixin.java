@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.mixin;
 import com.simibubi.create.content.kinetics.RotationPropagator;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
@@ -23,6 +24,18 @@ public class RotationPropagatorMixin {
         remap = false
     )
     private static void bnt$interceptGetRotationSpeedModifier(KineticBlockEntity from, KineticBlockEntity to, CallbackInfoReturnable<Float> cir) {
+        if (BntChainEngagement.sharesChain(from, to)) {
+            if (!BntChainEngagement.isEngaged(BntChainEngagement.chainBehaviour(from))
+                || !BntChainEngagement.isEngaged(BntChainEngagement.chainBehaviour(to))) {
+                cir.setReturnValue(0.0F);
+            }
+            return;
+        }
+        if (BntChainEngagement.meshingWouldFightChain(from, to)) {
+            cir.setReturnValue(0.0F);
+            return;
+        }
+
         BlockState stateFrom = from.getBlockState();
         BlockState stateTo = to.getBlockState();
         Block blockFrom = stateFrom.getBlock();

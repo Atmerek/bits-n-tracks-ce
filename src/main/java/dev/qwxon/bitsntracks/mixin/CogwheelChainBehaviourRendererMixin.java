@@ -20,6 +20,7 @@ import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.render.RenderTypes;
 import dev.qwxon.bitsntracks.BitsNTracks;
+import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
@@ -27,6 +28,8 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.TrackModelRenderContext;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainMotion;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import java.util.Arrays;
 import java.util.List;
@@ -127,9 +130,17 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         try {
             BntRadiusProvider.setLevel(HiddenCogwheelCompat.getActualLevel(be));
             BntRadiusProvider.setOrigin(be.getBlockPos());
+            BntChainMotion.setDisplacementSource(relativePos -> BntClientCompat.getNodeDisplacement(be, relativePos));
+            BntChainMotion.swapRouteSource(relativePos -> BntChainEngagement.routeSide(
+                HiddenCogwheelCompat.getActualLevel(be), be.getBlockPos().offset(relativePos)));
+            if (chain instanceof BntChainGeometryRefresh refreshable) {
+                refreshable.bnt$refreshChainGeometry(HiddenCogwheelCompat.getActualLevel(be), be.getBlockPos());
+            }
+
             List<ChainSegment> segments = CogwheelChainRenderGeometryBuilder.buildSegments(chain, origin);
             var5 = BntClientCompat.transformChainSegments(segments, chain, be);
         } finally {
+            BntChainMotion.clearDisplacementSource();
             BntRadiusProvider.clearLevel();
         }
 

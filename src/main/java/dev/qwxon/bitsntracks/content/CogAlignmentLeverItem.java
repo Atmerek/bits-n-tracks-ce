@@ -8,14 +8,18 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.CogAlignmentLeverItemRenderer;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -57,6 +61,7 @@ public class CogAlignmentLeverItem extends Item {
                     return InteractionResult.SUCCESS;
                 } else {
                     Player player = context.getPlayer();
+                    Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
                     if (player != null && player.isShiftKeyDown()) {
                         for (BlockPos nodePos : collectChainPositions(level, pos, be)) {
                             BlockEntity nodeBe = level.getBlockEntity(nodePos);
@@ -65,12 +70,14 @@ public class CogAlignmentLeverItem extends Item {
                                 nodeAccess.bnt$setAlignmentOffsetY(0.0F);
                                 nodeAccess.bnt$setAlignmentOffsetZ(0.0F);
                                 nodeAccess.bnt$setHiddenByLever(false);
+                                nodeAccess.bnt$setTrackRouteSide(-1);
                                 kinetic.setChanged();
                                 kinetic.sendData();
                             }
                         }
 
-                        player.displayClientMessage(shiftMessage(access), true);
+                        BntChainEngagement.refresh(level, pos, engagementBefore);
+                        player.displayClientMessage(shiftMessage(access, level, pos), true);
                         return InteractionResult.SUCCESS;
                     } else {
                         Vec3 hitVec = context.getClickLocation().subtract(HiddenCogwheelCompat.getModelTranslation(be, 1.0F));
@@ -144,6 +151,8 @@ public class CogAlignmentLeverItem extends Item {
                             BntCogwheelPairing.pushSettingsToPartner(level, pos);
                         }
 
+                        BntChainEngagement.refresh(level, pos, engagementBefore);
+
                         if (player != null) {
                             if (toggledVisibility) {
                                 Component status = access.bnt$isHiddenByLever()
@@ -151,9 +160,9 @@ public class CogAlignmentLeverItem extends Item {
                                     : Component.translatable("chat.bits_n_tracks.alignment.visibility.shown");
                                 player.displayClientMessage(Component.translatable("chat.bits_n_tracks.alignment.visibility", new Object[]{status}), true);
                             } else if (chainShift) {
-                                player.displayClientMessage(shiftMessage(access), true);
+                                player.displayClientMessage(shiftMessage(access, level, pos), true);
                             } else {
-                                player.displayClientMessage(shiftMessage(access), true);
+                                player.displayClientMessage(shiftMessage(access, level, pos), true);
                             }
                         }
 
@@ -188,13 +197,23 @@ public class CogAlignmentLeverItem extends Item {
         }
     }
 
-    private static Component shiftMessage(KineticBlockEntityPhysicsAccess access) {
-        return Component.translatable(
+    private static Component shiftMessage(KineticBlockEntityPhysicsAccess access, Level level, BlockPos pos) {
+        MutableComponent message = Component.translatable(
             "chat.bits_n_tracks.alignment.shift.3d",
             new Object[]{
                 formatPixels(access.bnt$getAlignmentOffsetX()), formatPixels(access.bnt$getAlignmentOffsetY()), formatPixels(access.bnt$getAlignmentOffsetZ())
             }
         );
+
+        Boolean engaged = BntChainEngagement.engagementAt(level, pos);
+        if (engaged == null) {
+            return message;
+        }
+        return message.append(" ").append(
+            Component.translatable(engaged
+                    ? "chat.bits_n_tracks.alignment.track.driving"
+                    : "chat.bits_n_tracks.alignment.track.free")
+                .withStyle(engaged ? ChatFormatting.GREEN : ChatFormatting.GRAY));
     }
 
     private static String formatPixels(float offset) {

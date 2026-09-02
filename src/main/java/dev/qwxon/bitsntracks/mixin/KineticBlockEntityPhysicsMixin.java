@@ -11,6 +11,7 @@ import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsRegistry;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
@@ -46,6 +47,8 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     private float bnt$alignmentOffsetZ = 0.0F;
     @Unique
     private boolean bnt$hiddenByLever = false;
+    @Unique
+    private int bnt$trackRouteSide = -1;
     @Unique
     private double bnt$extension = 0.65;
     @Unique
@@ -112,6 +115,16 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     @Override
     public void bnt$setHiddenByLever(boolean hidden) {
         this.bnt$hiddenByLever = hidden;
+    }
+
+    @Override
+    public int bnt$getTrackRouteSide() {
+        return this.bnt$trackRouteSide;
+    }
+
+    @Override
+    public void bnt$setTrackRouteSide(int side) {
+        this.bnt$trackRouteSide = side;
     }
 
     @Override
@@ -241,6 +254,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         this.bnt$alignmentOffsetY = tag.getFloat("BntAlignmentOffsetY");
         this.bnt$alignmentOffsetZ = tag.getFloat("BntAlignmentOffsetZ");
         this.bnt$hiddenByLever = tag.getBoolean("BntHiddenByLever");
+        this.bnt$trackRouteSide = tag.contains("BntTrackRouteSide") ? tag.getInt("BntTrackRouteSide") : -1;
         if (this.bnt$physicsEnabled) {
             KineticBlockEntity self = (KineticBlockEntity)(Object)this;
             double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock());
@@ -263,6 +277,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         tag.putFloat("BntAlignmentOffsetY", this.bnt$alignmentOffsetY);
         tag.putFloat("BntAlignmentOffsetZ", this.bnt$alignmentOffsetZ);
         tag.putBoolean("BntHiddenByLever", this.bnt$hiddenByLever);
+        tag.putInt("BntTrackRouteSide", this.bnt$trackRouteSide);
         if (this.bnt$physicsEnabled) {
             tag.putDouble("BntExtension", this.bnt$extension);
         }
@@ -300,6 +315,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
             } else {
                 HiddenCogwheelCompat.replaceBlockForPhysicsSwap(self.getLevel(), self.getBlockPos(), hiddenState);
                 HiddenCogwheelCompat.restoreBlockEntity(self.getLevel(), self.getBlockPos(), tag, true);
+                BntChainEngagement.rebuild(self.getLevel(), self.getBlockPos());
                 return true;
             }
         }
