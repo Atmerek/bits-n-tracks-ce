@@ -242,8 +242,9 @@ public final class BntPhysicsEvents {
         contact.subLevel = subLevel;
         contact.pose = pose;
         contact.forcePoint = forcePoint;
-        contact.normalD = normalD;
-        contact.sideD = sideD;
+        Vector3d groundUp = pose.transformNormalInverse(new Vector3d(0.0, 1.0, 0.0));
+        contact.normalD = groundAxis(normalD, groundUp);
+        contact.sideD = groundAxis(sideD, groundUp);
         contact.localVelocity = localVelocity;
         contact.extResult = extResult;
         contact.suspensionRest = suspensionRest;
@@ -665,6 +666,12 @@ public final class BntPhysicsEvents {
         }
 
         return center;
+    }
+
+    private static Vector3dc groundAxis(Vector3dc axis, Vector3dc up) {
+        Vector3d flattened = new Vector3d(axis).fma(-axis.dot(up), up);
+        double length = flattened.length();
+        return length < 1.0E-4 ? axis : flattened.div(length);
     }
 
     private static Vector3dc getTravelDirection(Axis axis) {
