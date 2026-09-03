@@ -215,6 +215,7 @@ public final class BntPhysicsEvents {
 
         mixin.bnt$setLiftedUp(false);
         Vector3d velocity = Sable.HELPER.getVelocity(kbe.getLevel(), JOMLConversion.toJOML(localPos));
+        double verticalSpeed = velocity.y;
         Vector3d localVelocity = pose.transformNormalInverse(velocity);
         double maxAirExtension = mixin.bnt$getMaxAirExtension();
         if (wasLiftedUp && velocity.y < -0.5 && maxAirExtension >= suspensionRest + wheelRadius + BntPhysicsTuning.getLandingSoundMinFallBlocks()) {
@@ -256,6 +257,7 @@ public final class BntPhysicsEvents {
         contact.isTrackModel = isConnected || block.getDescriptionId().contains("track");
         contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
         contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest;
+        contact.verticalSpeed = verticalSpeed;
         return contact;
     }
 
@@ -270,7 +272,7 @@ public final class BntPhysicsEvents {
         double dampingMult = contact.isTrackModel ? BntPhysicsTuning.getTrackDampingMultiplier() : BntPhysicsTuning.getCogwheelDampingMultiplier();
         double springStrength = suspensionGain * BntPhysicsTuning.getSpringScale() * springMult;
         double dampingStrength = suspensionGain * BntPhysicsTuning.getDampingScale() * dampingMult;
-        double relVelY = contact.localVelocity.y;
+        double relVelY = contact.verticalSpeed;
         double dampingImpulse = -relVelY * dampingStrength * timeStep;
         double springImpulse = (contact.suspensionRest - contact.springLength) * springStrength * timeStep;
         double denom = 1.0 + (springStrength * timeStep * timeStep + dampingStrength * timeStep) / normalMassShare;
@@ -695,6 +697,7 @@ public final class BntPhysicsEvents {
         double targetSpeed;
         double touchingFriction;
         double normalMass;
+        double verticalSpeed;
         double brakeStrength;
         double goalLongitudinal;
         double goalLateral;
