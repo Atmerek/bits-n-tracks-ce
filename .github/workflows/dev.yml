@@ -1,0 +1,73 @@
+name: Dev build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dev-build
+  cancel-in-progress: true
+
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve dev version
+        id: version
+        run: echo "version=${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build
+        run: ./gradlew build -Pmod_version=${{ steps.version.outputs.version }}
+
+      - name: Write release notes
+        run: |
+          {
+            echo "A development build of the latest \`main\`, not a release. It is less stable than a release and is meant for play testing, so back up your world before loading it. Report anything you find on the issue tracker."
+            echo
+            echo "Built from [\`${GITHUB_SHA:0:7}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})."
+            echo
+            last="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)"
+            if [ -n "$last" ]; then
+              echo "Changes since $last:"
+              echo
+              git log --pretty='- %s (%h)' "${last}..HEAD"
+            else
+              echo "Recent changes:"
+              echo
+              git log --pretty='- %s (%h)' -20
+            fi
+          } > dev-notes.md
+
+      - name: Publish rolling dev release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete dev --yes --cleanup-tag || true
+          git push origin :refs/tags/dev || true
+          gh release create dev \
+            --target "$GITHUB_SHA" \
+            --title "Dev build ${{ steps.version.outputs.version }}" \
+            --notes-file dev-notes.md \
+            --prerelease \
+            "build/libs/bits_n_tracks-${{ steps.version.outputs.version }}.jar"
