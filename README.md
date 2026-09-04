@@ -1,5 +1,11 @@
 # Create: Bits 'n' Tracks Community Edition
 
+![Minecraft 1.21.1](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=for-the-badge)
+![Loader NeoForge](https://img.shields.io/badge/Loader-NeoForge-F16436?style=for-the-badge)
+[![Latest release](https://img.shields.io/github/v/release/Atmerek/bits-n-tracks-ce?label=release&style=for-the-badge)](https://github.com/Atmerek/bits-n-tracks-ce/releases/latest)
+[![Dev build](https://img.shields.io/github/actions/workflow/status/Atmerek/bits-n-tracks-ce/dev.yml?branch=main&label=dev%20build&style=for-the-badge)](https://github.com/Atmerek/bits-n-tracks-ce/releases/tag/dev)
+[![License GPL-3.0](https://img.shields.io/github/license/Atmerek/bits-n-tracks-ce?style=for-the-badge)](LICENSE)
+
 Build working tracks in Create, using the belt and chain system from Bits 'n' Bobs.
 
 Flanged cogwheels come in several sizes and can be aligned, hidden and tuned in place.
