@@ -325,6 +325,10 @@ public final class HiddenCogwheelCompat {
         if (newBe != null) {
             newBe.loadWithComponents(tag, level.registryAccess());
             if (newBe instanceof KineticBlockEntityPhysicsAccess access) {
+                if (enablePhysics && tag.contains("BntOriginalBlock")) {
+                    access.bnt$setOriginalBlock(tag.getString("BntOriginalBlock"));
+                }
+
                 access.bnt$setPhysicsEnabled(enablePhysics);
             }
 

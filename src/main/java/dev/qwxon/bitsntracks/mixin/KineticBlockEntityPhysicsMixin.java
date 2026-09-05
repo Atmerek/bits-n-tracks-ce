@@ -152,6 +152,10 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         KineticBlockEntity self = (KineticBlockEntity)(Object)this;
         this.bnt$physicsEnabled = enabled;
         if (enabled) {
+            if (this.bnt$originalBlock == null && !HiddenCogwheelCompat.isHiddenCogwheel(self.getBlockState())) {
+                this.bnt$originalBlock = BuiltInRegistries.BLOCK.getKey(self.getBlockState().getBlock()).toString();
+            }
+
             BntPhysicsRegistry.add(self);
         } else {
             BntPhysicsRegistry.remove(self);
@@ -246,10 +250,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     )
     private void bnt$read(CompoundTag tag, Provider registries, boolean clientPacket, CallbackInfo ci) {
         this.bnt$physicsEnabled = tag.getBoolean("BntPhysicsEnabled");
-        if (tag.contains("BntOriginalBlock")) {
-            this.bnt$originalBlock = tag.getString("BntOriginalBlock");
-        }
-
+        this.bnt$originalBlock = tag.contains("BntOriginalBlock") ? tag.getString("BntOriginalBlock") : null;
         this.bnt$alignmentOffsetX = tag.getFloat("BntAlignmentOffsetX");
         this.bnt$alignmentOffsetY = tag.getFloat("BntAlignmentOffsetY");
         this.bnt$alignmentOffsetZ = tag.getFloat("BntAlignmentOffsetZ");
