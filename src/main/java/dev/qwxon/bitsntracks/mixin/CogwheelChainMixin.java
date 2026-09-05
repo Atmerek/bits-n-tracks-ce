@@ -7,6 +7,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.RenderedChainPathNode
 import com.kipti.bnb.content.kinetics.cogwheel_chain.segment.CogwheelChainSegment;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainMotion;
 import java.util.ArrayList;
@@ -182,11 +183,13 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         }
 
         double[] displacements = BntChainMotion.displacementSignature(nodes);
-        if (Arrays.equals(displacements, this.bnt$builtDisplacements)) {
+        double[] signature = Arrays.copyOf(displacements, displacements.length + 1);
+        signature[displacements.length] = BntBeltTension.at(level, controllerPos);
+        if (Arrays.equals(signature, this.bnt$builtDisplacements)) {
             return;
         }
 
-        this.bnt$builtDisplacements = displacements;
+        this.bnt$builtDisplacements = signature;
         BntChainGeometry.Layout layout = this.bnt$latchedLayout(level, controllerPos, nodes);
         BntChainGeometry.Layout previous = BntChainMotion.swapLayout(layout);
 

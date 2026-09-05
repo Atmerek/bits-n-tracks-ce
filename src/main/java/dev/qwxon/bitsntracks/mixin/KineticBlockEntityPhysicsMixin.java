@@ -11,6 +11,7 @@ import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsRegistry;
@@ -49,6 +50,8 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     private boolean bnt$hiddenByLever = false;
     @Unique
     private int bnt$trackRouteSide = -1;
+    @Unique
+    private float bnt$beltTension = BntBeltTension.DEFAULT;
     @Unique
     private double bnt$extension = 0.65;
     @Unique
@@ -125,6 +128,16 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     @Override
     public void bnt$setTrackRouteSide(int side) {
         this.bnt$trackRouteSide = side;
+    }
+
+    @Override
+    public float bnt$getBeltTension() {
+        return this.bnt$beltTension;
+    }
+
+    @Override
+    public void bnt$setBeltTension(float tension) {
+        this.bnt$beltTension = BntBeltTension.clamp(tension);
     }
 
     @Override
@@ -256,6 +269,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         this.bnt$alignmentOffsetZ = tag.getFloat("BntAlignmentOffsetZ");
         this.bnt$hiddenByLever = tag.getBoolean("BntHiddenByLever");
         this.bnt$trackRouteSide = tag.contains("BntTrackRouteSide") ? tag.getInt("BntTrackRouteSide") : -1;
+        this.bnt$beltTension = tag.contains("BntBeltTension") ? BntBeltTension.clamp(tag.getFloat("BntBeltTension")) : BntBeltTension.DEFAULT;
         if (this.bnt$physicsEnabled) {
             KineticBlockEntity self = (KineticBlockEntity)(Object)this;
             double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock());
@@ -279,6 +293,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         tag.putFloat("BntAlignmentOffsetZ", this.bnt$alignmentOffsetZ);
         tag.putBoolean("BntHiddenByLever", this.bnt$hiddenByLever);
         tag.putInt("BntTrackRouteSide", this.bnt$trackRouteSide);
+        tag.putFloat("BntBeltTension", this.bnt$beltTension);
         if (this.bnt$physicsEnabled) {
             tag.putDouble("BntExtension", this.bnt$extension);
         }

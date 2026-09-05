@@ -67,6 +67,7 @@ public final class BntPhysicsEvents {
     public static void onPhysicsTick(SubLevelPhysicsSystem physicsSystem, double timeStep) {
         ServerLevel level = physicsSystem.getLevel();
         Map<ServerSubLevel, List<BntPhysicsEvents.WheelContact>> contactsByBody = new Reference2ObjectOpenHashMap<>();
+        Map<ServerSubLevel, List<KineticBlockEntity>> wheelsByBody = new Reference2ObjectOpenHashMap<>();
 
         Iterator<KineticBlockEntity> iterator = BntPhysicsRegistry.getEnabled(level).iterator();
 
@@ -77,6 +78,7 @@ public final class BntPhysicsEvents {
             } else {
                 KineticBlockEntityPhysicsAccess mixin = (KineticBlockEntityPhysicsAccess)kbe;
                 if (mixin.bnt$isPhysicsEnabled() && Sable.HELPER.getContaining(kbe) instanceof ServerSubLevel subLevel && !subLevel.isRemoved()) {
+                    wheelsByBody.computeIfAbsent(subLevel, ignored -> new ArrayList<>()).add(kbe);
                     BntPhysicsEvents.WheelContact contact = resolveContact(kbe, mixin, subLevel);
                     if (contact != null) {
                         contactsByBody.computeIfAbsent(subLevel, ignored -> new ArrayList<>()).add(contact);
@@ -85,22 +87,37 @@ public final class BntPhysicsEvents {
             }
         }
 
-        for (Map.Entry<ServerSubLevel, List<BntPhysicsEvents.WheelContact>> entry : contactsByBody.entrySet()) {
-            List<BntPhysicsEvents.WheelContact> nearGround = entry.getValue();
+        for (Map.Entry<ServerSubLevel, List<KineticBlockEntity>> entry : wheelsByBody.entrySet()) {
+            ServerSubLevel subLevel = entry.getKey();
+            List<BntPhysicsEvents.WheelContact> nearGround = contactsByBody.getOrDefault(subLevel, List.of());
+            List<BntBeltContacts.BntBeltContact> belt = BntBeltContacts.build(subLevel, entry.getValue(), level);
+
             List<BntPhysicsEvents.WheelContact> loaded = new ArrayList<>(nearGround.size());
             for (BntPhysicsEvents.WheelContact contact : nearGround) {
                 if (contact.loaded) {
                     loaded.add(contact);
                 }
             }
-            if (loaded.isEmpty()) {
+
+            int shareCount = nearGround.size() + belt.size();
+            if (shareCount == 0) {
                 continue;
             }
 
-            solveTraction(entry.getKey(), loaded, timeStep);
+            if (!loaded.isEmpty()) {
+                solveTraction(subLevel, loaded, timeStep);
 
-            for (BntPhysicsEvents.WheelContact contact : loaded) {
-                applyWheelForces(contact, nearGround.size(), timeStep);
+                for (BntPhysicsEvents.WheelContact contact : loaded) {
+                    applyWheelForces(contact, shareCount, timeStep);
+                }
+            }
+
+            if (!belt.isEmpty()) {
+                KineticBlockEntityPhysicsAccess carrier = (KineticBlockEntityPhysicsAccess)entry.getValue().get(0);
+                for (BntBeltContacts.BntBeltContact contact : belt) {
+                    BntBeltContacts.assignCarrier(contact, carrier);
+                    BntBeltContacts.apply(contact, shareCount, timeStep);
+                }
             }
         }
 

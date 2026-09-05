@@ -36,7 +36,7 @@ public final class BntChainEdit {
         CogwheelChainSegment fallback = null;
         for (int i = 0; i < segments.size(); i++) {
             CogwheelChainSegment segment = segments.get(i);
-            if (segment.type() != SegmentType.BETWEEN_NODES || edges[i] != nodeIndex) {
+            if (edges[i] != nodeIndex) {
                 continue;
             }
             if (chainPosition + 0.001F >= segment.startDist() && chainPosition - 0.001F <= segment.endDist()) {

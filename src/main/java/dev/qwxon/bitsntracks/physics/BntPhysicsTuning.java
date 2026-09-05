@@ -60,6 +60,17 @@ public final class BntPhysicsTuning {
     private static final DoubleValue PIVOT_SCRUB;
     private static final DoubleValue ROLLING_RESISTANCE;
 
+    private static final BooleanValue BELT_COLLISION_ENABLED;
+    private static final BooleanValue BELT_DRAPE_ENABLED;
+    private static final DoubleValue BELT_SURFACE_CLEARANCE;
+    private static final DoubleValue BELT_NODE_SPACING;
+    private static final DoubleValue BELT_SAG_FRACTION;
+    private static final DoubleValue BELT_MAX_SAG;
+    private static final DoubleValue BELT_SUPPORT_STRENGTH;
+    private static final DoubleValue BELT_STIFFNESS_RANGE;
+    private static final DoubleValue BELT_GRIP;
+    private static final DoubleValue BELT_TENSION_STEP;
+
     private static final DoubleValue TINY_STRESS_IMPACT;
     private static final DoubleValue SMALL_STRESS_IMPACT;
     private static final DoubleValue MEDIUM_STRESS_IMPACT;
@@ -170,6 +181,39 @@ public final class BntPhysicsTuning {
             .defineInRange("rollingResistance", 1.0, 0.0, 1000.0);
         builder.pop();
 
+        builder.comment("How the run of track between two cogwheels meets the ground, and how tension changes that. Tension is set per chain with the alignment lever, from fully slack to fully taut.").push("belt");
+        BELT_COLLISION_ENABLED = builder
+            .comment("Let the track between cogwheels rest on terrain. With this off only the cogwheels themselves touch the ground.")
+            .define("beltCollisionEnabled", true);
+        BELT_DRAPE_ENABLED = builder
+            .comment("Let the run of track between two cogwheels bend over what it crosses instead of passing through it. Turning this off leaves it a straight line.")
+            .define("beltDrapeEnabled", true);
+        BELT_NODE_SPACING = builder
+            .comment("Distance between the points a run of track is shaped by, in blocks. Smaller follows the ground more closely and costs more to work out.")
+            .defineInRange("beltNodeSpacing", 0.25, 0.05, 4.0);
+        BELT_SURFACE_CLEARANCE = builder
+            .comment("Extra gap the track keeps above anything it climbs over, in blocks, on top of how it already sits on flat ground.")
+            .defineInRange("beltSurfaceClearance", 0.15, 0.0, 1.0);
+        BELT_SAG_FRACTION = builder
+            .comment("How far a fully slack run hangs below the straight line between its cogwheels, as a share of the run's length.")
+            .defineInRange("beltSagFraction", 0.12, 0.0, 1.0);
+        BELT_MAX_SAG = builder
+            .comment("Maximum belt hang, in blocks, so a long run does not droop through the floor.")
+            .defineInRange("beltMaxSag", 0.5, 0.0, 8.0);
+        BELT_SUPPORT_STRENGTH = builder
+            .comment("Share of the cogwheel suspension strength a belt contact carries. At zero the track rides over terrain without being held up by it.")
+            .defineInRange("beltSupportStrength", 0.6, 0.0, 10.0);
+        BELT_STIFFNESS_RANGE = builder
+            .comment("Spread between slack and taut. A taut belt pushes back this many times harder than a neutral one, a fully slack one this many times softer.")
+            .defineInRange("beltStiffnessRange", 2.0, 1.0, 20.0);
+        BELT_GRIP = builder
+            .comment("Additional grip the track picks up from ground it touches between the cogwheels.")
+            .defineInRange("beltGrip", 0.5, 0.0, 10.0);
+        BELT_TENSION_STEP = builder
+            .comment("Tension change from one click of the alignment lever.")
+            .defineInRange("beltTensionStep", 0.1, 0.01, 1.0);
+        builder.pop();
+
         builder.comment("Create stress consumed by each cogwheel size.").push("stress");
         TINY_STRESS_IMPACT = builder.defineInRange("tinyStressImpact", 2.0, 0.0, 1024.0);
         SMALL_STRESS_IMPACT = builder.defineInRange("smallStressImpact", 4.0, 0.0, 1024.0);
@@ -187,6 +231,46 @@ public final class BntPhysicsTuning {
         builder.pop();
 
         SPEC = builder.build();
+    }
+
+    public static boolean isBeltCollisionEnabled() {
+        return BELT_COLLISION_ENABLED.get();
+    }
+
+    public static boolean isBeltDrapeEnabled() {
+        return BELT_DRAPE_ENABLED.get();
+    }
+
+    public static double getBeltNodeSpacing() {
+        return BELT_NODE_SPACING.get();
+    }
+
+    public static double getBeltSurfaceClearance() {
+        return BELT_SURFACE_CLEARANCE.get();
+    }
+
+    public static double getBeltSagFraction() {
+        return BELT_SAG_FRACTION.get();
+    }
+
+    public static double getBeltMaxSag() {
+        return BELT_MAX_SAG.get();
+    }
+
+    public static double getBeltSupportStrength() {
+        return BELT_SUPPORT_STRENGTH.get();
+    }
+
+    public static double getBeltStiffnessRange() {
+        return BELT_STIFFNESS_RANGE.get();
+    }
+
+    public static double getBeltGrip() {
+        return BELT_GRIP.get();
+    }
+
+    public static double getBeltTensionStep() {
+        return BELT_TENSION_STEP.get();
     }
 
     public static boolean isCogwheelSuspensionEnabled() {

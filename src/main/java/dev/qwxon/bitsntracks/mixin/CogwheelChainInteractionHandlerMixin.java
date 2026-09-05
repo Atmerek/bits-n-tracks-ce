@@ -8,15 +8,20 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
+import dev.qwxon.bitsntracks.client.BntBeltClick;
+import dev.qwxon.bitsntracks.client.BntTintedLines;
+import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -24,12 +29,30 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(
     value = {CogwheelChainInteractionHandler.class},
     remap = false
 )
 public class CogwheelChainInteractionHandlerMixin {
+    /** Enables chain selection for the lever as well as the wrench and chain items. */
+    @Inject(method = "isActive", at = @At("HEAD"), cancellable = true, remap = false)
+    private static void activateForLever(LocalPlayer player, CallbackInfoReturnable<Boolean> cir) {
+        Item lever = (Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get();
+        if (player.getMainHandItem().is(lever) || player.getOffhandItem().is(lever)) {
+            cir.setReturnValue(true);
+        }
+    }
+
+    private static boolean holdingLever(Minecraft mc) {
+        if (mc.player == null) {
+            return false;
+        }
+        Item lever = (Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get();
+        return mc.player.getMainHandItem().is(lever) || mc.player.getOffhandItem().is(lever);
+    }
+
     @Inject(
         method = {"drawCustomBlockSelection"},
         at = {@At("HEAD")},
@@ -57,6 +80,9 @@ public class CogwheelChainInteractionHandlerMixin {
                 selectedShapeField.setAccessible(true);
                 CogwheelChainShape selectedShape = (CogwheelChainShape)selectedShapeField.get(null);
                 VertexConsumer vc = buffer.getBuffer(RenderType.lines());
+                if (holdingLever(mc) && BntBeltClick.wouldRetension()) {
+                    vc = new BntTintedLines(vc, 64, 255, 96);
+                }
                 ms.pushPose();
                 ms.translate(-cam.x, -cam.y, -cam.z);
                 ChainCoordinateSpace space = ChainCoordinateSpace.forRender(level, selectedController);

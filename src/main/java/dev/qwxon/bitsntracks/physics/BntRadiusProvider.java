@@ -21,6 +21,14 @@ public class BntRadiusProvider {
         CURRENT_ORIGIN.remove();
     }
 
+    public static Level level() {
+        return CURRENT_LEVEL.get();
+    }
+
+    public static BlockPos origin() {
+        return CURRENT_ORIGIN.get();
+    }
+
     public static double getTrackRadius(BlockPos bPos, boolean isLargeDefault, double fallbackRadius) {
         Level level = CURRENT_LEVEL.get();
         BlockPos lookupPos = CURRENT_ORIGIN.get() != null ? CURRENT_ORIGIN.get().offset(bPos) : bPos;

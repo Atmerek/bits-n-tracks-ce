@@ -4,6 +4,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.ChainDriveShapeHelper;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.CogwheelChainWholeShape;
 import dev.qwxon.bitsntracks.client.BntChainShapeContext;
+import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -28,6 +29,8 @@ public abstract class ChainDriveShapeHelperMixin {
         Map.Entry<BlockPos, CogwheelChain> entry, Level level, Vec3 from, Vec3 to, double maxDistance, boolean rendered
     ) {
         BntChainShapeContext.set(rendered ? level : null, entry.getKey());
+        BntRadiusProvider.setLevel(level);
+        BntRadiusProvider.setOrigin(entry.getKey());
         return entry.getValue();
     }
 
@@ -43,6 +46,7 @@ public abstract class ChainDriveShapeHelperMixin {
             return CogwheelChainWholeShape.buildShape(chain);
         } finally {
             BntChainShapeContext.clear();
+            BntRadiusProvider.clearLevel();
         }
     }
 }

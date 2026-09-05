@@ -11,5 +11,10 @@ public final class BntNetwork {
             BntRouteSidePayload.TYPE,
             BntRouteSidePayload.CODEC,
             (payload, context) -> context.enqueueWork(() -> WrenchPhysicsHandler.routeFromClient(context.player(), payload)));
+
+        event.registrar("1").playToServer(
+            BntBeltTensionPayload.TYPE,
+            BntBeltTensionPayload.CODEC,
+            (payload, context) -> context.enqueueWork(() -> BntBeltTensionHandler.applyFromClient(context.player(), payload)));
     }
 }

@@ -53,4 +53,8 @@ public interface KineticBlockEntityPhysicsAccess {
     int bnt$getTrackRouteSide();
 
     void bnt$setTrackRouteSide(int var1);
+
+    float bnt$getBeltTension();
+
+    void bnt$setBeltTension(float var1);
 }
