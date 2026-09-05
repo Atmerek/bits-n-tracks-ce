@@ -8,6 +8,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -117,8 +119,9 @@ public final class BntCogwheelPairing {
 
         for (AxisDirection axisDirection : AxisDirection.values()) {
             Direction direction = Direction.fromAxisAndDirection(axis, axisDirection);
-            BlockState neighbour = level.getBlockState(pos.relative(direction));
-            if (canPair(state, neighbour) && sideOf(neighbour) == BntWideSide.NONE) {
+            BlockPos neighbourPos = pos.relative(direction);
+            BlockState neighbour = level.getBlockState(neighbourPos);
+            if (canJoin(level, pos, state, neighbourPos, neighbour) && sideOf(neighbour) == BntWideSide.NONE) {
                 return (BlockState)state.setValue(WIDE, BntWideSide.of(direction));
             }
         }
@@ -134,7 +137,7 @@ public final class BntCogwheelPairing {
 
         BlockPos partnerPos = pos.relative(direction);
         BlockState partner = level.getBlockState(partnerPos);
-        if (!canPair(state, partner)) {
+        if (!canJoin(level, pos, state, partnerPos, partner)) {
             return;
         }
 
@@ -153,6 +156,22 @@ public final class BntCogwheelPairing {
         return canPair(state, neighbour) && sideOf(neighbour) == BntWideSide.of(direction.getOpposite())
             ? state
             : (BlockState)state.setValue(WIDE, BntWideSide.NONE);
+    }
+
+    private static boolean canJoin(BlockGetter level, BlockPos pos, BlockState state, BlockPos neighbourPos, BlockState neighbour) {
+        return canPair(state, neighbour) && isIndustrial(level, pos, state) == isIndustrial(level, neighbourPos, neighbour);
+    }
+
+    private static boolean isIndustrial(BlockGetter level, BlockPos pos, BlockState state) {
+        if (HiddenCogwheelCompat.isHiddenCogwheel(state) && level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
+            String originalBlock = access.bnt$getOriginalBlock();
+            if (originalBlock != null && !originalBlock.isEmpty()) {
+                return originalBlock.contains("industrial");
+            }
+        }
+
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        return id != null && id.getPath().contains("industrial");
     }
 
     private static boolean canPair(BlockState state, BlockState neighbour) {
