@@ -45,6 +45,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -165,7 +166,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
     }
 
     @Inject(
-        method = {"renderChainSlowerButWithoutGaps", "renderChainFastButWithGaps"},
+        method = {"renderChainSlowerButWithoutGaps"},
         at = {@At("HEAD")},
         cancellable = true
     )
@@ -184,6 +185,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         int lightAtDest,
         CogwheelChainType type,
         boolean flipInsideOutside,
+        Matrix3f accumulatedOrientation,
         CallbackInfo ci
     ) {
         ChainRenderInfo chainRenderInfo = type.getRenderType();
@@ -191,9 +193,17 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         Vec3 relFrom = Vec3.ZERO;
         Vec3 relTo = to.subtract(from);
         Vec3 relPostTo = postTo.subtract(from);
-        List<Vec3> destinationPoints = CogwheelChainRenderGeometryBuilder.getEndPointsForChainJoint(relFrom, relTo, relPostTo, chainRenderInfo, toCogwheelAxis);
-        List<Vec3> sourcePoints = CogwheelChainRenderGeometryBuilder.getEndPointsForChainJoint(relPreFrom, relFrom, relTo, chainRenderInfo, fromCogwheelAxis);
-        destinationPoints = CogwheelChainRenderGeometryBuilder.getPointsInClosestOrder(destinationPoints, sourcePoints);
+        List<Vec3> destinationPoints = CogwheelChainRenderGeometryBuilder.getEndPointsForChainJoint(
+            relFrom, relTo, relPostTo, chainRenderInfo, toCogwheelAxis, accumulatedOrientation
+        );
+        if (fromCogwheelAxis.dot(toCogwheelAxis) < 0.99) {
+            int rotationSign = fromCogwheelAxis.cross(toCogwheelAxis).dot(relTo) > 0.0 ? 1 : -1;
+            accumulatedOrientation.mul(new Matrix3f(0.0F, rotationSign, 0.0F, -rotationSign, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F));
+        }
+
+        List<Vec3> sourcePoints = CogwheelChainRenderGeometryBuilder.getEndPointsForChainJoint(
+            relPreFrom, relFrom, relTo, chainRenderInfo, fromCogwheelAxis, accumulatedOrientation
+        );
         float length = (float)from.distanceTo(to);
         ms.pushPose();
         boolean isCustomBeltItem = type.getRenderTexture().getNamespace().equals("bits_n_tracks");
