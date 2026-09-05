@@ -24,6 +24,9 @@ public class RotationPropagatorMixin {
         remap = false
     )
     private static void bnt$interceptGetRotationSpeedModifier(KineticBlockEntity from, KineticBlockEntity to, CallbackInfoReturnable<Float> cir) {
+        if (BntChainEngagement.sharesShaft(from, to)) {
+            return;
+        }
         if (BntChainEngagement.sharesChain(from, to)) {
             if (!BntChainEngagement.isEngaged(BntChainEngagement.chainBehaviour(from))
                 || !BntChainEngagement.isEngaged(BntChainEngagement.chainBehaviour(to))) {

@@ -18,9 +18,12 @@ import java.util.Set;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 
 public final class BntChainEngagement {
@@ -234,6 +237,23 @@ public final class BntChainEngagement {
             return false;
         }
         return controllerPos(chainBehaviour(from)) != null || controllerPos(chainBehaviour(to)) != null;
+    }
+
+    public static boolean sharesShaft(BlockEntity from, BlockEntity to) {
+        BlockState stateFrom = from.getBlockState();
+        BlockState stateTo = to.getBlockState();
+        if (!stateFrom.hasProperty(BlockStateProperties.AXIS) || !stateTo.hasProperty(BlockStateProperties.AXIS)) {
+            return false;
+        }
+
+        Axis axis = (Axis)stateFrom.getValue(BlockStateProperties.AXIS);
+        if (axis != stateTo.getValue(BlockStateProperties.AXIS)) {
+            return false;
+        }
+
+        BlockPos diff = to.getBlockPos().subtract(from.getBlockPos());
+        int alongAxis = axis.choose(diff.getX(), diff.getY(), diff.getZ());
+        return alongAxis != 0 && diff.distManhattan(BlockPos.ZERO) == Math.abs(alongAxis);
     }
 
     private static boolean isChainCogwheel(BlockEntity be) {
