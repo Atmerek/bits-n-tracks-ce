@@ -59,6 +59,10 @@ public final class BntCogwheelPairing {
         to.bnt$setAlignmentOffsetY(from.bnt$getAlignmentOffsetY());
         to.bnt$setAlignmentOffsetZ(from.bnt$getAlignmentOffsetZ());
         to.bnt$setHiddenByLever(from.bnt$isHiddenByLever());
+        to.bnt$setTrackRouteSide(from.bnt$getTrackRouteSide());
+        to.bnt$setExtension(from.bnt$getExtension());
+        to.bnt$setLiftedUp(from.bnt$isLiftedUp());
+        to.bnt$setMaxAirExtension(from.bnt$getMaxAirExtension());
     }
 
     public static void adoptPartnerSettings(Level level, BlockPos pos) {

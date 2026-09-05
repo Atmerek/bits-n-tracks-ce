@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.physics;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
@@ -660,7 +661,10 @@ public final class BntPhysicsEvents {
     }
 
     private static Vec3 getWheelCenter(KineticBlockEntity kbe, BlockState state) {
-        Vec3 center = kbe.getBlockPos().getCenter().add(0.0, CogwheelSizeHelper.getVerticalOffset(state.getBlock()), 0.0);
+        Vec3 center = kbe.getBlockPos()
+            .getCenter()
+            .add(0.0, CogwheelSizeHelper.getVerticalOffset(state.getBlock()), 0.0)
+            .add(BntCogwheelPairing.seamOffset(state));
         if (kbe instanceof KineticBlockEntityPhysicsAccess access) {
             center = center.add(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
         }
