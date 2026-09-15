@@ -284,7 +284,7 @@ public final class BntPhysicsEvents {
 
         mixin.bnt$setExtension(maxExtension);
 
-        double distance = suspensionRest / 6.0 + maxExtension;
+        double distance = suspensionRest / 6.0 + maxExtension + BntBeltHold.at(kbe.getLevel(), kbe);
         double springLength = Mth.clamp(distance - wheelRadius, -suspensionRest * 2.0, suspensionRest);
         CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)kbe.getBehaviour(CogwheelChainBehaviour.TYPE);
         boolean isConnected = behaviour != null && behaviour.isPartOfChain();
@@ -308,22 +308,17 @@ public final class BntPhysicsEvents {
         contact.isConnected = isConnected;
         contact.isTrackModel = isConnected || block.getDescriptionId().contains("track");
         contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
-        double reach = BntPhysicsTuning.getBeltMaxHold();
-        contact.bearing = reach <= 0.0
-            ? 1.0
-            : Mth.clamp(1.0 - BntBeltHold.at(kbe.getLevel(), kbe) / reach, 0.0, 1.0);
-        contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest
-            && contact.bearing > 0.0;
+        contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest;
         contact.verticalSpeed = verticalSpeed;
         return contact;
     }
 
-    private static void applyWheelForces(BntPhysicsEvents.WheelContact contact, double shareTotal, double timeStep) {
+    private static void applyWheelForces(BntPhysicsEvents.WheelContact contact, int shareCount, double timeStep) {
         Vector3d queuedForce = new Vector3d();
         boolean suspensionEnabled = contact.isTrackModel
             ? BntPhysicsTuning.isTrackSuspensionEnabled()
             : BntPhysicsTuning.isCogwheelSuspensionEnabled();
-        double normalMassShare = contact.normalMass / Math.max(shareTotal, 1.0);
+        double normalMassShare = contact.normalMass / shareCount;
         double suspensionGain = suspensionEnabled ? BntPhysicsTuning.getBaseSuspensionStrength() * normalMassShare : 0.0;
         double springMult = contact.isTrackModel ? BntPhysicsTuning.getTrackSpringMultiplier() : BntPhysicsTuning.getCogwheelSpringMultiplier();
         double dampingMult = contact.isTrackModel ? BntPhysicsTuning.getTrackDampingMultiplier() : BntPhysicsTuning.getCogwheelDampingMultiplier();
@@ -341,7 +336,7 @@ public final class BntPhysicsEvents {
         double maxImpulseVal = maxImpulseMult * suspensionGain * BntPhysicsTuning.getImpulseScale() * timeStep * bumpStopScale;
         double speedLimitImpulse = normalMassShare * (BntPhysicsTuning.getMaxSuspensionSpeed() + Math.abs(relVelY));
         double impulseCeiling = Math.min(maxImpulseVal, speedLimitImpulse);
-        double springForce = Mth.clamp(rawSpringForce, -impulseCeiling, impulseCeiling) * contact.bearing;
+        double springForce = Mth.clamp(rawSpringForce, -impulseCeiling, impulseCeiling);
         Vec3i rayHitNormal = contact.extResult.normal.getNormal();
         Vec3 localForce = new Vec3(springForce * rayHitNormal.getX(), springForce * rayHitNormal.getY(), springForce * rayHitNormal.getZ());
         if (contact.extResult.subLevel != null) {
@@ -394,8 +389,8 @@ public final class BntPhysicsEvents {
             double longitudinalSpeed = contact.localVelocity.dot(contact.normalD);
             contact.targetSpeed = targetSpeed;
             contact.goalLongitudinal = longitudinalSpeed + response * (targetSpeed - longitudinalSpeed);
-            contact.limitLongitudinal = driveTraction * grip * loadShare * timeStep * contact.bearing;
-            contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * loadShare * timeStep * contact.bearing;
+            contact.limitLongitudinal = driveTraction * grip * loadShare * timeStep;
+            contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * loadShare * timeStep;
         }
 
         if (!anyTraction) {
@@ -782,7 +777,6 @@ public final class BntPhysicsEvents {
         BntPhysicsEvents.TerrainCastResult extResult;
         double suspensionRest;
         double springLength;
-        double bearing;
         double chainRadius;
         double kineticSpeed;
         double targetSpeed;
