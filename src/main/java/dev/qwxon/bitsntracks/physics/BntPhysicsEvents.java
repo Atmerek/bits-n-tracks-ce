@@ -308,7 +308,7 @@ public final class BntPhysicsEvents {
         contact.touchingFriction = touchingFriction;
         contact.normalMass = normalMass;
         contact.hasTraction = axis != Axis.Y;
-        contact.isConnected = isConnected;
+        contact.isDriven = isConnected && BntChainEngagement.isEngaged(behaviour);
         contact.isTrackModel = isConnected || block.getDescriptionId().contains("track");
         contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
         contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest;
@@ -385,8 +385,8 @@ public final class BntPhysicsEvents {
             double gripMultiplier = contact.isTrackModel ? BntPhysicsTuning.getTrackGripMultiplier() : BntPhysicsTuning.getCogwheelGripMultiplier();
             double grip = contact.touchingFriction * gripMultiplier;
             double beltSpeed = contact.chainRadius * contact.kineticSpeed * BLOCKS_PER_SECOND_PER_RPM_RADIUS;
-            double targetSpeed = contact.isConnected ? beltSpeed * (1.0 - contact.brakeStrength) : 0.0;
-            double driveTraction = contact.isConnected
+            double targetSpeed = contact.isDriven ? beltSpeed * (1.0 - contact.brakeStrength) : 0.0;
+            double driveTraction = contact.isDriven
                 ? BntPhysicsTuning.getDriveTraction() + contact.brakeStrength * BntPhysicsTuning.getBrakeTraction()
                 : BntPhysicsTuning.getRollingResistance();
             double longitudinalSpeed = contact.localVelocity.dot(contact.normalD);
@@ -467,7 +467,7 @@ public final class BntPhysicsEvents {
         int driven = 0;
 
         for (BntPhysicsEvents.WheelContact contact : contacts) {
-            if (!contact.hasTraction || !contact.isConnected) {
+            if (!contact.hasTraction || !contact.isDriven) {
                 continue;
             }
 
@@ -794,7 +794,7 @@ public final class BntPhysicsEvents {
         double longitudinalImpulse;
         double lateralImpulse;
         boolean hasTraction;
-        boolean isConnected;
+        boolean isDriven;
         boolean isTrackModel;
         boolean loaded;
     }

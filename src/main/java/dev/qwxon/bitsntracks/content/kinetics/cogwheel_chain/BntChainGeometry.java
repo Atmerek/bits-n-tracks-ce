@@ -209,11 +209,18 @@ public final class BntChainGeometry {
         }
         chirality = chirality >= 0 ? 1 : -1;
 
+        double averageY = 0.0;
+        for (int node : sequence) {
+            averageY += BntChainMotion.liveCenter(pathNodes.get(node)).y;
+        }
+        averageY /= sequence.length;
+
         for (int position = 0; position < sequence.length; position++) {
             int node = sequence[position];
             int previous = sequence[(position - 1 + sequence.length) % sequence.length];
             int next = sequence[(position + 1) % sequence.length];
-            if (previous == node || next == node || previous == next || sides[node] != chirality) {
+            if (previous == node || next == node || previous == next || sides[node] != chirality
+                || axis != Axis.Y && BntChainMotion.liveCenter(pathNodes.get(node)).y <= averageY) {
                 continue;
             }
             if (clearance(xs, ys, radii, sides, previous, next, node) < -LEAVE_SLACK) {
