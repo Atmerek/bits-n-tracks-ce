@@ -47,5 +47,5 @@ description='''${mod_description}'''
     modId="bits_n_bobs"
     type="required"
     versionRange="[2.3.0,)"
-    ordering="AFTER"
+    ordering="NONE"
     side="BOTH"
