@@ -155,10 +155,10 @@ public final class BntPhysicsTuning {
         LARGE_VERTICAL_OFFSET = builder.defineInRange("largeVerticalOffset", 0.1, -8.0, 8.0);
         TINY_VISUAL_VERTICAL_OFFSET = builder
             .comment("Height the drawn cogwheel is lifted by, in blocks. Set so the outside of the track rests on the ground: track radius plus half a track link, plus the vertical offset, less the collision radius.")
-            .defineInRange("tinyVisualVerticalOffset", 0.07, -8.0, 8.0);
-        SMALL_VISUAL_VERTICAL_OFFSET = builder.defineInRange("smallVisualVerticalOffset", 0.09, -8.0, 8.0);
-        MEDIUM_VISUAL_VERTICAL_OFFSET = builder.defineInRange("mediumVisualVerticalOffset", 0.0, -8.0, 8.0);
-        LARGE_VISUAL_VERTICAL_OFFSET = builder.defineInRange("largeVisualVerticalOffset", 0.45, -8.0, 8.0);
+            .defineInRange("tinyVisualVerticalOffset", 0.0625, -8.0, 8.0);
+        SMALL_VISUAL_VERTICAL_OFFSET = builder.defineInRange("smallVisualVerticalOffset", 0.0325, -8.0, 8.0);
+        MEDIUM_VISUAL_VERTICAL_OFFSET = builder.defineInRange("mediumVisualVerticalOffset", 0.0525, -8.0, 8.0);
+        LARGE_VISUAL_VERTICAL_OFFSET = builder.defineInRange("largeVisualVerticalOffset", 0.4625, -8.0, 8.0);
         TINY_TOOL_HIGHLIGHT_RADIUS = builder
             .comment("Radius of the alignment tool's outline.")
             .defineInRange("tinyToolHighlightRadius", 0.34, 0.01, 8.0);
