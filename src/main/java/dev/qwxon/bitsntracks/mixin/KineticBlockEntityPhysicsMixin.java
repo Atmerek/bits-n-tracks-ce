@@ -56,6 +56,18 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     @Unique
     private int bnt$beltLinks = BntBeltLinks.UNSET;
     @Unique
+    private long bnt$drawnDropTick = Long.MIN_VALUE;
+    @Unique
+    private double bnt$drawnDrop = 0.0;
+    @Unique
+    private double bnt$lastDrawnDrop = 0.0;
+    @Unique
+    private double bnt$beltFit = 0.0;
+    @Unique
+    private long bnt$trackLiftTick = Long.MIN_VALUE;
+    @Unique
+    private double bnt$trackLift = 0.0;
+    @Unique
     private long bnt$beltHoldTick = Long.MIN_VALUE;
     @Unique
     private double bnt$beltHold = 0.0;
@@ -164,6 +176,32 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     }
 
     @Override
+    public double bnt$getBeltFit() {
+        return this.bnt$beltFit;
+    }
+
+    @Override
+    public void bnt$setBeltFit(double fit) {
+        this.bnt$beltFit = Math.max(0.0, fit);
+    }
+
+    @Override
+    public long bnt$getTrackLiftTick() {
+        return this.bnt$trackLiftTick;
+    }
+
+    @Override
+    public double bnt$getTrackLift() {
+        return this.bnt$trackLift;
+    }
+
+    @Override
+    public void bnt$setTrackLift(long tick, double lift) {
+        this.bnt$trackLiftTick = tick;
+        this.bnt$trackLift = lift;
+    }
+
+    @Override
     public long bnt$getBeltHoldTick() {
         return this.bnt$beltHoldTick;
     }
@@ -244,6 +282,25 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     @Override
     public void bnt$setLastTerrainExtension(double extension) {
         this.bnt$lastTerrainExtension = extension;
+    }
+
+    @Override
+    public long bnt$getDrawnDropTick() {
+        return this.bnt$drawnDropTick;
+    }
+
+    /** Eases the drawn drop one tick towards the terrain, snapping when the run of ticks broke. */
+    @Override
+    public void bnt$advanceDrawnDrop(long gameTime, double sample, double rate) {
+        boolean running = this.bnt$drawnDropTick == gameTime - 1L;
+        this.bnt$lastDrawnDrop = running ? this.bnt$drawnDrop : sample;
+        this.bnt$drawnDrop = running ? Mth.lerp(rate, this.bnt$drawnDrop, sample) : sample;
+        this.bnt$drawnDropTick = gameTime;
+    }
+
+    @Override
+    public double bnt$getDrawnDrop(float partialTick) {
+        return Mth.lerp(partialTick, this.bnt$lastDrawnDrop, this.bnt$drawnDrop);
     }
 
     @Override
@@ -336,6 +393,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         this.bnt$trackRouteSide = tag.contains("BntTrackRouteSide") ? tag.getInt("BntTrackRouteSide") : -1;
         this.bnt$beltTension = tag.contains("BntBeltTension") ? BntBeltTension.clamp(tag.getFloat("BntBeltTension")) : BntBeltTension.DEFAULT;
         this.bnt$beltLinks = tag.getInt("BntBeltLinks");
+        this.bnt$beltFit = tag.getDouble("BntBeltFit");
         if (this.bnt$physicsEnabled) {
             KineticBlockEntity self = (KineticBlockEntity)(Object)this;
             double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock());
@@ -361,6 +419,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         tag.putInt("BntTrackRouteSide", this.bnt$trackRouteSide);
         tag.putFloat("BntBeltTension", this.bnt$beltTension);
         tag.putInt("BntBeltLinks", this.bnt$beltLinks);
+        tag.putDouble("BntBeltFit", this.bnt$beltFit);
         if (this.bnt$physicsEnabled) {
             tag.putDouble("BntExtension", this.bnt$extension);
         }

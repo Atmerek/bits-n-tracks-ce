@@ -1,11 +1,13 @@
 package dev.qwxon.bitsntracks.mixin;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChainCandidate;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.placement.ChainInteractionFailedException;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.placement.CogwheelChainPlacementInteraction;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import java.util.function.Predicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -69,6 +71,12 @@ public abstract class CogwheelChainPlacementInteractionMixin {
         LocalPlayer player,
         Operation<Void> original
     ) {
+        String refused = BntCogwheelChainTypes.refusal(heldChainType, level, hitPos, targetedState);
+        if (refused != null) {
+            player.displayClientMessage(new ChainInteractionFailedException(refused).getComponent(), true);
+            return;
+        }
+
         HiddenCogwheelCompat.setPlacementLevel(level);
 
         try {

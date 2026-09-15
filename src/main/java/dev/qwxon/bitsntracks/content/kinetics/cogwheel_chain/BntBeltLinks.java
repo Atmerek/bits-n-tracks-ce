@@ -3,16 +3,23 @@ package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
+import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 /** The loop as a whole number of links of fixed pitch. */
 public final class BntBeltLinks {
@@ -71,7 +78,7 @@ public final class BntBeltLinks {
             sides[i] = nodes.get(i).side();
         }
 
-        double length = BntBeltSolver.beltLength(xs, ys, radii, sides);
+        double length = BntBeltSolver.tautLength(xs, ys, radii, sides);
         return Double.isFinite(length) && length < Double.MAX_VALUE ? length : 0.0;
     }
 
@@ -84,19 +91,19 @@ public final class BntBeltLinks {
         return Mth.clamp((int)Math.floor(tautLength / pitch + 1.0E-9), 2, MAX_LINKS);
     }
 
-    /** Slack from the dial, squared so hang moves evenly with the lever. */
+    /** Slack from the dial, squared so hang moves evenly with the lever, less the pull a taut loop keeps. */
     public static double slackLength(float tension) {
-        double slack = 1.0 - BntBeltTension.clamp(tension);
-        return BntPhysicsTuning.getBeltMaxSlackLinks() * pitch() * slack * slack;
+        double taut = BntBeltTension.clamp(tension);
+        double slack = 1.0 - taut;
+        return BntPhysicsTuning.getBeltMaxSlackLinks() * pitch() * slack * slack
+            - BntPhysicsTuning.getBeltPreTension() * taut;
     }
 
     /** Length the loop carries over the path it has to clear, never negative. */
-    public static double surplus(int links, float tension, double restLength, double liveLength) {
+    public static double surplus(int links, float tension, double clearing) {
         if (links <= UNSET) {
             return 0.0;
         }
-        double response = BntPhysicsTuning.getBeltSuspensionSlackResponse();
-        double clearing = Mth.lerp(response, restLength, liveLength);
         return Math.max(0.0, length(links) + slackLength(tension) - clearing);
     }
 
@@ -154,6 +161,24 @@ public final class BntBeltLinks {
     }
 
     /** Rebuilds the loop for a tension and returns its link count. */
+    /** Taut path the loop is fitted to, measured where the wheels are drawn. */
+    public static double fitLength(Level level, BlockPos controllerPos) {
+        List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
+        if (nodes.size() < 2) {
+            return 0.0;
+        }
+        Level heldLevel = BntRadiusProvider.level();
+        BlockPos heldOrigin = BntRadiusProvider.origin();
+        try {
+            BntRadiusProvider.setLevel(level);
+            BntRadiusProvider.setOrigin(controllerPos);
+            return drawnTautLength(level, controllerPos, nodes);
+        } finally {
+            BntRadiusProvider.setLevel(heldLevel);
+            BntRadiusProvider.setOrigin(heldOrigin);
+        }
+    }
+
     public static int relatch(Level level, BlockPos controllerPos, float tension) {
         List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
         if (nodes.size() < 2) {
@@ -164,25 +189,53 @@ public final class BntBeltLinks {
         try {
             BntRadiusProvider.setLevel(level);
             BntRadiusProvider.setOrigin(controllerPos);
-            return linksFor(tautLength(nodes));
+            return linksFor(drawnTautLength(level, controllerPos, nodes));
         } finally {
             BntRadiusProvider.setLevel(heldLevel);
             BntRadiusProvider.setOrigin(heldOrigin);
         }
     }
 
-    /** Taut path where the wheels are now, for a caller that holds no radius context. */
-    public static double liveTautLength(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
-        Level heldLevel = BntRadiusProvider.level();
-        BlockPos heldOrigin = BntRadiusProvider.origin();
-        try {
-            BntRadiusProvider.setLevel(level);
-            BntRadiusProvider.setOrigin(controllerPos);
-            return liveTautLength(nodes);
-        } finally {
-            BntRadiusProvider.setLevel(heldLevel);
-            BntRadiusProvider.setOrigin(heldOrigin);
+    /** Where a wheel is drawn, its visual seat less the drop terrain pulls it down to. */
+    public static Vec3 drawnCentre(Level level, BlockPos controllerPos, PathedCogwheelNode node) {
+        BlockPos nodePos = controllerPos.offset(node.localPos());
+        BlockState state = level.getBlockState(nodePos);
+        Vec3 centre = nodePos.getCenter()
+            .add(0.0, CogwheelSizeHelper.getVisualVerticalOffset(state.getBlock()), 0.0)
+            .add(BntCogwheelPairing.seamOffset(state));
+        BlockEntity be = level.getBlockEntity(nodePos);
+        if (be instanceof KineticBlockEntityPhysicsAccess access) {
+            centre = centre.add(
+                access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
         }
+        if (be instanceof KineticBlockEntity kinetic) {
+            centre = centre.subtract(0.0, Math.max(0.0, BntPhysicsEvents.getRawRenderExtension(kinetic, 1.0F)), 0.0);
+        }
+        return centre;
+    }
+
+    /** Taut path round the wheels where they are drawn, which is what the belt is fitted to. */
+    public static double drawnTautLength(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
+        int count = nodes == null ? 0 : nodes.size();
+        Axis axis = count < 2 || level == null ? null : BntChainGeometry.sharedAxis(nodes);
+        if (axis == null) {
+            return 0.0;
+        }
+
+        double[] xs = new double[count];
+        double[] ys = new double[count];
+        double[] radii = new double[count];
+        int[] sides = new int[count];
+        for (int i = 0; i < count; i++) {
+            Vec3 centre = drawnCentre(level, controllerPos, nodes.get(i));
+            xs[i] = BntChainGeometry.planarX(centre, axis);
+            ys[i] = BntChainGeometry.planarY(centre, axis);
+            radii[i] = BntChainGeometry.trackRadius(nodes.get(i));
+            sides[i] = nodes.get(i).side();
+        }
+
+        double length = BntBeltSolver.tautLength(xs, ys, radii, sides);
+        return Double.isFinite(length) && length < Double.MAX_VALUE ? length : 0.0;
     }
 
     /** Links the loop settles at, worked out fresh when none is latched. */
@@ -197,9 +250,10 @@ public final class BntBeltLinks {
             return;
         }
         float tension = BntBeltTension.at(level, controllerPos);
-        int links = relatch(level, controllerPos, tension);
+        double fit = fitLength(level, controllerPos);
+        int links = linksFor(fit);
         if (links > UNSET) {
-            BntBeltTension.write(level, controllerPos, tension, links);
+            BntBeltTension.write(level, controllerPos, tension, links, fit);
         }
     }
 

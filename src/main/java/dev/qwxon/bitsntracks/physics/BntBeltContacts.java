@@ -117,7 +117,24 @@ public final class BntBeltContacts {
         return loads;
     }
 
+    /** Walks a loop under the radius context the chain lengths are read from. */
     private static void collectSpans(
+        BntBeltLoads loads, Level level, ServerSubLevel subLevel, Pose3d pose,
+        MassData massData, BlockPos controllerPos, List<PathedCogwheelNode> nodes, float speed
+    ) {
+        Level heldLevel = BntRadiusProvider.level();
+        BlockPos heldOrigin = BntRadiusProvider.origin();
+        try {
+            BntRadiusProvider.setLevel(level);
+            BntRadiusProvider.setOrigin(controllerPos);
+            spans(loads, level, subLevel, pose, massData, controllerPos, nodes, speed);
+        } finally {
+            BntRadiusProvider.setLevel(heldLevel);
+            BntRadiusProvider.setOrigin(heldOrigin);
+        }
+    }
+
+    private static void spans(
         BntBeltLoads loads, Level level, ServerSubLevel subLevel, Pose3d pose,
         MassData massData, BlockPos controllerPos, List<PathedCogwheelNode> nodes, float speed
     ) {
@@ -169,7 +186,7 @@ public final class BntBeltContacts {
 
         int links = BntBeltLinks.resolve(level, controllerPos, tension);
         double surplus = BntBeltLinks.surplus(links, tension,
-            BntBeltLinks.tautLength(nodes), BntBeltLinks.liveTautLength(level, controllerPos, nodes));
+            BntBeltLinks.drawnTautLength(level, controllerPos, nodes));
         double[] slack = BntBeltSlack.distribute(
             runLengths, surplus, BntBeltSlack.tightRun(nodes, speed), speed);
         double massPerBlock = BntPhysicsTuning.getBeltMassPerBlock();
@@ -195,15 +212,16 @@ public final class BntBeltContacts {
             double segmentMass = massPerBlock * run[0] / samples;
             for (int sample = 0; sample < samples; sample++) {
                 double along = (sample + 0.5) / samples;
-                Vec3 point = BntBeltPath.fromPlanar(
+                Vec3 chord = BntBeltPath.fromPlanar(
                     Mth.lerp(along, startU, endU),
                     Mth.lerp(along, startV, endV),
                     Mth.lerp(along, alongAxis[i], alongAxis[next]),
                     axis);
-                point = point.subtract(0.0, BntBeltTension.droopAt(along, sag), 0.0);
+                double droop = BntBeltTension.droopAt(along, sag);
+                Vec3 point = chord.subtract(0.0, droop, 0.0);
 
                 BntBeltContact contact = underside
-                    ? sample(level, subLevel, pose, massData, point, tension)
+                    ? sample(level, subLevel, pose, massData, chord, droop, tension)
                     : null;
                 if (contact != null) {
                     loads.contacts().add(contact);
@@ -218,11 +236,13 @@ public final class BntBeltContacts {
         }
     }
 
+    /** Contact for one belt sample, where the run hangs by droop below the taut chord. */
     private static BntBeltContact sample(
-        Level level, ServerSubLevel subLevel, Pose3d pose, MassData massData, Vec3 localPoint, float tension
+        Level level, ServerSubLevel subLevel, Pose3d pose, MassData massData,
+        Vec3 chord, double droop, float tension
     ) {
-        Vec3 localStart = localPoint.add(0.0, CAST_HEADROOM, 0.0);
-        Vec3 localEnd = localPoint.subtract(0.0, CAST_DROP, 0.0);
+        Vec3 localStart = chord.add(0.0, CAST_HEADROOM, 0.0);
+        Vec3 localEnd = chord.subtract(0.0, droop + CAST_DROP, 0.0);
         ClipContext clipContext = new ClipContext(
             pose.transformPosition(localStart), pose.transformPosition(localEnd),
             ClipContext.Block.COLLIDER, Fluid.NONE, CollisionContext.empty());
@@ -240,18 +260,25 @@ public final class BntBeltContacts {
         Vec3 localHit = pose.transformPositionInverse(
             hitSubLevel == null ? hit.getLocation() : hitSubLevel.logicalPose().transformPosition(hit.getLocation()));
 
-        double penetration = localHit.y - localPoint.y;
-        if (penetration < -CONTACT_REACH || penetration > CAST_HEADROOM) {
+        double ground = localHit.y;
+        double reach = ground - (chord.y - droop);
+        if (reach < -CONTACT_REACH) {
             return null;
         }
 
-        Vector3d forcePoint = new Vector3d(localPoint.x, localPoint.y, localPoint.z);
+        double penetration = ground - chord.y;
+        if (penetration > CAST_HEADROOM) {
+            return null;
+        }
+
+        Vec3 restPoint = new Vec3(chord.x, Mth.clamp(ground, chord.y - droop, chord.y), chord.z);
+        Vector3d forcePoint = new Vector3d(restPoint.x, restPoint.y, restPoint.z);
         double inverseNormalMass = massData.getInverseNormalMass(forcePoint, OrientedBoundingBox3d.UP);
         if (!Double.isFinite(inverseNormalMass) || inverseNormalMass <= 0.0) {
             return null;
         }
 
-        Vector3d velocity = Sable.HELPER.getVelocity(level, JOMLConversion.toJOML(localPoint));
+        Vector3d velocity = Sable.HELPER.getVelocity(level, JOMLConversion.toJOML(restPoint));
 
         BntBeltContact contact = new BntBeltContact();
         contact.subLevel = subLevel;

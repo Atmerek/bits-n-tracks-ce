@@ -570,8 +570,8 @@ public final class BntBeltSolver {
         return new double[]{currentSide == nextSide ? 0.0 : 1.0, angle * radii[current] + outgoing[0]};
     }
 
-    /** Taut path length once round the loop, runs plus wraps. */
-    public static double beltLength(double[] xs, double[] ys, double[] radii, int[] sides) {
+    /** Path length once round the order as written, every wrap taken the long way. */
+    private static double beltLength(double[] xs, double[] ys, double[] radii, int[] sides) {
         int count = xs.length;
         double total = 0.0;
         double[][] runs = new double[count][];
@@ -586,6 +586,53 @@ public final class BntBeltSolver {
         for (int i = 0; i < count; i++) {
             double[] incoming = runs[(i - 1 + count) % count];
             total += sweep(sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]) * radii[i];
+        }
+        return total;
+    }
+
+    /** Taut loop length, with wheels the belt has fallen past unwound back off the wraps. */
+    public static double tautLength(double[] xs, double[] ys, double[] radii, int[] sides) {
+        int count = xs.length;
+        if (count < 2) {
+            return Double.MAX_VALUE;
+        }
+
+        double total = 0.0;
+        double[][] runs = new double[count][];
+        for (int i = 0; i < count; i++) {
+            int next = (i + 1) % count;
+            runs[i] = tangent(xs[i], ys[i], sides[i] * radii[i], xs[next], ys[next], sides[next] * radii[next]);
+            if (runs[i] == null) {
+                return Double.MAX_VALUE;
+            }
+            total += runs[i][0];
+        }
+
+        double[] wraps = new double[count];
+        double turned = 0.0;
+        int wide = 0;
+        for (int i = 0; i < count; i++) {
+            double[] incoming = runs[(i - 1 + count) % count];
+            wraps[i] = sweep(sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]);
+            turned += wraps[i];
+            if (wraps[i] > Math.PI) {
+                wide++;
+            }
+        }
+
+        int unwind = Math.min(wide, (int)Math.max(0L, Math.round((turned - TAU) / TAU)));
+        for (int undone = 0; undone < unwind; undone++) {
+            int widest = 0;
+            for (int i = 1; i < count; i++) {
+                if (wraps[i] > wraps[widest]) {
+                    widest = i;
+                }
+            }
+            wraps[widest] -= TAU;
+        }
+
+        for (int i = 0; i < count; i++) {
+            total += wraps[i] * radii[i];
         }
         return total;
     }

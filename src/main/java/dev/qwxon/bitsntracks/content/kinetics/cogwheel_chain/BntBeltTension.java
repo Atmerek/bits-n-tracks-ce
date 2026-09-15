@@ -50,16 +50,19 @@ public final class BntBeltTension {
 
     /** Writes a tension across the chain and rebuilds the loop at that many links. */
     public static void apply(Level level, BlockPos pos, float tension) {
-        write(level, pos, tension, BntBeltLinks.relatch(level, controllerPos(level, pos), tension));
+        BlockPos controller = controllerPos(level, pos);
+        double fit = BntBeltLinks.fitLength(level, controller);
+        write(level, pos, tension, BntBeltLinks.linksFor(fit), fit);
     }
 
     /** Writes a tension and an already solved link count across the chain. */
-    public static void write(Level level, BlockPos pos, float tension, int links) {
+    public static void write(Level level, BlockPos pos, float tension, int links, double fit) {
         for (BlockPos nodePos : chainPositions(level, pos)) {
             BlockEntity be = level.getBlockEntity(nodePos);
             if (be instanceof KineticBlockEntity kinetic && be instanceof KineticBlockEntityPhysicsAccess access) {
                 access.bnt$setBeltTension(tension);
                 access.bnt$setBeltLinks(links);
+                access.bnt$setBeltFit(fit);
                 kinetic.setChanged();
                 kinetic.sendData();
             }

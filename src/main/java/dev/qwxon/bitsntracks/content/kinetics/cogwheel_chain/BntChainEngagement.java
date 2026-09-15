@@ -4,15 +4,21 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBeha
 import com.kipti.bnb.content.kinetics.cogwheel_chain.block.IExclusiveCogwheelChainBlock;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
+import com.simibubi.create.content.kinetics.KineticNetwork;
+import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
+import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,9 +32,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class BntChainEngagement {
+    private static final Logger LOG = LoggerFactory.getLogger("bits_n_tracks");
     private static final float DRIVE_TOLERANCE = 1.0E-3F;
+    private static final int MAX_SOURCE_WALK = 256;
     private static final double DROP_STEP = 1.0 / 16.0;
 
     /** How long a settled belt layout is held before suspension travel is allowed to redraw it. */
@@ -230,9 +240,7 @@ public final class BntChainEngagement {
                 continue;
             }
 
-            kinetic.removeSource();
-            kinetic.setChanged();
-            kinetic.sendData();
+            restore(level, detach(level, List.of(kinetic.getBlockPos())));
         }
     }
 
@@ -304,27 +312,91 @@ public final class BntChainEngagement {
         return true;
     }
 
-    private static void rebuild(Level level, Set<BlockPos> nodes) {
-        detach(level, nodes);
-        restore(level, nodes);
+    /** Stops a loop of cogwheels driving each other with nothing generating. */
+    public static boolean clearPhantomDrive(Level level, KineticBlockEntity start) {
+        if (level == null || level.isClientSide || start.getTheoreticalSpeed() == 0.0F
+            || start.source == null || !start.hasNetwork()) {
+            return false;
+        }
+
+        KineticNetwork network = start.getOrCreateNetwork();
+        if (network == null || !network.sources.isEmpty()) {
+            return false;
+        }
+
+        Set<BlockPos> walked = new LinkedHashSet<>();
+        walked.add(start.getBlockPos());
+        BlockPos at = start.source;
+        for (int step = 0; step < MAX_SOURCE_WALK; step++) {
+            if (!walked.add(at)) {
+                LOG.info("belt stopped a loop of cogwheels driving each other, with nothing generating {}", walked);
+                restore(level, detach(level, walked));
+                return true;
+            }
+            if (!(level.getBlockEntity(at) instanceof KineticBlockEntity next)
+                || next.isSource()
+                || next.source == null) {
+                return false;
+            }
+            at = next.source;
+        }
+        return false;
     }
 
-    /**
-     * Brings the whole chain to a standstill before anything about it is allowed to change.
-     * The detach pass has to run while the sides still match the speeds Create has stored, because it
-     * propagates, and a propagation that meets a flipped side against a stale speed destroys the block.
-     */
-    public static void detach(Level level, Collection<BlockPos> nodes) {
-        for (BlockPos nodePos : nodes) {
-            if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic) {
-                kinetic.detachKinetics();
+    /** Each chain cogwheel's speed and what drives it. */
+    public static String report(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
+        StringBuilder line = new StringBuilder();
+        for (PathedCogwheelNode node : nodes) {
+            BlockPos pos = controllerPos.offset(node.localPos());
+            line.append(level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic
+                ? String.format(" [%s %.2f from %s]", pos.toShortString(), kinetic.getTheoreticalSpeed(),
+                    kinetic.source == null ? "nothing" : kinetic.source.toShortString())
+                : String.format(" [%s gone]", pos.toShortString()));
+        }
+        return line.toString();
+    }
+
+    private static void rebuild(Level level, Set<BlockPos> nodes) {
+        restore(level, detach(level, nodes));
+    }
+
+    /** Stops these cogwheels and everything they drive. */
+    public static Set<BlockPos> detach(Level level, Collection<BlockPos> nodes) {
+        Set<BlockPos> stopped = new HashSet<>(nodes);
+        ArrayDeque<BlockPos> frontier = new ArrayDeque<>(nodes);
+        while (!frontier.isEmpty()) {
+            BlockPos at = frontier.poll();
+            if (!(level.getBlockEntity(at) instanceof KineticBlockEntity kinetic)) {
+                continue;
+            }
+            for (BlockPos next : neighbours(level, kinetic)) {
+                if (!stopped.contains(next)
+                    && level.getBlockEntity(next) instanceof KineticBlockEntity driven
+                    && at.equals(driven.source)) {
+                    stopped.add(next);
+                    frontier.add(next);
+                }
             }
         }
-        for (BlockPos nodePos : nodes) {
-            if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic) {
+
+        for (BlockPos pos : stopped) {
+            if (level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic) {
                 kinetic.removeSource();
+                if (kinetic instanceof GeneratingKineticBlockEntity generator) {
+                    generator.reActivateSource = true;
+                }
             }
         }
+        return stopped;
+    }
+
+    private static List<BlockPos> neighbours(Level level, KineticBlockEntity kinetic) {
+        List<BlockPos> around = new ArrayList<>();
+        for (Direction facing : Direction.values()) {
+            around.add(kinetic.getBlockPos().relative(facing));
+        }
+        BlockState state = kinetic.getBlockState();
+        return state.getBlock() instanceof IRotate block ? kinetic.addPropagationLocations(block, state, around) : around;
     }
 
     /** Asks Create to work the chain's speeds out again from scratch. */
@@ -342,6 +414,44 @@ public final class BntChainEngagement {
         return be instanceof SmartBlockEntity smartBe
             ? (CogwheelChainBehaviour)smartBe.getBehaviour(CogwheelChainBehaviour.TYPE)
             : null;
+    }
+
+    /** Stops a chain's network instead of letting Create break a block in it. */
+    public static boolean stopChainNetwork(Level level, KineticBlockEntity kinetic, String site) {
+        if (level == null || level.isClientSide) {
+            return false;
+        }
+        List<BlockPos> network = chainNetwork(kinetic);
+        if (network == null) {
+            return false;
+        }
+
+        LOG.info("kept {} that Create would have broken in {}, speed {} flicker {} network {}",
+            kinetic.getBlockPos().toShortString(), site, kinetic.getTheoreticalSpeed(), kinetic.getFlickerScore(),
+            network.size());
+        restore(level, detach(level, network));
+        return true;
+    }
+
+    private static List<BlockPos> chainNetwork(KineticBlockEntity kinetic) {
+        if (!kinetic.hasNetwork()) {
+            return partOfChain(kinetic) ? List.of(kinetic.getBlockPos()) : null;
+        }
+
+        KineticNetwork network = kinetic.getOrCreateNetwork();
+        List<BlockPos> members = new ArrayList<>();
+        boolean chained = partOfChain(kinetic);
+        members.add(kinetic.getBlockPos());
+        for (KineticBlockEntity member : network.members.keySet()) {
+            chained |= partOfChain(member);
+            members.add(member.getBlockPos());
+        }
+        return chained ? members : null;
+    }
+
+    public static boolean partOfChain(BlockEntity be) {
+        CogwheelChainBehaviour behaviour = chainBehaviour(be);
+        return behaviour != null && behaviour.isPartOfChain();
     }
 
     public static boolean sharesChain(BlockEntity from, BlockEntity to) {

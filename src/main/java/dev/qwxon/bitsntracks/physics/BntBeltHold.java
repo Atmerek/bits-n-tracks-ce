@@ -7,22 +7,34 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
-import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltPath;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSolver;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/** A loop out of length holds its drooping wheels up, lift only ever shortens a droop. */
+/**
+ * The belt is a loop of fixed length, and it pulls back when the wheels ask for more path than it has.
+ * The length it is fitted to is measured where the wheels are drawn, so a machine standing still asks for
+ * exactly what it was fitted with, and only terrain that lengthens the path makes the belt carry anything.
+ */
 public final class BntBeltHold {
+    private static final Logger LOG = LoggerFactory.getLogger("bits_n_tracks");
     private static final double FLAT = 1.0E-6;
+    private static final double GRIP_SLOPE = 0.05;
+    private static final double RELAX = 0.6;
+    private static final double STEP = 1.0 / 8.0;
+    private static final int MAX_CLIMB_PROBES = 16;
 
     private BntBeltHold() {
     }
@@ -40,7 +52,7 @@ public final class BntBeltHold {
             return access.bnt$getBeltHold();
         }
 
-        access.bnt$setBeltHold(now, 0.0);
+        access.bnt$setBeltHold(now, access.bnt$getBeltHold());
         BlockPos controllerPos = controllerPos(wheel);
         if (controllerPos != null) {
             solve(level, controllerPos, now);
@@ -51,23 +63,16 @@ public final class BntBeltHold {
     private static void solve(Level level, BlockPos controllerPos, long now) {
         List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
         int count = nodes.size();
+        Axis axis = BntChainGeometry.sharedAxis(nodes);
+        boolean solvable = count >= 3 && axis != null && axis != Axis.Y;
         for (int i = 0; i < count; i++) {
             if (level.getBlockEntity(controllerPos.offset(nodes.get(i).localPos()))
                 instanceof KineticBlockEntityPhysicsAccess access) {
-                access.bnt$setBeltHold(now, 0.0);
+                access.bnt$setBeltHold(now,
+                    solvable ? access.bnt$getBeltHold() : Math.max(0.0, access.bnt$getBeltHold() - STEP));
             }
         }
-        if (count < 3) {
-            return;
-        }
-
-        Axis axis = BntChainGeometry.sharedAxis(nodes);
-        if (axis == null || axis == Axis.Y) {
-            return;
-        }
-
-        int links = BntBeltLinks.at(level, controllerPos);
-        if (links <= BntBeltLinks.UNSET) {
+        if (!solvable) {
             return;
         }
 
@@ -76,7 +81,7 @@ public final class BntBeltHold {
         try {
             BntRadiusProvider.setLevel(level);
             BntRadiusProvider.setOrigin(controllerPos);
-            apply(level, controllerPos, nodes, axis, links, now);
+            apply(level, controllerPos, nodes, axis, now);
         } finally {
             BntRadiusProvider.setLevel(heldLevel);
             BntRadiusProvider.setOrigin(heldOrigin);
@@ -84,95 +89,145 @@ public final class BntBeltHold {
     }
 
     private static void apply(
-        Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes, Axis axis, int links, long now
+        Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes, Axis axis, long now
     ) {
         int count = nodes.size();
         Vec3[] centres = new Vec3[count];
-        double[] drops = new double[count];
         double[] xs = new double[count];
         double[] ys = new double[count];
-        double[] restXs = new double[count];
-        double[] restYs = new double[count];
         double[] radii = new double[count];
+        double[] drops = new double[count];
         int[] sides = new int[count];
+        double averageY = 0.0;
 
+        double[] holds = new double[count];
+        boolean[] powered = new boolean[count];
         for (int i = 0; i < count; i++) {
             PathedCogwheelNode node = nodes.get(i);
-            BlockPos nodePos = controllerPos.offset(node.localPos());
-            BlockState state = level.getBlockState(nodePos);
-            Vec3 rest = nodePos.getCenter()
-                .add(0.0, CogwheelSizeHelper.getVerticalOffset(state.getBlock()), 0.0)
-                .add(BntCogwheelPairing.seamOffset(state));
-            BlockEntity be = level.getBlockEntity(nodePos);
-            if (be instanceof KineticBlockEntityPhysicsAccess access) {
-                rest = rest.add(
-                    access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
+            BlockEntity be = level.getBlockEntity(controllerPos.offset(node.localPos()));
+            if (be instanceof KineticBlockEntity kinetic) {
+                drops[i] = Math.max(0.0, BntPhysicsEvents.getRawRenderExtension(kinetic, 1.0F));
             }
-            drops[i] = be instanceof KineticBlockEntity kinetic
-                ? Math.max(0.0, BntPhysicsEvents.getRawRenderExtension(kinetic, 1.0F))
-                : 0.0;
-
-            centres[i] = rest.subtract(0.0, drops[i], 0.0);
+            if (be instanceof KineticBlockEntityPhysicsAccess access) {
+                holds[i] = access.bnt$getBeltHold();
+                powered[i] = access.bnt$isPhysicsEnabled();
+            }
+            centres[i] = BntBeltLinks.drawnCentre(level, controllerPos, node).add(0.0, holds[i], 0.0);
             xs[i] = BntChainGeometry.planarX(centres[i], axis);
             ys[i] = BntChainGeometry.planarY(centres[i], axis);
-            restXs[i] = BntChainGeometry.planarX(rest, axis);
-            restYs[i] = BntChainGeometry.planarY(rest, axis);
             radii[i] = BntChainGeometry.trackRadius(node);
             sides[i] = node.side();
+            averageY += centres[i].y;
         }
+        averageY /= count;
 
-        double drooped = BntBeltSolver.beltLength(xs, ys, radii, sides);
-        double resting = BntBeltSolver.beltLength(restXs, restYs, radii, sides);
-        if (!Double.isFinite(drooped) || drooped >= Double.MAX_VALUE
-            || !Double.isFinite(resting) || resting >= Double.MAX_VALUE) {
-            return;
-        }
-
-        double allowance = BntBeltLinks.length(links) + BntBeltLinks.slackLength(BntBeltTension.at(level, controllerPos));
-        double deficit = drooped - Math.max(allowance, resting);
-        if (deficit <= 0.0) {
-            return;
-        }
-
-        double travel = 0.0;
-        for (double drop : drops) {
-            travel += drop;
-        }
-        if (deficit > 2.0 * travel + FLAT) {
-            return;
-        }
+        float tension = BntBeltTension.at(level, controllerPos);
+        double give = Math.max(0.0, BntBeltLinks.slackLength(tension));
+        double cap = BntPhysicsTuning.getBeltMaxHold();
+        int links = BntBeltLinks.at(level, controllerPos);
+        double path = BntBeltSolver.tautLength(xs, ys, radii, sides)
+            + climb(controllerPos, nodes, axis, centres, xs, ys, radii, sides);
+        double fit = level.getBlockEntity(controllerPos) instanceof KineticBlockEntityPhysicsAccess seat
+            ? seat.bnt$getBeltFit()
+            : 0.0;
+        double allowance = fit > FLAT ? fit + give : BntBeltLinks.length(links) + BntBeltLinks.pitch() + give;
+        double excess = links <= BntBeltLinks.UNSET || !Double.isFinite(path) || path >= Double.MAX_VALUE
+            ? 0.0
+            : path - allowance;
 
         double[] gradient = new double[count];
         double weight = 0.0;
         for (int i = 0; i < count; i++) {
+            if (centres[i].y > averageY || !powered[i]) {
+                continue;
+            }
             Vec3 toPrevious = centres[(i - 1 + count) % count].subtract(centres[i]);
             Vec3 toNext = centres[(i + 1) % count].subtract(centres[i]);
             if (toPrevious.lengthSqr() < FLAT || toNext.lengthSqr() < FLAT) {
                 continue;
             }
-            gradient[i] = -(toPrevious.normalize().y + toNext.normalize().y);
-            if (gradient[i] < 0.0) {
-                weight += gradient[i] * gradient[i];
+            double slope = -(toPrevious.normalize().y + toNext.normalize().y);
+            if (slope > -GRIP_SLOPE) {
+                continue;
             }
-        }
-        if (weight < FLAT) {
-            return;
+            gradient[i] = slope;
+            weight += slope * slope;
         }
 
-        double cap = BntPhysicsTuning.getBeltMaxHold();
+        StringBuilder report = BntPhysicsTuning.isBeltDebugLogging() && now % 20L == 0L ? new StringBuilder() : null;
         for (int i = 0; i < count; i++) {
-            if (gradient[i] >= 0.0) {
-                continue;
-            }
-            double lift = Math.min(-deficit * gradient[i] / weight, Math.min(cap, drops[i]));
-            if (lift <= 0.0) {
-                continue;
+            double step = weight < FLAT || gradient[i] >= 0.0
+                ? -STEP
+                : Mth.clamp(RELAX * excess * -gradient[i] / weight, -STEP, STEP);
+            double lift = Mth.clamp(holds[i] + step, 0.0, Math.min(cap, drops[i]));
+            if (report != null) {
+                report.append(String.format(" [%d r%.2f drop%.3f grad%.2f lift%.3f%s]",
+                    i, radii[i], drops[i], gradient[i], lift, centres[i].y > averageY ? " top" : ""));
             }
             BlockEntity be = level.getBlockEntity(controllerPos.offset(nodes.get(i).localPos()));
             if (be instanceof KineticBlockEntityPhysicsAccess access) {
                 access.bnt$setBeltHold(now, lift);
             }
         }
+
+        if (report != null) {
+            LOG.info("belt {} {} tension={} give={} links={} path={} allow={} excess={}{}",
+                level.isClientSide ? "client" : "server", controllerPos,
+                String.format("%.2f", tension), String.format("%.3f", give), links,
+                String.format("%.3f", path), String.format("%.3f", allowance),
+                String.format("%.3f", excess), report);
+        }
+    }
+
+    /** Path the runs gain climbing the ground under them. */
+    private static double climb(
+        BlockPos controllerPos, List<PathedCogwheelNode> nodes, Axis axis,
+        Vec3[] centres, double[] xs, double[] ys, double[] radii, int[] sides
+    ) {
+        if (!BntPhysicsTuning.isBeltDrapeEnabled()) {
+            return 0.0;
+        }
+
+        int count = nodes.size();
+        double averageY = 0.0;
+        for (int i = 0; i < count; i++) {
+            averageY += centres[i].y;
+        }
+        averageY /= count;
+
+        Vec3 base = Vec3.atLowerCornerOf(controllerPos);
+        double total = 0.0;
+        for (int i = 0; i < count; i++) {
+            int next = (i + 1) % count;
+            if (next == i) {
+                continue;
+            }
+            double[] run = BntBeltPath.tangent(
+                xs[i], ys[i], sides[i] * radii[i], xs[next], ys[next], sides[next] * radii[next]);
+            if (run == null || run[0] < 1.0E-4) {
+                continue;
+            }
+
+            Vec3 start = BntBeltPath.fromPlanar(xs[i] + run[1], ys[i] + run[2],
+                BntBeltPath.axisCoord(centres[i], axis), axis);
+            Vec3 end = BntBeltPath.fromPlanar(xs[next] + run[3], ys[next] + run[4],
+                BntBeltPath.axisCoord(centres[next], axis), axis);
+            if ((start.y + end.y) * 0.5 > averageY) {
+                continue;
+            }
+
+            Vec3 along = end.subtract(start);
+            int probes = Math.min(BntBeltDrape.probeCount(run[0]), MAX_CLIMB_PROBES);
+            double rest = (BntBeltDrape.restOffset(nodes.get(i)) + BntBeltDrape.restOffset(nodes.get(next))) * 0.5;
+            double[] shape = BntBeltDrape.profile(start.subtract(base), along, probes, 0.0, rest, true);
+
+            double stride = run[0] / probes;
+            for (int probe = 0; probe < probes; probe++) {
+                double rise = shape[probe + 1] - shape[probe];
+                total += Math.sqrt(stride * stride + rise * rise) - stride;
+            }
+        }
+        return total;
     }
 
     private static List<PathedCogwheelNode> beltOrder(Level level, BlockPos controllerPos) {

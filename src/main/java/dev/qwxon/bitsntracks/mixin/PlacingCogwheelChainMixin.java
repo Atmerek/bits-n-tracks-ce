@@ -7,6 +7,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.placement.ChainInteractionFailedException;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
@@ -23,7 +24,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin({PlacingCogwheelChain.class})
 public abstract class PlacingCogwheelChainMixin {
@@ -195,6 +198,21 @@ public abstract class PlacingCogwheelChainMixin {
                 }
             } finally {
                 BntRadiusProvider.clearLevel();
+            }
+        }
+    }
+
+    @Inject(
+        method = {"checkMissingNodesInLevel"},
+        at = {@At("HEAD")},
+        cancellable = true,
+        remap = false
+    )
+    private void bnt$refuseNodes(Level level, CogwheelChainType type, CallbackInfoReturnable<Boolean> cir) {
+        for (PlacingCogwheelNode node : this.getVisitedNodes()) {
+            if (BntCogwheelChainTypes.refusal(type, level, node.pos(), level.getBlockState(node.pos())) != null) {
+                cir.setReturnValue(true);
+                return;
             }
         }
     }

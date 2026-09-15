@@ -4,6 +4,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBeha
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
@@ -51,13 +52,17 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3dc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class BntPhysicsEvents {
+    private static final Logger LOG = LoggerFactory.getLogger("bits_n_tracks");
     private static final double NO_GROUND = 5.0;
     private static final double CAST_HEADROOM = 0.0625;
     private static final double BLOCKS_PER_SECOND_PER_RPM_RADIUS = Math.PI * 2.0 / 60.0;
     private static final int TRACTION_ITERATIONS = 8;
     private static final double MAX_COMMANDED_YAW_RATE = 20.0;
+
 
     private BntPhysicsEvents() {
     }
@@ -80,6 +85,10 @@ public final class BntPhysicsEvents {
             } else {
                 KineticBlockEntityPhysicsAccess mixin = (KineticBlockEntityPhysicsAccess)kbe;
                 if (mixin.bnt$isPhysicsEnabled() && Sable.HELPER.getContaining(kbe) instanceof ServerSubLevel subLevel && !subLevel.isRemoved()) {
+                    if (level.getGameTime() % 20L == 0L) {
+                        BntChainEngagement.clearPhantomDrive(level, kbe);
+                    }
+
                     wheelsByBody.computeIfAbsent(subLevel, ignored -> new ArrayList<>()).add(kbe);
                     BntPhysicsEvents.WheelContact contact = resolveContact(kbe, mixin, subLevel);
                     if (contact != null) {
@@ -101,6 +110,11 @@ public final class BntPhysicsEvents {
                 }
             }
 
+            double bearing = 0.0;
+            for (BntPhysicsEvents.WheelContact contact : nearGround) {
+                bearing += contact.bearing;
+            }
+
             if (!loaded.isEmpty()) {
                 solveTraction(subLevel, loaded, timeStep);
 
@@ -108,6 +122,8 @@ public final class BntPhysicsEvents {
                     applyWheelForces(contact, nearGround.size(), timeStep);
                 }
             }
+
+            report(level, timeStep, loaded, bearing);
 
             if (!belt.isEmpty()) {
                 KineticBlockEntityPhysicsAccess carrier = (KineticBlockEntityPhysicsAccess)entry.getValue().get(0);
@@ -123,6 +139,31 @@ public final class BntPhysicsEvents {
         }
 
         applyAllBatchedForces(level);
+    }
+
+    /** One line a second per vehicle: what the spring asked for, what the ceiling allowed, what each track was told to do. */
+    private static void report(ServerLevel level, double timeStep, List<BntPhysicsEvents.WheelContact> loaded, double shareCount) {
+        if (loaded.isEmpty() || !BntPhysicsTuning.isBeltDebugLogging() || level.getGameTime() % 20L != 0L) {
+            return;
+        }
+
+        StringBuilder wheels = new StringBuilder();
+        int shown = 0;
+        for (BntPhysicsEvents.WheelContact contact : loaded) {
+            if (shown++ >= 8) {
+                break;
+            }
+            boolean clamped = Math.abs(contact.rawSpringForce) > contact.impulseCeiling + 1.0E-9;
+            wheels.append(String.format(" [%d,%d,%d comp%.3f carry%.3f bear%.2f raw%.2f cap%.2f%s vy%.2f kin%.1f tgt%.2f lon%.2f lat%.2f]",
+                contact.pos.getX(), contact.pos.getY(), contact.pos.getZ(),
+                contact.compression, contact.carried, contact.bearing, contact.rawSpringForce, contact.impulseCeiling, clamped ? " CLAMPED" : "",
+                contact.verticalSpeed, contact.kineticSpeed, contact.targetSpeed,
+                contact.longitudinalImpulse, contact.lateralImpulse));
+        }
+
+        LOG.info("wheels dt={} loaded={} bearing={} yaw={}{}",
+            String.format("%.4f", timeStep), loaded.size(), String.format("%.2f", shareCount),
+            String.format("%.3f", loaded.get(0).commandedYaw), wheels);
     }
 
     public static void updateClientRollingSpeed(KineticBlockEntity kbe, KineticBlockEntityPhysicsAccess mixin, SubLevel subLevel) {
@@ -173,16 +214,24 @@ public final class BntPhysicsEvents {
         return getRawRenderExtension(kbe, partialTick);
     }
 
-    /** Drop a wheel is drawn at, less what the belt holds it up by. */
+    /** Drop a wheel is drawn at, eased across the tick so terrain steps do not snap. */
     public static double getHeldRenderExtension(KineticBlockEntity kbe, float partialTick) {
         Level level = kbe.getLevel();
-        double drop = level != null
-            && level.isClientSide
-            && kbe instanceof KineticBlockEntityPhysicsAccess mixin
-            && mixin.bnt$isPhysicsEnabled()
-            ? mixin.bnt$getLerpedExtension(partialTick)
-            : getRawRenderExtension(kbe, partialTick);
-        return drop <= 0.0 ? drop : Math.max(0.0, drop - BntBeltHold.at(level, kbe));
+        if (level == null || !level.isClientSide || !(kbe instanceof KineticBlockEntityPhysicsAccess mixin)) {
+            return heldDrop(kbe, partialTick);
+        }
+
+        long now = level.getGameTime();
+        if (mixin.bnt$getDrawnDropTick() != now) {
+            mixin.bnt$advanceDrawnDrop(now, heldDrop(kbe, 1.0F), BntPhysicsTuning.getSuspensionSmoothing());
+        }
+        return mixin.bnt$getDrawnDrop(partialTick);
+    }
+
+    /** Terrain drop less what the belt holds the wheel up by. */
+    private static double heldDrop(KineticBlockEntity kbe, float partialTick) {
+        double raw = getRawRenderExtension(kbe, partialTick);
+        return raw <= 0.0 ? raw : Math.max(0.0, raw - BntBeltHold.at(kbe.getLevel(), kbe));
     }
 
     /** Drop terrain alone puts a wheel at, before the belt has a say. */
@@ -241,7 +290,8 @@ public final class BntPhysicsEvents {
         double normalMass = 1.0 / inverseNormalMass;
 
         BntPhysicsEvents.TerrainCastResult extResult = computeMaxExtensionToTerrain(kbe, normalD, pose, subLevel);
-        double maxExtension = extResult.maxExtension;
+        double carried = BntTrackFloor.at(kbe.getLevel(), kbe);
+        double maxExtension = extResult.maxExtension - carried;
         boolean wasLiftedUp = mixin.bnt$isLiftedUp();
         if (maxExtension > suspensionRest + wheelRadius + 0.25) {
             mixin.bnt$setMaxAirExtension(Math.max(mixin.bnt$getMaxAirExtension(), maxExtension));
@@ -268,9 +318,9 @@ public final class BntPhysicsEvents {
             touchingFriction = fudgeFriction(PhysicsBlockPropertyHelper.getFriction(kbe.getLevel().getBlockState(extResult.minInteractingBlock)));
         }
 
-        mixin.bnt$setExtension(Mth.clamp(maxExtension - wheelRadius, -suspensionRest * 3.0, suspensionRest));
+        mixin.bnt$setExtension(maxExtension);
 
-        double distance = suspensionRest / 6.0 + maxExtension + BntBeltHold.at(kbe.getLevel(), kbe);
+        double distance = suspensionRest / 6.0 + maxExtension;
         double springLength = Mth.clamp(distance - wheelRadius, -suspensionRest * 2.0, suspensionRest);
         CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)kbe.getBehaviour(CogwheelChainBehaviour.TYPE);
         boolean isConnected = behaviour != null && behaviour.isPartOfChain();
@@ -294,17 +344,24 @@ public final class BntPhysicsEvents {
         contact.isConnected = isConnected;
         contact.isTrackModel = isConnected || block.getDescriptionId().contains("track");
         contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
-        contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest;
+        double reach = BntPhysicsTuning.getBeltMaxHold();
+        contact.bearing = reach <= 0.0
+            ? 1.0
+            : Mth.clamp(1.0 - BntBeltHold.at(kbe.getLevel(), kbe) / reach, 0.0, 1.0);
+        contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest
+            && contact.bearing > 0.0;
+        contact.carried = carried;
         contact.verticalSpeed = verticalSpeed;
+        contact.pos = kbe.getBlockPos();
         return contact;
     }
 
-    private static void applyWheelForces(BntPhysicsEvents.WheelContact contact, int shareCount, double timeStep) {
+    private static void applyWheelForces(BntPhysicsEvents.WheelContact contact, double shareTotal, double timeStep) {
         Vector3d queuedForce = new Vector3d();
         boolean suspensionEnabled = contact.isTrackModel
             ? BntPhysicsTuning.isTrackSuspensionEnabled()
             : BntPhysicsTuning.isCogwheelSuspensionEnabled();
-        double normalMassShare = contact.normalMass / shareCount;
+        double normalMassShare = contact.normalMass / Math.max(shareTotal, 1.0);
         double suspensionGain = suspensionEnabled ? BntPhysicsTuning.getBaseSuspensionStrength() * normalMassShare : 0.0;
         double springMult = contact.isTrackModel ? BntPhysicsTuning.getTrackSpringMultiplier() : BntPhysicsTuning.getCogwheelSpringMultiplier();
         double dampingMult = contact.isTrackModel ? BntPhysicsTuning.getTrackDampingMultiplier() : BntPhysicsTuning.getCogwheelDampingMultiplier();
@@ -322,7 +379,11 @@ public final class BntPhysicsEvents {
         double maxImpulseVal = maxImpulseMult * suspensionGain * BntPhysicsTuning.getImpulseScale() * timeStep * bumpStopScale;
         double speedLimitImpulse = normalMassShare * (BntPhysicsTuning.getMaxSuspensionSpeed() + Math.abs(relVelY));
         double impulseCeiling = Math.min(maxImpulseVal, speedLimitImpulse);
-        double springForce = Mth.clamp(rawSpringForce, -impulseCeiling, impulseCeiling);
+        double springForce = Mth.clamp(rawSpringForce, -impulseCeiling, impulseCeiling) * contact.bearing;
+        contact.compression = contact.suspensionRest - contact.springLength;
+        contact.rawSpringForce = rawSpringForce;
+        contact.springForce = springForce;
+        contact.impulseCeiling = impulseCeiling;
         Vec3i rayHitNormal = contact.extResult.normal.getNormal();
         Vec3 localForce = new Vec3(springForce * rayHitNormal.getX(), springForce * rayHitNormal.getY(), springForce * rayHitNormal.getZ());
         if (contact.extResult.subLevel != null) {
@@ -375,8 +436,8 @@ public final class BntPhysicsEvents {
             double longitudinalSpeed = contact.localVelocity.dot(contact.normalD);
             contact.targetSpeed = targetSpeed;
             contact.goalLongitudinal = longitudinalSpeed + response * (targetSpeed - longitudinalSpeed);
-            contact.limitLongitudinal = driveTraction * grip * loadShare * timeStep;
-            contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * loadShare * timeStep;
+            contact.limitLongitudinal = driveTraction * grip * loadShare * timeStep * contact.bearing;
+            contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * loadShare * timeStep * contact.bearing;
         }
 
         if (!anyTraction) {
@@ -384,6 +445,9 @@ public final class BntPhysicsEvents {
         }
 
         double commandedYawRate = pivotScrub > 0.0 ? solveCommandedYawRate(contacts) : 0.0;
+        for (BntPhysicsEvents.WheelContact contact : contacts) {
+            contact.commandedYaw = commandedYawRate;
+        }
 
         for (BntPhysicsEvents.WheelContact contact : contacts) {
             if (contact.hasTraction) {
@@ -594,7 +658,9 @@ public final class BntPhysicsEvents {
         }
     }
 
-    private static double computeRenderExtensionForPose(KineticBlockEntity kbe, Pose3dc pose, SubLevel subLevel) {
+    private static double computeRenderExtensionForPose(
+        KineticBlockEntity kbe, Pose3dc pose, SubLevel subLevel
+    ) {
         BlockState state = kbe.getBlockState();
         if (!state.hasProperty(BlockStateProperties.AXIS)) {
             return CogwheelSizeHelper.getSuspensionRest(state.getBlock());
@@ -679,7 +745,9 @@ public final class BntPhysicsEvents {
                     }
 
                     if (!(hitNormal.dot(0.0, 1.0, 0.0) < 0.5)) {
-                        double dist = wheelPosCenter.y - localHitPos.y;
+                        double bulge = wheelRadius
+                            - Math.sqrt(Math.max(0.0, wheelRadius * wheelRadius - sampleOffset * sampleOffset));
+                        double dist = wheelPosCenter.y - localHitPos.y + bulge;
                         pose.transformNormalInverse(hitNormal);
                         if (dist < minExtension) {
                             minExtension = dist;
@@ -711,8 +779,9 @@ public final class BntPhysicsEvents {
     }
 
     private static double[] getTerrainSampleOffsets(double wheelRadius) {
-        double inner = wheelRadius * 0.5;
-        return new double[]{-wheelRadius, -inner, 0.0, inner, wheelRadius};
+        double outer = wheelRadius * 2.0 / 3.0;
+        double inner = wheelRadius / 3.0;
+        return new double[]{-wheelRadius, -outer, -inner, 0.0, inner, outer, wheelRadius};
     }
 
     private static Vec3 getWheelCenter(KineticBlockEntity kbe, BlockState state) {
@@ -758,6 +827,8 @@ public final class BntPhysicsEvents {
         BntPhysicsEvents.TerrainCastResult extResult;
         double suspensionRest;
         double springLength;
+        double bearing;
+        double carried;
         double chainRadius;
         double kineticSpeed;
         double targetSpeed;
@@ -771,6 +842,12 @@ public final class BntPhysicsEvents {
         double limitLateral;
         double longitudinalImpulse;
         double lateralImpulse;
+        BlockPos pos;
+        double compression;
+        double rawSpringForce;
+        double springForce;
+        double impulseCeiling;
+        double commandedYaw;
         boolean hasTraction;
         boolean isConnected;
         boolean isTrackModel;

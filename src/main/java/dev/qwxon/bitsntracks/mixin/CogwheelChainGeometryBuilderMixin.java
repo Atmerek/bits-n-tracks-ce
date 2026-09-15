@@ -103,7 +103,8 @@ public class CogwheelChainGeometryBuilderMixin {
             Vec3 runStart = BntChainMotion.liveCenter(currentNode).add(currentOffsets.getSecond());
             Vec3 runEnd = BntChainMotion.liveCenter(nextNode).add(nextOffsets.getFirst());
             int skipped = bnt$passThroughSkippedNodes(resultNodes, pathNodes, present, emitted,
-                listIndex[i], listIndex[(i + 1) % n], runStart, runEnd);
+                listIndex[i], listIndex[(i + 1) % n], runStart, runEnd,
+                BntBeltDrape.seamOffset(currentNode), BntBeltDrape.seamOffset(nextNode));
             for (; walked < resultNodes.size(); walked++) {
                 Vec3 point = resultNodes.get(walked).getPosition();
                 if (previous != null) {
@@ -162,7 +163,9 @@ public class CogwheelChainGeometryBuilderMixin {
         int from,
         int to,
         Vec3 runStart,
-        Vec3 runEnd
+        Vec3 runEnd,
+        Vec3 seamStart,
+        Vec3 seamEnd
     ) {
         int size = pathNodes.size();
         if (from < 0 || to < 0) {
@@ -186,8 +189,9 @@ public class CogwheelChainGeometryBuilderMixin {
             double at = lengthSquared < 1.0E-12 ? 0.0 : along.dot(center.subtract(runStart)) / lengthSquared;
             at = Math.min(1.0, Math.max(lower, at));
             lower = at;
-            resultNodes.add(new RenderedChainPathNode(
-                skipped.localPos(), runStart.add(along.scale(at)).subtract(center), skipped.rotationAxisVec()));
+            Vec3 onSeam = runStart.add(along.scale(at)).add(seamStart.lerp(seamEnd, at));
+            resultNodes.add(new RenderedChainPathNode(skipped.localPos(),
+                onSeam.subtract(center).subtract(BntBeltDrape.seamOffset(skipped)), skipped.rotationAxisVec()));
             count++;
         }
         return count;
@@ -206,8 +210,7 @@ public class CogwheelChainGeometryBuilderMixin {
 
         int links = BntBeltLinks.contextOrEstimate(nodes);
         float tension = BntBeltTension.contextTension();
-        double surplus = BntBeltLinks.surplus(
-            links, tension, BntBeltLinks.tautLength(nodes), BntBeltLinks.liveTautLength(nodes));
+        double surplus = BntBeltLinks.surplus(links, tension, BntBeltLinks.liveTautLength(nodes));
         float speed = BntBeltSlack.contextSpeed();
         return BntBeltSlack.distribute(runLengths, surplus, BntBeltSlack.tightRun(nodes, speed), speed);
     }
@@ -228,9 +231,12 @@ public class CogwheelChainGeometryBuilderMixin {
         int probes = BntBeltDrape.probeCount(Math.sqrt(owner.localPos().distSqr(next.localPos())));
         boolean underside = (runStart.y + runEnd.y) * 0.5
             <= (BntChainMotion.liveCenter(owner).y + BntChainMotion.liveCenter(next).y) * 0.5;
-        double[] offsets = BntBeltDrape.profile(runStart, along, probes, sag, restOffset, underside);
+        Vec3 seamStart = BntBeltDrape.seamOffset(owner);
+        Vec3 seamRunStart = runStart.add(seamStart);
+        Vec3 seamAlong = along.add(BntBeltDrape.seamOffset(next)).subtract(seamStart);
+        double[] offsets = BntBeltDrape.profile(seamRunStart, seamAlong, probes, sag, restOffset, underside);
 
-        Vec3 base = BntChainMotion.liveCenter(owner).add(BntBeltDrape.seamOffset(owner));
+        Vec3 base = BntChainMotion.liveCenter(owner).add(seamStart);
         double pitch = BntBeltLinks.pitch();
         double reached = 0.0;
         for (int probe = 1; probe < probes; probe++) {
@@ -243,7 +249,7 @@ public class CogwheelChainGeometryBuilderMixin {
             int upper = Math.min(lower + 1, probes);
             double lift = Mth.lerp(sampled - lower, offsets[lower], offsets[upper]);
 
-            Vec3 point = runStart.add(along.scale(at)).add(0.0, lift, 0.0);
+            Vec3 point = seamRunStart.add(seamAlong.scale(at)).add(0.0, lift, 0.0);
             RenderedChainPathNode shapePoint = new RenderedChainPathNode(
                 owner.localPos(), point.subtract(base), owner.rotationAxisVec());
             ((BntRunShapeNode)(Object)shapePoint).bnt$markRunShape();

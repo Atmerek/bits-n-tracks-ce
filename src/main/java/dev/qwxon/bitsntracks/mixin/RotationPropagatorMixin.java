@@ -1,5 +1,7 @@
 package dev.qwxon.bitsntracks.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.kinetics.RotationPropagator;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
@@ -7,6 +9,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -58,6 +61,24 @@ public class RotationPropagatorMixin {
                 }
             }
         }
+    }
+
+    /** Stops the chain instead of breaking the driving block. */
+    @WrapOperation(
+        method = {"propagateNewSource(Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;)V"},
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;Z)Z"
+        ),
+        require = 0,
+        remap = false
+    )
+    private static boolean bnt$stopInsteadOfBreaking(Level level, BlockPos pos, boolean drop, Operation<Boolean> original) {
+        if (level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic
+            && BntChainEngagement.stopChainNetwork(level, kinetic, "propagation")) {
+            return false;
+        }
+        return original.call(level, pos, drop);
     }
 
     private static double getSizeMultiplier(Block block) {

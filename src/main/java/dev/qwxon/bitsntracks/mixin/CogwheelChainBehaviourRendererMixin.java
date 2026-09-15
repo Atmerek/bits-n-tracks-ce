@@ -256,7 +256,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         boolean wideBelt = isCustomBeltPlacement && TrackModelRenderContext.isRenderingWideChain();
         ResourceLocation renderTexture = type.getRenderTexture();
         if (tankTread) {
-            renderTexture = BitsNTracks.asResource("textures/block/tank_tread.png");
+            renderTexture = BitsNTracks.asResource(wideBelt ? "textures/block/tank_tread_wide.png" : "textures/block/tank_tread.png");
         } else if (isCustomBeltPlacement) {
             if (renderTexture.getPath().contains("industrial")) {
                 renderTexture = BitsNTracks.asResource(
@@ -297,7 +297,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         }
 
         if (tankTread) {
-            BntTankTread.emitSegment(emitter, sourcePoints, destinationPoints, offset, length);
+            BntTankTread.emitSegment(emitter, sourcePoints, destinationPoints, offset, length, wideBelt);
         } else if (chainRenderInfo == ChainRenderInfo.BELT && renderTexture.getNamespace().equals("bits_n_tracks")) {
             float u0Top = 0.875F;
             float u1Top = 0.4375F;
