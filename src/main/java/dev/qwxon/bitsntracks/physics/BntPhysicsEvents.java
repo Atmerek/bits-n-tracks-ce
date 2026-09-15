@@ -192,10 +192,13 @@ public final class BntPhysicsEvents {
         return mixin.bnt$getDrawnDrop(partialTick);
     }
 
-    /** Terrain drop less what the belt holds the wheel up by. */
+    /** Terrain drop less what the belt holds the wheel up by and what the track carries it on. */
     private static double heldDrop(KineticBlockEntity kbe, float partialTick) {
         double raw = getRawRenderExtension(kbe, partialTick);
-        return raw <= 0.0 ? raw : Math.max(0.0, raw - BntBeltHold.at(kbe.getLevel(), kbe));
+        Level level = kbe.getLevel();
+        return raw <= 0.0
+            ? raw
+            : Math.max(0.0, raw - BntBeltHold.at(level, kbe) - BntTrackFloor.at(level, kbe));
     }
 
     /** Drop terrain alone puts a wheel at, before the belt has a say. */
