@@ -1,6 +1,5 @@
 package dev.qwxon.bitsntracks.index;
 
-import com.kipti.bnb.registry.content.blocks.BnbKineticBlocks;
 import com.kipti.bnb.registry.core.BnbTags.BnbBlockTags;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.tterrag.registrate.builders.BlockBuilder;
@@ -11,14 +10,14 @@ import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.MapColor;
 
 public class BitsNTracksBlocks {
     public static final BlockEntry<HiddenCogwheelBlock> TINY_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("tiny_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.TINY))
-        .initialProperties(() -> (Block)BnbKineticBlocks.SMALL_FLANGED_COGWHEEL.get())
+        .initialProperties(SharedProperties::stone)
+        .properties(p -> p.sound(SoundType.WOOD).mapColor(MapColor.DIRT))
         .properties(p -> p.noOcclusion())
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
         .blockstate((c, p) -> {})
@@ -48,13 +47,15 @@ public class BitsNTracksBlocks {
         .register();
     public static final BlockEntry<HiddenCogwheelBlock> SMALL_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("small_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.SMALL))
-        .initialProperties(() -> (Block)BnbKineticBlocks.SMALL_FLANGED_COGWHEEL.get())
+        .initialProperties(SharedProperties::stone)
+        .properties(p -> p.sound(SoundType.WOOD).mapColor(MapColor.DIRT))
         .properties(p -> p.noOcclusion())
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
         .register();
     public static final BlockEntry<HiddenCogwheelBlock> LARGE_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("large_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.LARGE))
-        .initialProperties(() -> (Block)BnbKineticBlocks.LARGE_FLANGED_COGWHEEL.get())
+        .initialProperties(SharedProperties::stone)
+        .properties(p -> p.sound(SoundType.WOOD).mapColor(MapColor.DIRT))
         .properties(p -> p.noOcclusion())
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
         .register();
@@ -129,7 +130,8 @@ public class BitsNTracksBlocks {
         .register();
     public static final BlockEntry<HiddenCogwheelBlock> MEDIUM_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("medium_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.MEDIUM))
-        .initialProperties(() -> (Block)BnbKineticBlocks.LARGE_FLANGED_COGWHEEL.get())
+        .initialProperties(SharedProperties::stone)
+        .properties(p -> p.sound(SoundType.WOOD).mapColor(MapColor.DIRT))
         .properties(p -> p.noOcclusion())
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
         .blockstate((c, p) -> {})
