@@ -285,7 +285,7 @@ public final class BntPhysicsEvents {
             touchingFriction = fudgeFriction(PhysicsBlockPropertyHelper.getFriction(kbe.getLevel().getBlockState(extResult.minInteractingBlock)));
         }
 
-        mixin.bnt$setExtension(maxExtension);
+        mixin.bnt$setExtension(Mth.clamp(maxExtension - wheelRadius, -suspensionRest * 3.0, suspensionRest));
 
         double distance = suspensionRest / 6.0 + maxExtension + BntBeltHold.at(kbe.getLevel(), kbe);
         double springLength = Mth.clamp(distance - wheelRadius, -suspensionRest * 2.0, suspensionRest);
