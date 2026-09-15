@@ -49,10 +49,12 @@ public final class BntBeltHold {
             return access.bnt$getBeltHold();
         }
 
-        access.bnt$setBeltHold(now, access.bnt$getBeltHold());
         BlockPos controllerPos = controllerPos(wheel);
         if (controllerPos != null) {
             solve(level, controllerPos, now);
+        }
+        if (access.bnt$getBeltHoldTick() != now) {
+            access.bnt$setBeltHold(now, Math.max(0.0, access.bnt$getBeltHold() - STEP));
         }
         return access.bnt$getBeltHold();
     }
