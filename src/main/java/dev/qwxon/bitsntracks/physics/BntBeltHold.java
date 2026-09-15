@@ -54,9 +54,14 @@ public final class BntBeltHold {
             solve(level, controllerPos, now);
         }
         if (access.bnt$getBeltHoldTick() != now) {
-            access.bnt$setBeltHold(now, Math.max(0.0, access.bnt$getBeltHold() - STEP));
+            access.bnt$setBeltHold(now, Math.max(0.0, carried(access, now) - STEP));
         }
         return access.bnt$getBeltHold();
+    }
+
+    /** Lift a wheel may relax from, which is nothing unless it was solved on the previous tick. */
+    private static double carried(KineticBlockEntityPhysicsAccess access, long now) {
+        return access.bnt$getBeltHoldTick() == now - 1L ? access.bnt$getBeltHold() : 0.0;
     }
 
     private static void solve(Level level, BlockPos controllerPos, long now) {
@@ -67,8 +72,8 @@ public final class BntBeltHold {
         for (int i = 0; i < count; i++) {
             if (level.getBlockEntity(controllerPos.offset(nodes.get(i).localPos()))
                 instanceof KineticBlockEntityPhysicsAccess access) {
-                access.bnt$setBeltHold(now,
-                    solvable ? access.bnt$getBeltHold() : Math.max(0.0, access.bnt$getBeltHold() - STEP));
+                double held = carried(access, now);
+                access.bnt$setBeltHold(now, solvable ? held : Math.max(0.0, held - STEP));
             }
         }
         if (!solvable) {
