@@ -5,6 +5,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.ModConfigSpec.BooleanValue;
 import net.neoforged.neoforge.common.ModConfigSpec.Builder;
 import net.neoforged.neoforge.common.ModConfigSpec.DoubleValue;
+import net.neoforged.neoforge.common.ModConfigSpec.IntValue;
 
 public final class BntPhysicsTuning {
     public static final ModConfigSpec SPEC;
@@ -62,24 +63,23 @@ public final class BntPhysicsTuning {
     private static final DoubleValue ROLLING_RESISTANCE;
 
     private static final BooleanValue BELT_COLLISION_ENABLED;
+    private static final BooleanValue BELT_DRAPE_ENABLED;
+    private static final DoubleValue BELT_NODE_SPACING;
+    private static final DoubleValue BELT_SURFACE_CLEARANCE;
     private static final DoubleValue BELT_MAX_SAG;
     private static final DoubleValue BELT_SUPPORT_STRENGTH;
     private static final DoubleValue BELT_STIFFNESS_RANGE;
     private static final DoubleValue BELT_GRIP;
     private static final DoubleValue BELT_TENSION_STEP;
-
-    private static final boolean BELT_DRAPE_ENABLED = true;
-    private static final double BELT_SURFACE_CLEARANCE = 0.15;
-    private static final double BELT_NODE_SPACING = 0.25;
-    private static final double BELT_LINK_PITCH = 0.25;
-    private static final int BELT_LINKS_PER_TEXTURE = 4;
-    private static final int BELT_MAX_SLACK_LINKS = 2;
-    private static final double BELT_PRE_TENSION = 0.3;
-    private static final double BELT_MASS_PER_BLOCK = 0.1;
-    private static final double BELT_TIGHT_SIDE_BIAS = 0.85;
-    private static final double BELT_TIGHT_SIDE_SPEED = 32.0;
-    private static final boolean BELT_HOLD_ENABLED = true;
-    private static final double BELT_MAX_HOLD = 2.0;
+    private static final DoubleValue BELT_LINK_PITCH;
+    private static final IntValue BELT_LINKS_PER_TEXTURE;
+    private static final IntValue BELT_MAX_SLACK_LINKS;
+    private static final DoubleValue BELT_PRE_TENSION;
+    private static final DoubleValue BELT_MASS_PER_BLOCK;
+    private static final DoubleValue BELT_TIGHT_SIDE_BIAS;
+    private static final DoubleValue BELT_TIGHT_SIDE_SPEED;
+    private static final BooleanValue BELT_HOLD_ENABLED;
+    private static final DoubleValue BELT_MAX_HOLD;
 
     private static final DoubleValue TINY_STRESS_IMPACT;
     private static final DoubleValue SMALL_STRESS_IMPACT;
@@ -200,6 +200,15 @@ public final class BntPhysicsTuning {
         BELT_COLLISION_ENABLED = builder
             .comment("Let the track between cogwheels rest on terrain. With this off only the cogwheels themselves touch the ground.")
             .define("beltCollisionEnabled", true);
+        BELT_DRAPE_ENABLED = builder
+            .comment("Let the run of track between two cogwheels bend over what it crosses instead of passing through it. Turning this off leaves it a straight line.")
+            .define("beltDrapeEnabled", true);
+        BELT_NODE_SPACING = builder
+            .comment("Distance between the points a run of track is shaped by, in blocks. Smaller follows the ground more closely and costs more to work out.")
+            .defineInRange("beltNodeSpacing", 0.25, 0.05, 4.0);
+        BELT_SURFACE_CLEARANCE = builder
+            .comment("Extra gap the track keeps above anything it climbs over, in blocks, on top of how it already sits on flat ground.")
+            .defineInRange("beltSurfaceClearance", 0.15, 0.0, 1.0);
         BELT_MAX_SAG = builder
             .comment("Maximum belt hang, in blocks, so a long run does not droop through the floor.")
             .defineInRange("beltMaxSag", 1.0, 0.0, 8.0);
@@ -215,6 +224,33 @@ public final class BntPhysicsTuning {
         BELT_TENSION_STEP = builder
             .comment("Tension change from one click of the alignment lever.")
             .defineInRange("beltTensionStep", 0.1, 0.01, 1.0);
+        BELT_LINK_PITCH = builder
+            .comment("Length of one track link, in blocks. A loop is always a whole number of links, and slack is the surplus of that length over the taut path.")
+            .defineInRange("beltLinkPitch", 0.25, 0.0625, 2.0);
+        BELT_LINKS_PER_TEXTURE = builder
+            .comment("Links drawn by one pass of the belt texture. The default texture is sixteen rows tall and shows four links.")
+            .defineInRange("beltLinksPerTexture", 4, 1, 64);
+        BELT_MAX_SLACK_LINKS = builder
+            .comment("Links of slack a fully slack loop carries beyond the taut path. The hang follows the lever evenly, so this sets how deep the slackest setting hangs.")
+            .defineInRange("beltMaxSlackLinks", 2, 0, 256);
+        BELT_PRE_TENSION = builder
+            .comment("Length a fully taut loop is fitted short by, in blocks, so it pulls on its wheels instead of merely reaching round them. At zero a taut loop is exactly the length of the path it wraps.")
+            .defineInRange("beltPreTension", 0.3, 0.0, 8.0);
+        BELT_MASS_PER_BLOCK = builder
+            .comment("Mass of one block of track, in kilograms. Runs that are not resting on anything hang from the cogwheels under this weight.")
+            .defineInRange("beltMassPerBlock", 0.1, 0.0, 1000.0);
+        BELT_TIGHT_SIDE_BIAS = builder
+            .comment("Share of its slack a run gives up when the sprocket is pulling into it. At zero the loop holds one tension all the way round.")
+            .defineInRange("beltTightSideBias", 0.85, 0.0, 1.0);
+        BELT_TIGHT_SIDE_SPEED = builder
+            .comment("Chain speed at which the tight side reaches its full bias, in revolutions per minute.")
+            .defineInRange("beltTightSideSpeed", 32.0, 1.0, 1024.0);
+        BELT_HOLD_ENABLED = builder
+            .comment("Let a loop that has run out of length hold its drooping wheels up instead of stretching to follow them.")
+            .define("beltHoldEnabled", true);
+        BELT_MAX_HOLD = builder
+            .comment("Furthest the track may hold one wheel above the ground it would otherwise drop to, in blocks.")
+            .defineInRange("beltMaxHold", 2.0, 0.0, 8.0);
         builder.pop();
 
         builder.comment("Create stress consumed by each cogwheel size.").push("stress");
@@ -241,15 +277,15 @@ public final class BntPhysicsTuning {
     }
 
     public static boolean isBeltDrapeEnabled() {
-        return BELT_DRAPE_ENABLED;
+        return BELT_DRAPE_ENABLED.get();
     }
 
     public static double getBeltNodeSpacing() {
-        return BELT_NODE_SPACING;
+        return BELT_NODE_SPACING.get();
     }
 
     public static double getBeltSurfaceClearance() {
-        return BELT_SURFACE_CLEARANCE;
+        return BELT_SURFACE_CLEARANCE.get();
     }
 
     public static double getBeltMaxSag() {
@@ -273,39 +309,39 @@ public final class BntPhysicsTuning {
     }
 
     public static double getBeltLinkPitch() {
-        return BELT_LINK_PITCH;
+        return BELT_LINK_PITCH.get();
     }
 
     public static int getBeltLinksPerTexture() {
-        return BELT_LINKS_PER_TEXTURE;
+        return BELT_LINKS_PER_TEXTURE.get();
     }
 
     public static int getBeltMaxSlackLinks() {
-        return BELT_MAX_SLACK_LINKS;
+        return BELT_MAX_SLACK_LINKS.get();
     }
 
     public static double getBeltPreTension() {
-        return BELT_PRE_TENSION;
+        return BELT_PRE_TENSION.get();
     }
 
     public static double getBeltMassPerBlock() {
-        return BELT_MASS_PER_BLOCK;
+        return BELT_MASS_PER_BLOCK.get();
     }
 
     public static double getBeltTightSideBias() {
-        return BELT_TIGHT_SIDE_BIAS;
+        return BELT_TIGHT_SIDE_BIAS.get();
     }
 
     public static double getBeltTightSideSpeed() {
-        return BELT_TIGHT_SIDE_SPEED;
+        return BELT_TIGHT_SIDE_SPEED.get();
     }
 
     public static boolean isBeltHoldEnabled() {
-        return BELT_HOLD_ENABLED;
+        return BELT_HOLD_ENABLED.get();
     }
 
     public static double getBeltMaxHold() {
-        return BELT_MAX_HOLD;
+        return BELT_MAX_HOLD.get();
     }
 
     public static boolean isCogwheelSuspensionEnabled() {
