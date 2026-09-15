@@ -350,12 +350,12 @@ public final class BntChainEngagement {
         ArrayDeque<BlockPos> frontier = new ArrayDeque<>(nodes);
         while (!frontier.isEmpty()) {
             BlockPos at = frontier.poll();
-            if (!(level.getBlockEntity(at) instanceof KineticBlockEntity kinetic)) {
+            if (!(loadedBlockEntity(level, at) instanceof KineticBlockEntity kinetic)) {
                 continue;
             }
             for (BlockPos next : neighbours(level, kinetic)) {
                 if (!stopped.contains(next)
-                    && level.getBlockEntity(next) instanceof KineticBlockEntity driven
+                    && loadedBlockEntity(level, next) instanceof KineticBlockEntity driven
                     && at.equals(driven.source)) {
                     stopped.add(next);
                     frontier.add(next);
@@ -364,7 +364,7 @@ public final class BntChainEngagement {
         }
 
         for (BlockPos pos : stopped) {
-            if (level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic) {
+            if (loadedBlockEntity(level, pos) instanceof KineticBlockEntity kinetic) {
                 kinetic.removeSource();
                 if (kinetic instanceof GeneratingKineticBlockEntity generator) {
                     generator.reActivateSource = true;
@@ -372,6 +372,10 @@ public final class BntChainEngagement {
             }
         }
         return stopped;
+    }
+
+    private static BlockEntity loadedBlockEntity(Level level, BlockPos pos) {
+        return level.isLoaded(pos) ? level.getBlockEntity(pos) : null;
     }
 
     private static List<BlockPos> neighbours(Level level, KineticBlockEntity kinetic) {
