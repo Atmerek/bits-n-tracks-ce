@@ -20,8 +20,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The belt is a loop of fixed length, and it pulls back when the wheels ask for more path than it has.
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
  * exactly what it was fitted with, and only terrain that lengthens the path makes the belt carry anything.
  */
 public final class BntBeltHold {
-    private static final Logger LOG = LoggerFactory.getLogger("bits_n_tracks");
     private static final double FLAT = 1.0E-6;
     private static final double GRIP_SLOPE = 0.05;
     private static final double RELAX = 0.6;
@@ -154,28 +151,15 @@ public final class BntBeltHold {
             weight += slope * slope;
         }
 
-        StringBuilder report = BntPhysicsTuning.isBeltDebugLogging() && now % 20L == 0L ? new StringBuilder() : null;
         for (int i = 0; i < count; i++) {
             double step = weight < FLAT || gradient[i] >= 0.0
                 ? -STEP
                 : Mth.clamp(RELAX * excess * -gradient[i] / weight, -STEP, STEP);
             double lift = Mth.clamp(holds[i] + step, 0.0, Math.min(cap, drops[i]));
-            if (report != null) {
-                report.append(String.format(" [%d r%.2f drop%.3f grad%.2f lift%.3f%s]",
-                    i, radii[i], drops[i], gradient[i], lift, centres[i].y > averageY ? " top" : ""));
-            }
             BlockEntity be = level.getBlockEntity(controllerPos.offset(nodes.get(i).localPos()));
             if (be instanceof KineticBlockEntityPhysicsAccess access) {
                 access.bnt$setBeltHold(now, lift);
             }
-        }
-
-        if (report != null) {
-            LOG.info("belt {} {} tension={} give={} links={} path={} allow={} excess={}{}",
-                level.isClientSide ? "client" : "server", controllerPos,
-                String.format("%.2f", tension), String.format("%.3f", give), links,
-                String.format("%.3f", path), String.format("%.3f", allowance),
-                String.format("%.3f", excess), report);
         }
     }
 

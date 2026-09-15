@@ -67,7 +67,6 @@ public final class BntPhysicsTuning {
     private static final DoubleValue BELT_STIFFNESS_RANGE;
     private static final DoubleValue BELT_GRIP;
     private static final DoubleValue BELT_TENSION_STEP;
-    private static final BooleanValue BELT_DEBUG_LOGGING;
 
     private static final boolean BELT_DRAPE_ENABLED = true;
     private static final double BELT_SURFACE_CLEARANCE = 0.15;
@@ -216,9 +215,6 @@ public final class BntPhysicsTuning {
         BELT_TENSION_STEP = builder
             .comment("Tension change from one click of the alignment lever.")
             .defineInRange("beltTensionStep", 0.1, 0.01, 1.0);
-        BELT_DEBUG_LOGGING = builder
-            .comment("Log what the belt hold and the suspension see, once a second per chain, to the game log.")
-            .define("beltDebugLogging", true);
         builder.pop();
 
         builder.comment("Create stress consumed by each cogwheel size.").push("stress");
@@ -302,10 +298,6 @@ public final class BntPhysicsTuning {
 
     public static double getBeltTightSideSpeed() {
         return BELT_TIGHT_SIDE_SPEED;
-    }
-
-    public static boolean isBeltDebugLogging() {
-        return BELT_DEBUG_LOGGING.get();
     }
 
     public static boolean isBeltHoldEnabled() {

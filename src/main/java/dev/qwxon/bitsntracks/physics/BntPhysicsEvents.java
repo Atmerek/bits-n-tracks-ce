@@ -52,17 +52,13 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3dc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class BntPhysicsEvents {
-    private static final Logger LOG = LoggerFactory.getLogger("bits_n_tracks");
     private static final double NO_GROUND = 5.0;
     private static final double CAST_HEADROOM = 0.0625;
     private static final double BLOCKS_PER_SECOND_PER_RPM_RADIUS = Math.PI * 2.0 / 60.0;
     private static final int TRACTION_ITERATIONS = 8;
     private static final double MAX_COMMANDED_YAW_RATE = 20.0;
-
 
     private BntPhysicsEvents() {
     }
@@ -110,11 +106,6 @@ public final class BntPhysicsEvents {
                 }
             }
 
-            double bearing = 0.0;
-            for (BntPhysicsEvents.WheelContact contact : nearGround) {
-                bearing += contact.bearing;
-            }
-
             if (!loaded.isEmpty()) {
                 solveTraction(subLevel, loaded, timeStep);
 
@@ -122,8 +113,6 @@ public final class BntPhysicsEvents {
                     applyWheelForces(contact, nearGround.size(), timeStep);
                 }
             }
-
-            report(level, timeStep, loaded, bearing);
 
             if (!belt.isEmpty()) {
                 KineticBlockEntityPhysicsAccess carrier = (KineticBlockEntityPhysicsAccess)entry.getValue().get(0);
@@ -139,31 +128,6 @@ public final class BntPhysicsEvents {
         }
 
         applyAllBatchedForces(level);
-    }
-
-    /** One line a second per vehicle: what the spring asked for, what the ceiling allowed, what each track was told to do. */
-    private static void report(ServerLevel level, double timeStep, List<BntPhysicsEvents.WheelContact> loaded, double shareCount) {
-        if (loaded.isEmpty() || !BntPhysicsTuning.isBeltDebugLogging() || level.getGameTime() % 20L != 0L) {
-            return;
-        }
-
-        StringBuilder wheels = new StringBuilder();
-        int shown = 0;
-        for (BntPhysicsEvents.WheelContact contact : loaded) {
-            if (shown++ >= 8) {
-                break;
-            }
-            boolean clamped = Math.abs(contact.rawSpringForce) > contact.impulseCeiling + 1.0E-9;
-            wheels.append(String.format(" [%d,%d,%d comp%.3f carry%.3f bear%.2f raw%.2f cap%.2f%s vy%.2f kin%.1f tgt%.2f lon%.2f lat%.2f]",
-                contact.pos.getX(), contact.pos.getY(), contact.pos.getZ(),
-                contact.compression, contact.carried, contact.bearing, contact.rawSpringForce, contact.impulseCeiling, clamped ? " CLAMPED" : "",
-                contact.verticalSpeed, contact.kineticSpeed, contact.targetSpeed,
-                contact.longitudinalImpulse, contact.lateralImpulse));
-        }
-
-        LOG.info("wheels dt={} loaded={} bearing={} yaw={}{}",
-            String.format("%.4f", timeStep), loaded.size(), String.format("%.2f", shareCount),
-            String.format("%.3f", loaded.get(0).commandedYaw), wheels);
     }
 
     public static void updateClientRollingSpeed(KineticBlockEntity kbe, KineticBlockEntityPhysicsAccess mixin, SubLevel subLevel) {
@@ -350,9 +314,7 @@ public final class BntPhysicsEvents {
             : Mth.clamp(1.0 - BntBeltHold.at(kbe.getLevel(), kbe) / reach, 0.0, 1.0);
         contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest
             && contact.bearing > 0.0;
-        contact.carried = carried;
         contact.verticalSpeed = verticalSpeed;
-        contact.pos = kbe.getBlockPos();
         return contact;
     }
 
@@ -380,10 +342,6 @@ public final class BntPhysicsEvents {
         double speedLimitImpulse = normalMassShare * (BntPhysicsTuning.getMaxSuspensionSpeed() + Math.abs(relVelY));
         double impulseCeiling = Math.min(maxImpulseVal, speedLimitImpulse);
         double springForce = Mth.clamp(rawSpringForce, -impulseCeiling, impulseCeiling) * contact.bearing;
-        contact.compression = contact.suspensionRest - contact.springLength;
-        contact.rawSpringForce = rawSpringForce;
-        contact.springForce = springForce;
-        contact.impulseCeiling = impulseCeiling;
         Vec3i rayHitNormal = contact.extResult.normal.getNormal();
         Vec3 localForce = new Vec3(springForce * rayHitNormal.getX(), springForce * rayHitNormal.getY(), springForce * rayHitNormal.getZ());
         if (contact.extResult.subLevel != null) {
@@ -445,9 +403,6 @@ public final class BntPhysicsEvents {
         }
 
         double commandedYawRate = pivotScrub > 0.0 ? solveCommandedYawRate(contacts) : 0.0;
-        for (BntPhysicsEvents.WheelContact contact : contacts) {
-            contact.commandedYaw = commandedYawRate;
-        }
 
         for (BntPhysicsEvents.WheelContact contact : contacts) {
             if (contact.hasTraction) {
@@ -828,7 +783,6 @@ public final class BntPhysicsEvents {
         double suspensionRest;
         double springLength;
         double bearing;
-        double carried;
         double chainRadius;
         double kineticSpeed;
         double targetSpeed;
@@ -842,12 +796,6 @@ public final class BntPhysicsEvents {
         double limitLateral;
         double longitudinalImpulse;
         double lateralImpulse;
-        BlockPos pos;
-        double compression;
-        double rawSpringForce;
-        double springForce;
-        double impulseCeiling;
-        double commandedYaw;
         boolean hasTraction;
         boolean isConnected;
         boolean isTrackModel;

@@ -24,7 +24,7 @@ public abstract class GeneratingKineticBlockEntityMixin {
         require = 0
     )
     private boolean bnt$stopInsteadOfBreaking(Level level, BlockPos pos, boolean drop, Operation<Boolean> original) {
-        if (BntChainEngagement.stopChainNetwork(level, (GeneratingKineticBlockEntity)(Object)this, "an overpowered source")) {
+        if (BntChainEngagement.stopChainNetwork(level, (GeneratingKineticBlockEntity)(Object)this)) {
             return false;
         }
         return original.call(level, pos, drop);

@@ -32,11 +32,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class BntChainEngagement {
-    private static final Logger LOG = LoggerFactory.getLogger("bits_n_tracks");
     private static final float DRIVE_TOLERANCE = 1.0E-3F;
     private static final int MAX_SOURCE_WALK = 256;
     private static final double DROP_STEP = 1.0 / 16.0;
@@ -329,7 +326,6 @@ public final class BntChainEngagement {
         BlockPos at = start.source;
         for (int step = 0; step < MAX_SOURCE_WALK; step++) {
             if (!walked.add(at)) {
-                LOG.info("belt stopped a loop of cogwheels driving each other, with nothing generating {}", walked);
                 restore(level, detach(level, walked));
                 return true;
             }
@@ -341,19 +337,6 @@ public final class BntChainEngagement {
             at = next.source;
         }
         return false;
-    }
-
-    /** Each chain cogwheel's speed and what drives it. */
-    public static String report(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
-        StringBuilder line = new StringBuilder();
-        for (PathedCogwheelNode node : nodes) {
-            BlockPos pos = controllerPos.offset(node.localPos());
-            line.append(level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic
-                ? String.format(" [%s %.2f from %s]", pos.toShortString(), kinetic.getTheoreticalSpeed(),
-                    kinetic.source == null ? "nothing" : kinetic.source.toShortString())
-                : String.format(" [%s gone]", pos.toShortString()));
-        }
-        return line.toString();
     }
 
     private static void rebuild(Level level, Set<BlockPos> nodes) {
@@ -417,7 +400,7 @@ public final class BntChainEngagement {
     }
 
     /** Stops a chain's network instead of letting Create break a block in it. */
-    public static boolean stopChainNetwork(Level level, KineticBlockEntity kinetic, String site) {
+    public static boolean stopChainNetwork(Level level, KineticBlockEntity kinetic) {
         if (level == null || level.isClientSide) {
             return false;
         }
@@ -426,9 +409,6 @@ public final class BntChainEngagement {
             return false;
         }
 
-        LOG.info("kept {} that Create would have broken in {}, speed {} flicker {} network {}",
-            kinetic.getBlockPos().toShortString(), site, kinetic.getTheoreticalSpeed(), kinetic.getFlickerScore(),
-            network.size());
         restore(level, detach(level, network));
         return true;
     }

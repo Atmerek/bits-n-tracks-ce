@@ -75,7 +75,7 @@ public class RotationPropagatorMixin {
     )
     private static boolean bnt$stopInsteadOfBreaking(Level level, BlockPos pos, boolean drop, Operation<Boolean> original) {
         if (level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic
-            && BntChainEngagement.stopChainNetwork(level, kinetic, "propagation")) {
+            && BntChainEngagement.stopChainNetwork(level, kinetic)) {
             return false;
         }
         return original.call(level, pos, drop);
