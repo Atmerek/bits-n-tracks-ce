@@ -229,6 +229,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         List<Vec3> sourcePoints = CogwheelChainRenderGeometryBuilder.getEndPointsForChainJoint(
             relPreFrom, relFrom, relTo, chainRenderInfo, fromCogwheelAxis, accumulatedOrientation
         );
+        destinationPoints = CogwheelChainRenderGeometryBuilder.getPointsInClosestOrder(destinationPoints, sourcePoints);
         float length = (float)from.distanceTo(to);
         ms.pushPose();
         boolean isCustomBeltItem = type.getRenderTexture().getNamespace().equals("bits_n_tracks");
