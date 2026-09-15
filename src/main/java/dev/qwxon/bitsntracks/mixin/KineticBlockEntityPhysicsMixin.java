@@ -72,6 +72,8 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     @Unique
     private double bnt$beltHold = 0.0;
     @Unique
+    private long bnt$chainStopTick = Long.MIN_VALUE;
+    @Unique
     private double bnt$extension = 0.65;
     @Unique
     private double bnt$lastExtension = 0.65;
@@ -215,6 +217,16 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     public void bnt$setBeltHold(long tick, double hold) {
         this.bnt$beltHoldTick = tick;
         this.bnt$beltHold = hold;
+    }
+
+    @Override
+    public long bnt$getChainStopTick() {
+        return this.bnt$chainStopTick;
+    }
+
+    @Override
+    public void bnt$setChainStopTick(long tick) {
+        this.bnt$chainStopTick = tick;
     }
 
     @Override

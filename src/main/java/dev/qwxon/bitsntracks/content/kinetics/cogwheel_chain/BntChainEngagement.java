@@ -36,6 +36,7 @@ import net.minecraft.world.phys.Vec3;
 public final class BntChainEngagement {
     private static final float DRIVE_TOLERANCE = 1.0E-3F;
     private static final int MAX_SOURCE_WALK = 256;
+    private static final int STOP_RETRY = 20;
     private static final double DROP_STEP = 1.0 / 16.0;
 
     /** How long a settled belt layout is held before suspension travel is allowed to redraw it. */
@@ -409,7 +410,17 @@ public final class BntChainEngagement {
             return false;
         }
 
-        restore(level, detach(level, network));
+        long now = level.getGameTime();
+        boolean standing = false;
+        if (kinetic instanceof KineticBlockEntityPhysicsAccess access) {
+            standing = now - access.bnt$getChainStopTick() < STOP_RETRY;
+            access.bnt$setChainStopTick(now);
+        }
+
+        Set<BlockPos> stopped = detach(level, network);
+        if (!standing) {
+            restore(level, stopped);
+        }
         return true;
     }
 

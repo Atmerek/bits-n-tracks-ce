@@ -93,4 +93,8 @@ public interface KineticBlockEntityPhysicsAccess {
     double bnt$getBeltHold();
 
     void bnt$setBeltHold(long var1, double var3);
+
+    long bnt$getChainStopTick();
+
+    void bnt$setChainStopTick(long var1);
 }
