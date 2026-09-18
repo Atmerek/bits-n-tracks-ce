@@ -180,6 +180,11 @@ public final class BntPhysicsEvents {
 
     /** Drop a wheel is drawn at, eased across the tick so terrain steps do not snap. */
     public static double getHeldRenderExtension(KineticBlockEntity kbe, float partialTick) {
+        double staged = BntPonderPhysics.wheelDrop(kbe);
+        if (!Double.isNaN(staged)) {
+            return staged;
+        }
+
         Level level = kbe.getLevel();
         if (level == null || !level.isClientSide || !(kbe instanceof KineticBlockEntityPhysicsAccess mixin)) {
             return heldDrop(kbe, partialTick);
@@ -204,6 +209,11 @@ public final class BntPhysicsEvents {
     /** Drop terrain alone puts a wheel at, before the belt has a say. */
     public static double getRawRenderExtension(KineticBlockEntity kbe, float partialTick) {
         if (kbe instanceof KineticBlockEntityPhysicsAccess mixin && mixin.bnt$isPhysicsEnabled()) {
+            double staged = BntPonderPhysics.wheelDrop(kbe);
+            if (!Double.isNaN(staged)) {
+                return staged;
+            }
+
             Level level = kbe.getLevel();
             if (level != null && level.isClientSide) {
                 BlockState state = kbe.getBlockState();

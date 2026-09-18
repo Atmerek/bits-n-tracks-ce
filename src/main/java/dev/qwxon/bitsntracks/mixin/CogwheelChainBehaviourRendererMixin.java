@@ -298,7 +298,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         }
 
         if (tankTread) {
-            BntTankTread.emitSegment(emitter, sourcePoints, destinationPoints, offset, length, wideBelt);
+            BntTankTread.emitSegment(emitter, sourcePoints, destinationPoints, offset, length, wideBelt, flipInsideOutside);
         } else if (chainRenderInfo == ChainRenderInfo.BELT && renderTexture.getNamespace().equals("bits_n_tracks")) {
             float u0Top = 0.875F;
             float u1Top = 0.4375F;

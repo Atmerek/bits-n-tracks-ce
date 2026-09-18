@@ -12,6 +12,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,6 +65,10 @@ public final class BntChainEngagement {
 
     /** The drop a wheel is drawn at, held steady for a tick and sticky across ticks. */
     private static double groundDrop(Level level, BlockEntity be, KineticBlockEntityPhysicsAccess access) {
+        if (BntPonderPhysics.stage(level) != null) {
+            return 0.0;
+        }
+
         long now = level.getGameTime();
         boolean known = access.bnt$getGroundDropTick() != Long.MIN_VALUE;
         double previous = access.bnt$getGroundDrop();

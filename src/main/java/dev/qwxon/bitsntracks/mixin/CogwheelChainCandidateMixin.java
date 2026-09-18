@@ -1,6 +1,7 @@
 package dev.qwxon.bitsntracks.mixin;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChainCandidate;
+import com.kipti.bnb.registry.core.BnbTags.BnbBlockTags;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.minecraft.world.level.block.Block;
@@ -36,7 +37,8 @@ public abstract class CogwheelChainCandidateMixin {
                 isTiny = true;
             } else if (!state.is((Block)BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get())
                 && !state.is((Block)BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.get())
-                && !state.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())) {
+                && !state.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())
+                && !BnbBlockTags.SMALL_FLANGED_COGWHEEL.matches(state)) {
                 if (HiddenCogwheelCompat.isHiddenFlangedCogwheel(state)) {
                     BlockState visible = HiddenCogwheelCompat.toVisibleCogwheelState(state);
                     if (visible != null) {

@@ -5,11 +5,15 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChainGeometry
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.RenderedChainPathNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.segment.CogwheelChainSegment;
+import com.kipti.bnb.registry.core.BnbTags.BnbBlockTags;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainMotion;
+import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
+import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,12 +21,14 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(
     value = {CogwheelChain.class},
@@ -241,6 +247,43 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$restoredLayout = bnt$readLayout(tag, this.cogwheelNodes.size());
     }
 
+    /** Bits 'n' Bobs saves its small flanged cogwheel as tiny. */
+    @Inject(
+        method = {"checkIntegrity"},
+        at = {@At("HEAD")}
+    )
+    private void bnt$adoptSmallFlangedSize(Level level, BlockPos origin, CallbackInfoReturnable<Boolean> cir) {
+        List<PathedCogwheelNode> nodes = this.cogwheelNodes;
+        List<PathedCogwheelNode> updated = null;
+        for (int i = 0; i < nodes.size(); i++) {
+            PathedCogwheelNode node = nodes.get(i);
+            BlockPos pos = node.localPos().offset(origin);
+            if (node.isLarge() || node.hasSmallCogwheelOffset() || !level.isLoaded(pos)) {
+                continue;
+            }
+            BlockState state = level.getBlockState(pos);
+            if (!BnbBlockTags.SMALL_FLANGED_COGWHEEL.matches(state) && !state.is(BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())) {
+                continue;
+            }
+            if (updated == null) {
+                updated = new ArrayList<>(nodes);
+            }
+            updated.set(i, new PathedCogwheelNode(node.side(), false, node.rotationAxis(), node.localPos(), true));
+        }
+        if (updated == null) {
+            return;
+        }
+
+        this.cogwheelNodes = updated;
+        this.renderedNodes = CogwheelChainGeometryBuilder.buildFullChainFromPathNodes(updated);
+        this.cachedSegments = null;
+        this.bnt$builtDisplacements = null;
+        if (!level.isClientSide && level.getBlockEntity(origin) instanceof SmartBlockEntity controller) {
+            controller.setChanged();
+            controller.sendData();
+        }
+    }
+
     @Inject(
         method = {"write"},
         at = {@At("TAIL")}
@@ -282,8 +325,10 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         }
 
         double[] displacements = BntChainMotion.displacementSignature(nodes);
-        double[] signature = Arrays.copyOf(displacements, displacements.length + 1);
+        double[] signature = Arrays.copyOf(displacements, displacements.length + 2);
         signature[displacements.length] = BntBeltTension.at(level, controllerPos);
+        BntPonderPhysics.Stage stage = BntPonderPhysics.stage(level);
+        signature[displacements.length + 1] = stage == null ? 0.0 : stage.epoch();
         if (Arrays.equals(signature, this.bnt$builtDisplacements)) {
             return;
         }

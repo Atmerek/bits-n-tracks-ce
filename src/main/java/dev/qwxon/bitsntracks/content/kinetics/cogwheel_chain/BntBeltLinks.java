@@ -160,7 +160,6 @@ public final class BntBeltLinks {
         return repeat <= 0.0 ? 1.0F : (float)(1.0 / repeat);
     }
 
-    /** Rebuilds the loop for a tension and returns its link count. */
     /** Taut path the loop is fitted to, measured where the wheels are drawn. */
     public static double fitLength(Level level, BlockPos controllerPos) {
         List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
@@ -179,6 +178,7 @@ public final class BntBeltLinks {
         }
     }
 
+    /** Rebuilds the loop for a tension and returns its link count. */
     public static int relatch(Level level, BlockPos controllerPos, float tension) {
         List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
         if (nodes.size() < 2) {

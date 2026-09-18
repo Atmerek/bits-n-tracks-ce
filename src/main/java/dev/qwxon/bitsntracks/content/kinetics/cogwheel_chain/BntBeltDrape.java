@@ -4,6 +4,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
+import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import dev.ryanhcode.sable.Sable;
@@ -74,13 +75,17 @@ public final class BntBeltDrape {
         BlockPos origin = BntRadiusProvider.origin();
         if (underside && level != null && origin != null && BntPhysicsTuning.isBeltDrapeEnabled()) {
             Vec3 base = Vec3.atLowerCornerOf(origin);
-            SubLevel subLevel = Sable.HELPER.getContaining(level, base.add(runStart));
-            if (subLevel != null) {
-                Pose3dc pose = level.isClientSide ? BntClientCompat.drawnPose(subLevel) : subLevel.logicalPose();
+            BntPonderPhysics.Stage stage = BntPonderPhysics.stage(level);
+            SubLevel subLevel = stage != null ? null : Sable.HELPER.getContaining(level, base.add(runStart));
+            if (stage != null || subLevel != null) {
+                Pose3dc pose = subLevel == null ? null
+                    : level.isClientSide ? BntClientCompat.drawnPose(subLevel) : subLevel.logicalPose();
                 double clearance = BntPhysicsTuning.getBeltSurfaceClearance();
                 for (int probe = 1; probe < probes; probe++) {
                     Vec3 chord = runStart.add(along.scale((double)probe / probes));
-                    double raw = surfaceOffset(level, base, pose, subLevel, chord, sag, restOffset);
+                    double raw = stage != null
+                        ? stagedSurfaceOffset(stage, base.add(chord), sag, restOffset)
+                        : surfaceOffset(level, base, pose, subLevel, chord, sag, restOffset);
                     if (raw <= NO_SURFACE) {
                         continue;
                     }
@@ -126,6 +131,21 @@ public final class BntBeltDrape {
             return NO_SURFACE;
         }
         return top + (bottom - top) * (hit.getLocation().distanceTo(worldTop) / reach);
+    }
+
+    /** Same as surfaceOffset, against the ground a ponder scene draws. */
+    private static double stagedSurfaceOffset(BntPonderPhysics.Stage stage, Vec3 point, double sag, double restOffset) {
+        double top = PROBE_ABOVE;
+        double bottom = Math.min(-(sag + PROBE_BELOW), restOffset - PROBE_BELOW);
+        Vec3 worldTop = stage.toWorld(point.add(0.0, top, 0.0));
+        Vec3 worldBottom = stage.toWorld(point.add(0.0, bottom, 0.0));
+        double reach = worldTop.y - worldBottom.y;
+        double ground = stage.groundAt((worldTop.x + worldBottom.x) * 0.5, (worldTop.z + worldBottom.z) * 0.5);
+        if (reach < 1.0E-9 || Double.isNaN(ground) || ground < worldBottom.y) {
+            return NO_SURFACE;
+        }
+        double along = Mth.clamp((worldTop.y - ground) / reach, 0.0, 1.0);
+        return top + (bottom - top) * along;
     }
 
     /** Upper convex hull of the samples, never below them and never concave. */

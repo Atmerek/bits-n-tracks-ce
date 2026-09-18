@@ -13,7 +13,11 @@ import net.minecraft.world.phys.Vec3;
 
 public final class BntChainGeometry {
     private static final double ORIENTATION_TOLERANCE = 1.0E-6;
+    /** Below this a lined-up wheel's arc can round to a full turn. */
+    private static final double GRAZE_TOLERANCE = 1.0E-4;
     private static final double LEAVE_SLACK = 0.25;
+    private static final double LOOPED_WRAP = Math.PI * 1.5;
+    private static final int REWRAP_PASSES = 3;
 
     private BntChainGeometry() {
     }
@@ -138,7 +142,7 @@ public final class BntChainGeometry {
             if (sides[i] != chirality || previous == next) {
                 continue;
             }
-            grazed[i] = clearance(xs, ys, radii, sides, previous, next, i) < 0.0;
+            grazed[i] = clearance(xs, ys, radii, sides, previous, next, i) < GRAZE_TOLERANCE;
         }
         return grazed;
     }
@@ -155,30 +159,150 @@ public final class BntChainGeometry {
         double[] radii = new double[count];
         fillLive(pathNodes, axis, xs, ys, radii);
 
-        boolean[] free = BntBeltSolver.contacts(xs, ys, radii);
-        int[] sides = BntBeltSolver.sides(xs, ys, radii, free);
+        Direction[] routes = routes(pathNodes);
+        boolean[] requested = null;
+        if (routes != null) {
+            requested = new boolean[count];
+            for (int i = 0; i < count; i++) {
+                requested[i] = routes[i] != null;
+            }
+        }
+
+        boolean[] free = BntBeltSolver.contacts(xs, ys, radii, requested);
+        int[] pinned = routes == null ? null : pins(xs, ys, radii, axis, routes, free, requested);
+        int[] sides = BntBeltSolver.sides(xs, ys, radii, free, pinned);
         if (sides == null) {
             sides = new int[count];
             for (int i = 0; i < count; i++) {
                 sides[i] = pathNodes.get(i).side();
             }
-        } else {
+        } else if (pinned == null) {
             sides = orient(xs, ys, radii, sides, pathNodes, free);
         }
 
-        Direction[] routes = routes(pathNodes);
-        if (routes == null) {
-            return new Layout(BntBeltSolver.contactSequence(xs, ys, radii, sides), sides);
+        int[] sequence = BntBeltSolver.contactSequence(xs, ys, radii, sides, requested);
+        for (int pass = 0; pass < REWRAP_PASSES; pass++) {
+            int[] rewrapped = rewrap(xs, ys, radii, sides, sequence, pinned, requested);
+            if (rewrapped == null) {
+                break;
+            }
+            sequence = rewrapped;
+        }
+        return new Layout(sequence, sides);
+    }
+
+    private static int[] rewrap(double[] xs, double[] ys, double[] radii, int[] sides, int[] sequence,
+                                int[] pinned, boolean[] requested) {
+        int length = sequence.length;
+        if (length < 3) {
+            return null;
         }
 
-        boolean[] requested = new boolean[count];
-        for (int i = 0; i < count; i++) {
-            requested[i] = routes[i] != null;
+        double[] px = new double[length];
+        double[] py = new double[length];
+        double[] pr = new double[length];
+        int[] pp = new int[length];
+        boolean[] seen = new boolean[sides.length];
+        for (int i = 0; i < length; i++) {
+            int node = sequence[i];
+            if (seen[node]) {
+                return null;
+            }
+            seen[node] = true;
+            px[i] = xs[node];
+            py[i] = ys[node];
+            pr[i] = radii[node];
+            pp[i] = pinned == null ? 0 : pinned[node];
         }
 
-        int[] wrapped = wrap(xs, ys, radii, routes, axis, requested, pathNodes);
-        int[] chosen = wrapped == null ? sides : wrapped;
-        return new Layout(BntBeltSolver.contactSequence(xs, ys, radii, chosen, requested), chosen);
+        int[] solved = BntBeltSolver.sidesInOrder(px, py, pr, pp);
+        if (solved == null) {
+            return null;
+        }
+
+        boolean changed = false;
+        for (int i = 0; i < length; i++) {
+            if (sides[sequence[i]] != solved[i]) {
+                sides[sequence[i]] = solved[i];
+                changed = true;
+            }
+        }
+        return changed ? BntBeltSolver.contactSequence(xs, ys, radii, sides, requested) : null;
+    }
+
+    private static int[] pins(double[] xs, double[] ys, double[] radii, Axis axis, Direction[] routes,
+                              boolean[] free, boolean[] requested) {
+        int[] pinned = new int[routes.length];
+        boolean any = false;
+
+        for (int node = 0; node < routes.length; node++) {
+            if (routes[node] == null) {
+                continue;
+            }
+
+            double[] target = planarDirection(routes[node], axis);
+            int held = 0;
+            double best = 0.0;
+            for (int side = 1; side >= -1; side -= 2) {
+                pinned[node] = side;
+                double agreement = agreement(xs, ys, radii, free, requested, pinned, node, target);
+                if (agreement > best) {
+                    best = agreement;
+                    held = side;
+                }
+            }
+            pinned[node] = held;
+            any |= held != 0;
+        }
+        return any ? pinned : null;
+    }
+
+    private static double agreement(double[] xs, double[] ys, double[] radii, boolean[] free, boolean[] requested,
+                                    int[] pinned, int node, double[] target) {
+        int[] sides = BntBeltSolver.sides(xs, ys, radii, free, pinned);
+        if (sides == null) {
+            return 0.0;
+        }
+
+        int[] sequence = BntBeltSolver.contactSequence(xs, ys, radii, sides, requested);
+        double[] face = contactFace(xs, ys, radii, sides, sequence, node);
+        return face == null ? 0.0 : face[0] * target[0] + face[1] * target[1];
+    }
+
+    private static double[] contactFace(double[] xs, double[] ys, double[] radii, int[] sides, int[] sequence, int node) {
+        int length = sequence.length;
+        if (length < 2) {
+            return null;
+        }
+
+        int position = -1;
+        for (int i = 0; i < length; i++) {
+            if (sequence[i] == node) {
+                position = i;
+                break;
+            }
+        }
+        if (position < 0) {
+            return null;
+        }
+
+        int previous = sequence[(position - 1 + length) % length];
+        int next = sequence[(position + 1) % length];
+        double[] incoming = BntBeltSolver.tangent(xs[previous], ys[previous], sides[previous] * radii[previous],
+            xs[node], ys[node], sides[node] * radii[node]);
+        double[] outgoing = BntBeltSolver.tangent(xs[node], ys[node], sides[node] * radii[node],
+            xs[next], ys[next], sides[next] * radii[next]);
+        if (incoming == null || outgoing == null) {
+            return null;
+        }
+
+        double arc = BntBeltSolver.sweep(sides[node], incoming[3], incoming[4], outgoing[1], outgoing[2]);
+        if (arc > LOOPED_WRAP) {
+            return null;
+        }
+
+        double middle = Math.atan2(incoming[4], incoming[3]) - sides[node] * arc * 0.5;
+        return new double[]{Math.cos(middle), Math.sin(middle)};
     }
 
     public static boolean stillHolds(List<PathedCogwheelNode> pathNodes, Layout layout) {
@@ -265,12 +389,13 @@ public final class BntChainGeometry {
         return true;
     }
 
+    /** How far a node reaches past its neighbours' run, or NaN when it does not sit along that run. */
     private static double clearance(double[] xs, double[] ys, double[] radii, int[] sides,
                                     int from, int to, int node) {
         double[] run = BntBeltSolver.tangent(xs[from], ys[from], sides[from] * radii[from],
             xs[to], ys[to], sides[to] * radii[to]);
         if (run == null) {
-            return 0.0;
+            return Double.NaN;
         }
 
         double startX = xs[from] + run[1];
@@ -279,17 +404,17 @@ public final class BntChainGeometry {
         double dy = ys[to] + run[4] - startY;
         double lengthSquared = dx * dx + dy * dy;
         if (lengthSquared < 1.0E-12) {
-            return 0.0;
+            return Double.NaN;
         }
 
         double along = ((xs[node] - startX) * dx + (ys[node] - startY) * dy) / lengthSquared;
         if (along <= 0.0 || along >= 1.0) {
-            return 0.0;
+            return Double.NaN;
         }
 
         double offsetX = xs[node] - (startX + dx * along);
         double offsetY = ys[node] - (startY + dy * along);
-        return radii[node] + (offsetX * run[1] + offsetY * run[2]) / radii[from];
+        return radii[node] + sides[node] * sides[from] * (offsetX * run[1] + offsetY * run[2]) / radii[from];
     }
 
     private static double[] planarDirection(Direction route, Axis axis) {
@@ -310,56 +435,6 @@ public final class BntChainGeometry {
             routes[i] = route;
         }
         return routes;
-    }
-
-    private static int[] wrap(double[] xs, double[] ys, double[] radii, Direction[] routes, Axis axis,
-                              boolean[] requested, List<PathedCogwheelNode> pathNodes) {
-        int count = requested.length;
-        int[] best = null;
-        int bestHonoured = -1;
-        int bestAgreements = -1;
-
-        for (int chirality = 1; chirality >= -1; chirality -= 2) {
-            int[] candidate = new int[count];
-            int agreements = 0;
-            for (int i = 0; i < count; i++) {
-                candidate[i] = requested[i] ? -chirality : chirality;
-                if (candidate[i] == pathNodes.get(i).side()) {
-                    agreements++;
-                }
-            }
-            if (BntBeltSolver.evaluate(xs, ys, radii, candidate) == null) {
-                continue;
-            }
-
-            int honoured = honours(xs, ys, radii, candidate, routes, axis, requested);
-            if (honoured > bestHonoured || (honoured == bestHonoured && agreements > bestAgreements)) {
-                bestHonoured = honoured;
-                bestAgreements = agreements;
-                best = candidate;
-            }
-        }
-        return best;
-    }
-
-    private static int honours(double[] xs, double[] ys, double[] radii, int[] sides,
-                               Direction[] routes, Axis axis, boolean[] requested) {
-        int[] sequence = BntBeltSolver.contactSequence(xs, ys, radii, sides, requested);
-        int honoured = 0;
-        for (int i = 0; i < routes.length; i++) {
-            if (routes[i] == null) {
-                continue;
-            }
-            double[] contact = BntBeltSolver.contactDirection(xs, ys, radii, sides, sequence, i);
-            if (contact == null) {
-                continue;
-            }
-            double[] target = planarDirection(routes[i], axis);
-            if (contact[0] * target[0] + contact[1] * target[1] > 0.0) {
-                honoured++;
-            }
-        }
-        return honoured;
     }
 
     private static int[] orient(double[] xs, double[] ys, double[] radii, int[] sides,

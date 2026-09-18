@@ -73,7 +73,8 @@ public final class BntTankTread {
 
     /** Emits every box whose middle falls inside this segment of the path. */
     public static void emitSegment(
-        VertexEmitter emitter, List<Vec3> source, List<Vec3> destination, double offset, double length, boolean wide
+        VertexEmitter emitter, List<Vec3> source, List<Vec3> destination, double offset, double length, boolean wide,
+        boolean frameTopOutward
     ) {
         if (source.size() != 4 || destination.size() != 4 || length <= 1.0E-6) {
             return;
@@ -83,18 +84,19 @@ public final class BntTankTread {
         double end = offset + length;
         long first = (long)Math.floor(offset / CELL) - 1L;
         long last = (long)Math.ceil(end / CELL) + 1L;
+        double facing = frameTopOutward ? 1.0 : -1.0;
 
         for (long plate = first; plate <= last; plate++) {
             double base = plate * CELL;
             for (Part part : wide ? WIDE : NARROW) {
-                place(emitter, source, destination, offset, length, base + part.at(), part);
+                place(emitter, source, destination, offset, length, base + part.at(), part, facing);
             }
         }
     }
 
     private static void place(
         VertexEmitter emitter, List<Vec3> source, List<Vec3> destination,
-        double offset, double length, double at, Part part
+        double offset, double length, double at, Part part, double facing
     ) {
         if (at < offset || at >= offset + length) {
             return;
@@ -107,8 +109,8 @@ public final class BntTankTread {
         }
 
         Vec3 centre = frame[0].add(frame[1]).add(frame[2]).add(frame[3]).scale(0.25);
-        Vec3 across = unit(frame[0].subtract(frame[1]));
-        Vec3 thick = unit(frame[1].subtract(frame[2]));
+        Vec3 across = unit(frame[0].subtract(frame[1])).scale(facing);
+        Vec3 thick = unit(frame[1].subtract(frame[2])).scale(facing);
         if (across.lengthSqr() < 0.5 || thick.lengthSqr() < 0.5) {
             return;
         }

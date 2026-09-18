@@ -7,7 +7,6 @@ import java.util.PriorityQueue;
 
 public final class BntBeltSolver {
     private static final double TAU = Math.PI * 2.0;
-    private static final double CONTACT_TOLERANCE = 1.0E-7;
     static final double CONTACT_REACH = 1.0 / 32.0;
     private static final double TANGENT_TOLERANCE = 1.0E-6;
     private static final int MAX_CANDIDATES = 48;
@@ -219,44 +218,6 @@ public final class BntBeltSolver {
         return order;
     }
 
-    public static double[] contactDirection(double[] xs, double[] ys, double[] radii, int[] sides, int[] sequence, int node) {
-        int length = sequence.length;
-        if (length < 2) {
-            return null;
-        }
-        int position = -1;
-        for (int i = 0; i < length; i++) {
-            if (sequence[i] == node) {
-                position = i;
-                break;
-            }
-        }
-        if (position < 0) {
-            return null;
-        }
-
-        int previous = sequence[(position - 1 + length) % length];
-        int next = sequence[(position + 1) % length];
-        double[] incoming = tangent(xs[previous], ys[previous], sides[previous] * radii[previous],
-            xs[node], ys[node], sides[node] * radii[node]);
-        double[] outgoing = tangent(xs[node], ys[node], sides[node] * radii[node],
-            xs[next], ys[next], sides[next] * radii[next]);
-        if (incoming == null && outgoing == null) {
-            return null;
-        }
-        if (incoming == null) {
-            return new double[]{outgoing[1], outgoing[2]};
-        }
-        if (outgoing == null) {
-            return new double[]{incoming[3], incoming[4]};
-        }
-        double meanX = (incoming[3] + outgoing[1]) * 0.5;
-        double meanY = (incoming[4] + outgoing[2]) * 0.5;
-        return meanX * meanX + meanY * meanY < CONTACT_TOLERANCE
-            ? new double[]{outgoing[1], outgoing[2]}
-            : new double[]{meanX, meanY};
-    }
-
     public static double[] evaluate(double[] xs, double[] ys, double[] radii, int[] sides) {
         long crossingCount = crossings(xs, ys, radii, sides);
         if (crossingCount == Long.MAX_VALUE) {
@@ -360,9 +321,42 @@ public final class BntBeltSolver {
         return pinned == null || pinned[node] == 0 || pinned[node] == side;
     }
 
+    public static int[] sidesInOrder(double[] xs, double[] ys, double[] radii, int[] pinned) {
+        return xs.length < 2 ? null : solveSides(xs, ys, radii, pinned);
+    }
+
     private static int[] solveSides(double[] xs, double[] ys, double[] radii, int[] pinned) {
         int[] uniform = solveUniformSides(xs, ys, radii, pinned);
-        return uniform != null ? uniform : solveMixedSides(xs, ys, radii, pinned);
+        int[] mixed = solveMixedSides(xs, ys, radii, pinned);
+        if (uniform == null) {
+            return mixed;
+        }
+        if (mixed == null) {
+            return uniform;
+        }
+        return cheaper(cost(xs, ys, radii, mixed), cost(xs, ys, radii, uniform)) ? mixed : uniform;
+    }
+
+    private static double[] cost(double[] xs, double[] ys, double[] radii, int[] sides) {
+        double[] evaluated = evaluate(xs, ys, radii, sides);
+        return evaluated == null
+            ? null
+            : new double[]{clipping(xs, ys, radii, sides), evaluated[0], evaluated[1], evaluated[2]};
+    }
+
+    private static boolean cheaper(double[] candidate, double[] held) {
+        if (candidate == null) {
+            return false;
+        }
+        if (held == null) {
+            return true;
+        }
+        for (int i = 0; i < candidate.length; i++) {
+            if (candidate[i] != held[i]) {
+                return candidate[i] < held[i];
+            }
+        }
+        return false;
     }
 
     private static int[] solveUniformSides(double[] xs, double[] ys, double[] radii, int[] pinned) {
@@ -375,17 +369,8 @@ public final class BntBeltSolver {
             for (int i = 0; i < count; i++) {
                 candidate[i] = pinned != null && pinned[i] != 0 ? pinned[i] : chirality;
             }
-            double[] cost = evaluate(xs, ys, radii, candidate);
-            if (cost == null) {
-                continue;
-            }
-            double[] scored = new double[]{clipping(xs, ys, radii, candidate), cost[0], cost[1], cost[2]};
-            if (bestCost == null
-                || scored[0] < bestCost[0]
-                || (scored[0] == bestCost[0] && scored[1] < bestCost[1])
-                || (scored[0] == bestCost[0] && scored[1] == bestCost[1] && scored[2] < bestCost[2])
-                || (scored[0] == bestCost[0] && scored[1] == bestCost[1]
-                    && scored[2] == bestCost[2] && scored[3] < bestCost[3])) {
+            double[] scored = cost(xs, ys, radii, candidate);
+            if (cheaper(scored, bestCost)) {
                 bestCost = scored;
                 best = candidate;
             }
