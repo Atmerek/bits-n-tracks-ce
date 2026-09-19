@@ -100,7 +100,7 @@ public final class BntBeltTension {
     public static double supportScale(float tension) {
         double range = BntPhysicsTuning.getBeltStiffnessRange();
         double normalised = clamp(tension);
-        return BntPhysicsTuning.getBeltSupportStrength() * Mth.lerp(normalised, 1.0 / range, range);
+        return BntPhysicsTuning.BELT_SUPPORT * Mth.lerp(normalised, 1.0 / range, range);
     }
 
     public static double gripScale(float tension) {

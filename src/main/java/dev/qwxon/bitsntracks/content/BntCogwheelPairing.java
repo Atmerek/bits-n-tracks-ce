@@ -1,8 +1,10 @@
 package dev.qwxon.bitsntracks.content;
 
+import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -54,6 +56,23 @@ public final class BntCogwheelPairing {
         return canPair(state, partner) && sideOf(partner) == BntWideSide.of(direction.getOpposite()) ? partnerPos : null;
     }
 
+    public static KineticBlockEntity beltTwin(KineticBlockEntity wheel) {
+        Level level = wheel.getLevel();
+        if (level == null || onBelt(wheel)) {
+            return wheel;
+        }
+
+        BlockPos partnerPos = partnerPos(level, wheel.getBlockPos());
+        return partnerPos != null && level.getBlockEntity(partnerPos) instanceof KineticBlockEntity partner && onBelt(partner)
+            ? partner
+            : wheel;
+    }
+
+    private static boolean onBelt(KineticBlockEntity wheel) {
+        CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)wheel.getBehaviour(CogwheelChainBehaviour.TYPE);
+        return behaviour != null && behaviour.isPartOfChain();
+    }
+
     public static void copySettings(KineticBlockEntityPhysicsAccess from, KineticBlockEntityPhysicsAccess to) {
         to.bnt$setAlignmentOffsetX(from.bnt$getAlignmentOffsetX());
         to.bnt$setAlignmentOffsetY(from.bnt$getAlignmentOffsetY());
@@ -63,6 +82,9 @@ public final class BntCogwheelPairing {
         to.bnt$setExtension(from.bnt$getExtension());
         to.bnt$setLiftedUp(from.bnt$isLiftedUp());
         to.bnt$setMaxAirExtension(from.bnt$getMaxAirExtension());
+        for (BntTuning setting : BntTuning.values()) {
+            to.bnt$setTuning(setting, from.bnt$getTuning(setting));
+        }
     }
 
     public static void adoptPartnerSettings(Level level, BlockPos pos) {

@@ -250,7 +250,7 @@ public final class BntPhysicsEvents {
 
         Block block = state.getBlock();
         double wheelRadius = CogwheelSizeHelper.getRadius(block);
-        double suspensionRest = CogwheelSizeHelper.getSuspensionRest(block);
+        double suspensionRest = CogwheelSizeHelper.getSuspensionRest(block, kbe);
         Axis axis = (Axis)state.getValue(BlockStateProperties.AXIS);
         Vec3 localPos = getWheelCenter(kbe, state);
         Vector3d forcePoint = new Vector3d(localPos.x, localPos.y, localPos.z);
@@ -299,7 +299,8 @@ public final class BntPhysicsEvents {
 
         double distance = suspensionRest / 6.0 + maxExtension + BntBeltHold.at(kbe.getLevel(), kbe);
         double springLength = Mth.clamp(distance - wheelRadius, -suspensionRest * 2.0, suspensionRest);
-        CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)kbe.getBehaviour(CogwheelChainBehaviour.TYPE);
+        KineticBlockEntity track = BntCogwheelPairing.beltTwin(kbe);
+        CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)track.getBehaviour(CogwheelChainBehaviour.TYPE);
         boolean isConnected = behaviour != null && behaviour.isPartOfChain();
         BntPhysicsEvents.WheelContact contact = new BntPhysicsEvents.WheelContact();
         contact.mixin = mixin;
@@ -314,7 +315,7 @@ public final class BntPhysicsEvents {
         contact.suspensionRest = suspensionRest;
         contact.springLength = springLength;
         contact.chainRadius = CogwheelSizeHelper.getChainRadius(block);
-        contact.kineticSpeed = kbe.getSpeed();
+        contact.kineticSpeed = track.getSpeed();
         contact.touchingFriction = touchingFriction;
         contact.normalMass = normalMass;
         contact.hasTraction = axis != Axis.Y;
@@ -323,6 +324,8 @@ public final class BntPhysicsEvents {
         contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
         contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest;
         contact.verticalSpeed = verticalSpeed;
+        contact.stiffness = BntTuning.STIFFNESS.scale(kbe);
+        contact.damping = BntTuning.DAMPING.scale(kbe);
         return contact;
     }
 
@@ -332,11 +335,9 @@ public final class BntPhysicsEvents {
             ? BntPhysicsTuning.isTrackSuspensionEnabled()
             : BntPhysicsTuning.isCogwheelSuspensionEnabled();
         double normalMassShare = contact.normalMass / shareCount;
-        double suspensionGain = suspensionEnabled ? BntPhysicsTuning.getBaseSuspensionStrength() * normalMassShare : 0.0;
-        double springMult = contact.isTrackModel ? BntPhysicsTuning.getTrackSpringMultiplier() : BntPhysicsTuning.getCogwheelSpringMultiplier();
-        double dampingMult = contact.isTrackModel ? BntPhysicsTuning.getTrackDampingMultiplier() : BntPhysicsTuning.getCogwheelDampingMultiplier();
-        double springStrength = suspensionGain * BntPhysicsTuning.getSpringScale() * springMult;
-        double dampingStrength = suspensionGain * BntPhysicsTuning.getDampingScale() * dampingMult;
+        double suspensionGain = suspensionEnabled ? BntPhysicsTuning.SUSPENSION_GAIN * normalMassShare : 0.0;
+        double springStrength = suspensionGain * BntPhysicsTuning.SPRING_SCALE * BntPhysicsTuning.WHEEL_SPRING * contact.stiffness;
+        double dampingStrength = suspensionGain * BntPhysicsTuning.DAMPING_SCALE * BntPhysicsTuning.WHEEL_DAMPING * contact.damping;
         double relVelY = contact.verticalSpeed;
         double dampingImpulse = -relVelY * dampingStrength * timeStep;
         double springImpulse = (contact.suspensionRest - contact.springLength) * springStrength * timeStep;
@@ -346,7 +347,8 @@ public final class BntPhysicsEvents {
             ? BntPhysicsTuning.getTrackMaxImpulseMultiplier()
             : BntPhysicsTuning.getCogwheelMaxImpulseMultiplier();
         double bumpStopScale = contact.springLength < 0.0 ? BntPhysicsTuning.getBumpStopScale() : 1.0;
-        double maxImpulseVal = maxImpulseMult * suspensionGain * BntPhysicsTuning.getImpulseScale() * timeStep * bumpStopScale;
+        double maxImpulseVal = maxImpulseMult * suspensionGain * BntPhysicsTuning.getImpulseScale() * timeStep * bumpStopScale
+            * Math.max(1.0, contact.stiffness);
         double speedLimitImpulse = normalMassShare * (BntPhysicsTuning.getMaxSuspensionSpeed() + Math.abs(relVelY));
         double impulseCeiling = Math.min(maxImpulseVal, speedLimitImpulse);
         double springForce = Mth.clamp(rawSpringForce, -impulseCeiling, impulseCeiling);
@@ -608,10 +610,10 @@ public final class BntPhysicsEvents {
     private static double computeMaxExtensionVisual(KineticBlockEntity kbe, KineticBlockEntityPhysicsAccess mixin, SubLevel subLevel) {
         BlockState state = kbe.getBlockState();
         if (!state.hasProperty(BlockStateProperties.AXIS)) {
-            return CogwheelSizeHelper.getSuspensionRest(state.getBlock());
+            return CogwheelSizeHelper.getSuspensionRest(state.getBlock(), kbe);
         } else {
             double wheelRadius = CogwheelSizeHelper.getRadius(state.getBlock());
-            double suspensionRest = CogwheelSizeHelper.getSuspensionRest(state.getBlock());
+            double suspensionRest = CogwheelSizeHelper.getSuspensionRest(state.getBlock(), kbe);
             Axis axis = (Axis)state.getValue(BlockStateProperties.AXIS);
             Pose3dc pose = subLevel.logicalPose();
             BntPhysicsEvents.TerrainCastResult extensionToTerrain = computeMaxExtensionToTerrain(kbe, getTravelDirection(axis), pose, subLevel);
@@ -626,10 +628,10 @@ public final class BntPhysicsEvents {
     ) {
         BlockState state = kbe.getBlockState();
         if (!state.hasProperty(BlockStateProperties.AXIS)) {
-            return CogwheelSizeHelper.getSuspensionRest(state.getBlock());
+            return CogwheelSizeHelper.getSuspensionRest(state.getBlock(), kbe);
         } else {
             double wheelRadius = CogwheelSizeHelper.getRadius(state.getBlock());
-            double suspensionRest = CogwheelSizeHelper.getSuspensionRest(state.getBlock());
+            double suspensionRest = CogwheelSizeHelper.getSuspensionRest(state.getBlock(), kbe);
             Axis axis = (Axis)state.getValue(BlockStateProperties.AXIS);
             BntPhysicsEvents.TerrainCastResult extensionToTerrain = computeMaxExtensionToTerrain(kbe, getTravelDirection(axis), pose, subLevel);
             return Mth.clamp(extensionToTerrain.maxExtension - wheelRadius, -suspensionRest * 3.0, suspensionRest);
@@ -642,7 +644,7 @@ public final class BntPhysicsEvents {
         BlockState state = kbe.getBlockState();
         Vec3 wheelPosCenter = getWheelCenter(kbe, state);
         double wheelRadius = CogwheelSizeHelper.getRadius(state.getBlock());
-        double suspensionRest = CogwheelSizeHelper.getSuspensionRest(state.getBlock());
+        double suspensionRest = CogwheelSizeHelper.getSuspensionRest(state.getBlock(), kbe);
         Vec3 sampleAxis = JOMLConversion.toMojang(normalD).normalize();
         double maxCastHeight = suspensionRest + 0.5 + CAST_HEADROOM;
         double minExtension = NO_GROUND;
@@ -797,6 +799,8 @@ public final class BntPhysicsEvents {
         double normalMass;
         double verticalSpeed;
         double brakeStrength;
+        double stiffness;
+        double damping;
         double goalLongitudinal;
         double goalLateral;
         double limitLongitudinal;

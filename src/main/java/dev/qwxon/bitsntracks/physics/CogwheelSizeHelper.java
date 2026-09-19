@@ -16,6 +16,11 @@ public final class CogwheelSizeHelper {
     private static final double MEDIUM_CHAIN_RADIUS = 0.75;
     private static final double LARGE_CHAIN_RADIUS = 1.0;
 
+    private static final double TINY_SUSPENSION_REST = 0.45;
+    private static final double SMALL_SUSPENSION_REST = 0.65;
+    private static final double MEDIUM_SUSPENSION_REST = 1.0;
+    private static final double LARGE_SUSPENSION_REST = 1.3;
+
     private CogwheelSizeHelper() {
     }
 
@@ -90,11 +95,15 @@ public final class CogwheelSizeHelper {
 
     public static double getSuspensionRest(Block block) {
         return switch (sizeOf(block)) {
-            case LARGE -> BntPhysicsTuning.getLargeSuspensionRest();
-            case MEDIUM -> BntPhysicsTuning.getMediumSuspensionRest();
-            case TINY -> BntPhysicsTuning.getTinySuspensionRest();
-            case SMALL -> BntPhysicsTuning.getSmallSuspensionRest();
+            case LARGE -> LARGE_SUSPENSION_REST;
+            case MEDIUM -> MEDIUM_SUSPENSION_REST;
+            case TINY -> TINY_SUSPENSION_REST;
+            case SMALL -> SMALL_SUSPENSION_REST;
         };
+    }
+
+    public static double getSuspensionRest(Block block, Object blockEntity) {
+        return getSuspensionRest(block) * BntTuning.TRAVEL.scale(blockEntity);
     }
 
     public static double getVerticalOffset(Block block) {

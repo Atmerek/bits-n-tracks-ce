@@ -8,6 +8,7 @@ import dev.qwxon.bitsntracks.client.BntClientConfig;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
+import dev.qwxon.bitsntracks.index.BitsNTracksDataComponents;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.interaction.BntNetwork;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
@@ -31,6 +32,7 @@ public class BitsNTracks {
         modContainer.registerConfig(Type.CLIENT, BntClientConfig.SPEC);
         modContainer.registerConfig(Type.SERVER, BntPhysicsTuning.SPEC);
         REGISTRATE.setTooltipModifierFactory(item -> new Modifier(item, Palette.STANDARD_CREATE).andThen(TooltipModifier.mapNull(KineticStats.create(item))));
+        BitsNTracksDataComponents.register(modEventBus);
         BitsNTracksItems.init();
         BitsNTracksBlocks.init();
         BntStressValues.register();

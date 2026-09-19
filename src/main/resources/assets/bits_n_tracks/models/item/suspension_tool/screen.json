@@ -1,0 +1,17 @@
+{
+	"textures": {
+		"0": "bits_n_tracks:item/suspension_tool",
+		"particle": "bits_n_tracks:item/suspension_tool"
+	},
+	"elements": [
+		{
+			"name": "SCREEN",
+			"from": [6.75, 23, 5.5],
+			"to": [6.75, 28, 10.5],
+			"faces": {
+				"east": {"uv": [3.75, 0, 5, 1.25], "texture": "#0"},
+				"west": {"uv": [3.75, 1.25, 5, 2.5], "texture": "#0"}
+			}
+		}
+	]
+}

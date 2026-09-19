@@ -16,6 +16,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsRegistry;
+import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
@@ -73,6 +74,8 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     private double bnt$beltHold = 0.0;
     @Unique
     private long bnt$chainStopTick = Long.MIN_VALUE;
+    @Unique
+    private final int[] bnt$tuning = BntTuning.defaults();
     @Unique
     private double bnt$extension = 0.65;
     @Unique
@@ -230,6 +233,16 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     }
 
     @Override
+    public int bnt$getTuning(BntTuning setting) {
+        return this.bnt$tuning[setting.ordinal()];
+    }
+
+    @Override
+    public void bnt$setTuning(BntTuning setting, int level) {
+        this.bnt$tuning[setting.ordinal()] = BntTuning.clamp(level);
+    }
+
+    @Override
     public void bnt$setPhysicalSpeed(float speed) {
         this.bnt$physicalSpeed = speed;
     }
@@ -261,7 +274,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
             BntPhysicsRegistry.add(self);
         } else {
             BntPhysicsRegistry.remove(self);
-            double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock());
+            double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock(), this);
             this.bnt$extension = rest;
             this.bnt$lastExtension = rest;
             this.bnt$liftedUp = false;
@@ -406,9 +419,13 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         this.bnt$beltTension = tag.contains("BntBeltTension") ? BntBeltTension.clamp(tag.getFloat("BntBeltTension")) : BntBeltTension.DEFAULT;
         this.bnt$beltLinks = tag.getInt("BntBeltLinks");
         this.bnt$beltFit = tag.getDouble("BntBeltFit");
+        CompoundTag tuning = tag.getCompound("BntTuning");
+        for (BntTuning setting : BntTuning.values()) {
+            this.bnt$tuning[setting.ordinal()] = tuning.contains(setting.key()) ? BntTuning.clamp(tuning.getInt(setting.key())) : BntTuning.DEFAULT;
+        }
         if (this.bnt$physicsEnabled) {
             KineticBlockEntity self = (KineticBlockEntity)(Object)this;
-            double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock());
+            double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock(), this);
             this.bnt$extension = tag.contains("BntExtension", 6) ? tag.getDouble("BntExtension") : rest;
             this.bnt$lastExtension = this.bnt$extension;
         }
@@ -432,6 +449,15 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         tag.putFloat("BntBeltTension", this.bnt$beltTension);
         tag.putInt("BntBeltLinks", this.bnt$beltLinks);
         tag.putDouble("BntBeltFit", this.bnt$beltFit);
+        CompoundTag tuning = new CompoundTag();
+        for (BntTuning setting : BntTuning.values()) {
+            if (this.bnt$tuning[setting.ordinal()] != BntTuning.DEFAULT) {
+                tuning.putInt(setting.key(), this.bnt$tuning[setting.ordinal()]);
+            }
+        }
+        if (!tuning.isEmpty()) {
+            tag.put("BntTuning", tuning);
+        }
         if (this.bnt$physicsEnabled) {
             tag.putDouble("BntExtension", this.bnt$extension);
         }

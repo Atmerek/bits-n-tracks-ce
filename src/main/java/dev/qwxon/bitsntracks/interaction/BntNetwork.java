@@ -16,5 +16,15 @@ public final class BntNetwork {
             BntBeltTensionPayload.TYPE,
             BntBeltTensionPayload.CODEC,
             (payload, context) -> context.enqueueWork(() -> BntBeltTensionHandler.applyFromClient(context.player(), payload)));
+
+        event.registrar("1").playToServer(
+            BntTuningModePayload.TYPE,
+            BntTuningModePayload.CODEC,
+            (payload, context) -> context.enqueueWork(() -> BntTuningHandler.modeFromClient(context.player(), payload)));
+
+        event.registrar("1").playToServer(
+            BntTuningPayload.TYPE,
+            BntTuningPayload.CODEC,
+            (payload, context) -> context.enqueueWork(() -> BntTuningHandler.tuneFromClient(context.player(), payload)));
     }
 }

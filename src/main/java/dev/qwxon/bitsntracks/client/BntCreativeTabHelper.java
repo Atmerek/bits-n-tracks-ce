@@ -39,6 +39,7 @@ public class BntCreativeTabHelper {
             new ItemStack((ItemLike)BitsNTracksItems.INDUSTRIAL_BELT.get()),
             new ItemStack((ItemLike)BitsNTracksItems.TANK_TREAD.get()),
             new ItemStack((ItemLike)BitsNTracksItems.COG_ALIGNMENT_LEVER.get()),
+            new ItemStack((ItemLike)BitsNTracksItems.SUSPENSION_TOOL.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get()),

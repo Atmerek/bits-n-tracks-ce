@@ -10,20 +10,20 @@ import net.neoforged.neoforge.common.ModConfigSpec.IntValue;
 public final class BntPhysicsTuning {
     public static final ModConfigSpec SPEC;
 
+    public static final double SUSPENSION_GAIN = 15.0;
+    public static final double SPRING_SCALE = 200.0;
+    public static final double DAMPING_SCALE = 14.0;
+    public static final double WHEEL_SPRING = 0.5;
+    public static final double WHEEL_DAMPING = 0.3;
+    public static final double BELT_SUPPORT = 0.6;
+
     private static final BooleanValue COGWHEEL_SUSPENSION_ENABLED;
     private static final BooleanValue TRACK_SUSPENSION_ENABLED;
     private static final DoubleValue SUSPENSION_SMOOTHING;
-    private static final DoubleValue BASE_SUSPENSION_STRENGTH;
-    private static final DoubleValue SPRING_SCALE;
-    private static final DoubleValue DAMPING_SCALE;
     private static final DoubleValue IMPULSE_SCALE;
     private static final DoubleValue BUMP_STOP_SCALE;
     private static final DoubleValue MAX_SUSPENSION_SPEED;
 
-    private static final DoubleValue COGWHEEL_SPRING_MULTIPLIER;
-    private static final DoubleValue TRACK_SPRING_MULTIPLIER;
-    private static final DoubleValue COGWHEEL_DAMPING_MULTIPLIER;
-    private static final DoubleValue TRACK_DAMPING_MULTIPLIER;
     private static final DoubleValue COGWHEEL_MAX_IMPULSE_MULTIPLIER;
     private static final DoubleValue TRACK_MAX_IMPULSE_MULTIPLIER;
 
@@ -35,10 +35,6 @@ public final class BntPhysicsTuning {
     private static final DoubleValue SMALL_TRACK_RADIUS;
     private static final DoubleValue MEDIUM_TRACK_RADIUS;
     private static final DoubleValue LARGE_TRACK_RADIUS;
-    private static final DoubleValue TINY_SUSPENSION_REST;
-    private static final DoubleValue SMALL_SUSPENSION_REST;
-    private static final DoubleValue MEDIUM_SUSPENSION_REST;
-    private static final DoubleValue LARGE_SUSPENSION_REST;
     private static final DoubleValue TINY_VERTICAL_OFFSET;
     private static final DoubleValue SMALL_VERTICAL_OFFSET;
     private static final DoubleValue MEDIUM_VERTICAL_OFFSET;
@@ -67,7 +63,6 @@ public final class BntPhysicsTuning {
     private static final DoubleValue BELT_NODE_SPACING;
     private static final DoubleValue BELT_SURFACE_CLEARANCE;
     private static final DoubleValue BELT_MAX_SAG;
-    private static final DoubleValue BELT_SUPPORT_STRENGTH;
     private static final DoubleValue BELT_STIFFNESS_RANGE;
     private static final DoubleValue BELT_GRIP;
     private static final DoubleValue BELT_TENSION_STEP;
@@ -95,7 +90,7 @@ public final class BntPhysicsTuning {
     static {
         Builder builder = new Builder();
 
-        builder.comment("Suspension response. Spring and damping are sized per contact point: each cogwheel takes a share of the vehicle mass, so a long track does not apply the whole vehicle's suspension force once per wheel.")
+        builder.comment("Suspension response. Forces are sized per contact point: each cogwheel takes a share of the vehicle mass, so a long track does not apply the whole vehicle's suspension force once per wheel. Stiffness, damping, travel and spring strength are set on each cogwheel with the Suspension Tool.")
             .push("suspension");
         COGWHEEL_SUSPENSION_ENABLED = builder
             .comment("Apply suspension to cogwheels that are not part of a chain.")
@@ -106,15 +101,6 @@ public final class BntPhysicsTuning {
         SUSPENSION_SMOOTHING = builder
             .comment("How fast a drawn wheel catches up to the terrain under it. One snaps to every block edge, lower eases the step out over several ticks.")
             .defineInRange("suspensionSmoothing", 0.7, 0.01, 1.0);
-        BASE_SUSPENSION_STRENGTH = builder
-            .comment("Overall suspension gain. Scales spring, damping and the impulse ceiling together. Raise it if a vehicle sags onto its belly, lower it if it bounces.")
-            .defineInRange("baseStrength", 15.0, 0.01, 100.0);
-        SPRING_SCALE = builder
-            .comment("Converts the suspension gain into a spring constant.")
-            .defineInRange("springScale", 200.0, 0.0, 10000.0);
-        DAMPING_SCALE = builder
-            .comment("Converts the suspension gain into a damping constant. Sized against the spring: near two times its square root the suspension settles in one gentle overshoot, far above it the solver spends the spring cancelling velocity instead of holding the wheel up.")
-            .defineInRange("dampingScale", 14.0, 0.0, 10000.0);
         IMPULSE_SCALE = builder
             .comment("Converts the suspension gain into the per-tick impulse ceiling.")
             .defineInRange("impulseScale", 200.0, 0.0, 10000.0);
@@ -124,12 +110,6 @@ public final class BntPhysicsTuning {
         MAX_SUSPENSION_SPEED = builder
             .comment("Fastest a wheel may push its share of the vehicle off a surface, in blocks per second, on top of whatever it takes to stop the approach. Bounds the kick a wheel gets when it ends up buried in terrain or in another vehicle, which is what happens for a moment when a structure breaks in two.")
             .defineInRange("maxSuspensionSpeed", 6.0, 0.0, 1000.0);
-        COGWHEEL_SPRING_MULTIPLIER = builder.defineInRange("cogwheelSpringMultiplier", 0.0, 0.0, 100.0);
-        TRACK_SPRING_MULTIPLIER = builder.defineInRange("trackSpringMultiplier", 0.5, 0.0, 100.0);
-        COGWHEEL_DAMPING_MULTIPLIER = builder
-            .comment("Damping resists suspension travel. At zero the suspension never settles.")
-            .defineInRange("cogwheelDampingMultiplier", 0.3, 0.0, 100.0);
-        TRACK_DAMPING_MULTIPLIER = builder.defineInRange("trackDampingMultiplier", 0.3, 0.0, 100.0);
         COGWHEEL_MAX_IMPULSE_MULTIPLIER = builder.defineInRange("cogwheelMaxImpulseMultiplier", 1.0, 0.0, 100.0);
         TRACK_MAX_IMPULSE_MULTIPLIER = builder.defineInRange("trackMaxImpulseMultiplier", 1.0, 0.0, 100.0);
         builder.pop();
@@ -143,12 +123,6 @@ public final class BntPhysicsTuning {
         SMALL_TRACK_RADIUS = builder.defineInRange("smallTrackRadius", 0.55, 0.01, 8.0);
         MEDIUM_TRACK_RADIUS = builder.defineInRange("mediumTrackRadius", 0.74, 0.01, 8.0);
         LARGE_TRACK_RADIUS = builder.defineInRange("largeTrackRadius", 1.1, 0.01, 8.0);
-        TINY_SUSPENSION_REST = builder
-            .comment("Resting suspension travel, in blocks.")
-            .defineInRange("tinySuspensionRest", 0.45, 0.01, 8.0);
-        SMALL_SUSPENSION_REST = builder.defineInRange("smallSuspensionRest", 0.65, 0.01, 8.0);
-        MEDIUM_SUSPENSION_REST = builder.defineInRange("mediumSuspensionRest", 1.0, 0.01, 8.0);
-        LARGE_SUSPENSION_REST = builder.defineInRange("largeSuspensionRest", 1.3, 0.01, 8.0);
         TINY_VERTICAL_OFFSET = builder.defineInRange("tinyVerticalOffset", -0.1, -8.0, 8.0);
         SMALL_VERTICAL_OFFSET = builder.defineInRange("smallVerticalOffset", -0.08, -8.0, 8.0);
         MEDIUM_VERTICAL_OFFSET = builder.defineInRange("mediumVerticalOffset", 0.0, -8.0, 8.0);
@@ -212,9 +186,6 @@ public final class BntPhysicsTuning {
         BELT_MAX_SAG = builder
             .comment("Maximum belt hang, in blocks, so a long run does not droop through the floor.")
             .defineInRange("beltMaxSag", 1.0, 0.0, 8.0);
-        BELT_SUPPORT_STRENGTH = builder
-            .comment("Share of the cogwheel suspension strength a belt contact carries. At zero the track rides over terrain without being held up by it.")
-            .defineInRange("beltSupportStrength", 0.6, 0.0, 10.0);
         BELT_STIFFNESS_RANGE = builder
             .comment("Spread between slack and taut. A taut belt pushes back this many times harder than a neutral one, a fully slack one this many times softer.")
             .defineInRange("beltStiffnessRange", 2.0, 1.0, 20.0);
@@ -292,16 +263,8 @@ public final class BntPhysicsTuning {
         return BELT_MAX_SAG.get();
     }
 
-    public static double getBeltSupportStrength() {
-        return BELT_SUPPORT_STRENGTH.get();
-    }
-
     public static double getBeltStiffnessRange() {
         return BELT_STIFFNESS_RANGE.get();
-    }
-
-    public static double getBeltGrip() {
-        return BELT_GRIP.get();
     }
 
     public static double getBeltTensionStep() {
@@ -356,18 +319,6 @@ public final class BntPhysicsTuning {
         return SUSPENSION_SMOOTHING.get();
     }
 
-    public static double getBaseSuspensionStrength() {
-        return BASE_SUSPENSION_STRENGTH.get();
-    }
-
-    public static double getSpringScale() {
-        return SPRING_SCALE.get();
-    }
-
-    public static double getDampingScale() {
-        return DAMPING_SCALE.get();
-    }
-
     public static double getImpulseScale() {
         return IMPULSE_SCALE.get();
     }
@@ -378,22 +329,6 @@ public final class BntPhysicsTuning {
 
     public static double getMaxSuspensionSpeed() {
         return MAX_SUSPENSION_SPEED.get();
-    }
-
-    public static double getCogwheelSpringMultiplier() {
-        return COGWHEEL_SPRING_MULTIPLIER.get();
-    }
-
-    public static double getTrackSpringMultiplier() {
-        return TRACK_SPRING_MULTIPLIER.get();
-    }
-
-    public static double getCogwheelDampingMultiplier() {
-        return COGWHEEL_DAMPING_MULTIPLIER.get();
-    }
-
-    public static double getTrackDampingMultiplier() {
-        return TRACK_DAMPING_MULTIPLIER.get();
     }
 
     public static double getCogwheelMaxImpulseMultiplier() {
@@ -434,22 +369,6 @@ public final class BntPhysicsTuning {
 
     public static double getLargeTrackRadius() {
         return LARGE_TRACK_RADIUS.get();
-    }
-
-    public static double getTinySuspensionRest() {
-        return TINY_SUSPENSION_REST.get();
-    }
-
-    public static double getSmallSuspensionRest() {
-        return SMALL_SUSPENSION_REST.get();
-    }
-
-    public static double getMediumSuspensionRest() {
-        return MEDIUM_SUSPENSION_REST.get();
-    }
-
-    public static double getLargeSuspensionRest() {
-        return LARGE_SUSPENSION_REST.get();
     }
 
     public static double getTinyVerticalOffset() {
@@ -504,14 +423,6 @@ public final class BntPhysicsTuning {
         return DRIVE_TRACTION.get();
     }
 
-    public static double getBrakeTraction() {
-        return BRAKE_TRACTION.get();
-    }
-
-    public static double getTractionResponse() {
-        return TRACTION_RESPONSE.get();
-    }
-
     public static double getCogwheelGripMultiplier() {
         return COGWHEEL_GRIP_MULTIPLIER.get();
     }
@@ -522,6 +433,18 @@ public final class BntPhysicsTuning {
 
     public static double getLateralTraction() {
         return LATERAL_TRACTION.get();
+    }
+
+    public static double getBeltGrip() {
+        return BELT_GRIP.get();
+    }
+
+    public static double getBrakeTraction() {
+        return BRAKE_TRACTION.get();
+    }
+
+    public static double getTractionResponse() {
+        return TRACTION_RESPONSE.get();
     }
 
     public static double getPivotScrub() {

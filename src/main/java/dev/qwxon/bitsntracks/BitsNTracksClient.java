@@ -1,6 +1,9 @@
 package dev.qwxon.bitsntracks;
 
 import dev.qwxon.bitsntracks.client.BntClientKeyMappings;
+import dev.qwxon.bitsntracks.client.BntShaderHand;
+import dev.qwxon.bitsntracks.client.BntTunerGauge;
+import dev.qwxon.bitsntracks.client.BntTunerInput;
 import dev.qwxon.bitsntracks.client.ponder.BntPonderPlugin;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelRenderer;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelRenderer;
@@ -27,6 +30,11 @@ public class BitsNTracksClient {
         modEventBus.addListener(BitsNTracksClient::registerRenderers);
         modEventBus.addListener(BitsNTracksClient::onClientSetup);
         NeoForge.EVENT_BUS.addListener(BntClientKeyMappings::onClientTick);
+        NeoForge.EVENT_BUS.addListener(BntTunerInput::onInteraction);
+        NeoForge.EVENT_BUS.addListener(BntTunerInput::onClientTick);
+        NeoForge.EVENT_BUS.addListener(BntTunerGauge::onClientTick);
+        NeoForge.EVENT_BUS.addListener(BntTunerGauge::onRenderFrame);
+        NeoForge.EVENT_BUS.addListener(BntShaderHand::onRenderFrame);
     }
 
     private static void onClientSetup(FMLClientSetupEvent event) {

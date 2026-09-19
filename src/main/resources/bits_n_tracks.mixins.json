@@ -38,6 +38,7 @@
         "BntCreativeModeInventoryScreenMixin",
         "BntItemPickerMenuMixin",
         "BntGameRendererPickMixin",
+        "compat.IrisHandRendererMixin",
         "accessor.CreativeModeInventoryScreenAccessor"
     ],
     "server": [],

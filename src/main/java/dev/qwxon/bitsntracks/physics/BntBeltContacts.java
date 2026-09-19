@@ -34,6 +34,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.ClipContext.Fluid;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
@@ -59,6 +60,7 @@ public final class BntBeltContacts {
         private double normalMass;
         private double friction;
         private float tension;
+        private double support;
     }
 
     /** A stretch of track hanging off the wheels, carrying its own weight. */
@@ -151,6 +153,7 @@ public final class BntBeltContacts {
         int[] sides = new int[count];
         float tension = BntBeltTension.at(level, controllerPos);
         double averageY = 0.0;
+        double[] support = new double[count];
 
         for (int i = 0; i < count; i++) {
             PathedCogwheelNode node = nodes.get(i);
@@ -159,9 +162,11 @@ public final class BntBeltContacts {
             Vec3 centre = nodePos.getCenter()
                 .add(0.0, CogwheelSizeHelper.getVerticalOffset(state.getBlock()), 0.0)
                 .add(BntCogwheelPairing.seamOffset(state));
-            if (level.getBlockEntity(nodePos) instanceof KineticBlockEntityPhysicsAccess access) {
+            BlockEntity nodeBe = level.getBlockEntity(nodePos);
+            if (nodeBe instanceof KineticBlockEntityPhysicsAccess access) {
                 centre = centre.add(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
             }
+            support[i] = BntTuning.SUPPORT.scale(nodeBe);
             planarU[i] = BntChainGeometry.planarX(centre, axis);
             planarV[i] = BntChainGeometry.planarY(centre, axis);
             alongAxis[i] = BntBeltPath.axisCoord(centre, axis);
@@ -208,6 +213,7 @@ public final class BntBeltContacts {
             boolean underside = midpoint.y <= averageY;
 
             int samples = BntBeltDrape.probeCount(run[0]);
+            double runSupport = (support[i] + support[next]) * 0.5;
             double sag = BntBeltTension.sagFromSurplus(run[0], slack[i]);
             double segmentMass = massPerBlock * run[0] / samples;
             for (int sample = 0; sample < samples; sample++) {
@@ -224,6 +230,7 @@ public final class BntBeltContacts {
                     ? sample(level, subLevel, pose, massData, chord, droop, tension)
                     : null;
                 if (contact != null) {
+                    contact.support = runSupport;
                     loads.contacts().add(contact);
                 } else if (segmentMass > 0.0) {
                     BntBeltWeight weight = new BntBeltWeight();
@@ -298,11 +305,11 @@ public final class BntBeltContacts {
         }
 
         double normalMassShare = contact.normalMass / Math.max(shareCount, 1);
-        double support = BntBeltTension.supportScale(contact.tension);
-        double springStrength = BntPhysicsTuning.getBaseSuspensionStrength() * normalMassShare
-            * BntPhysicsTuning.getSpringScale() * support;
-        double dampingStrength = BntPhysicsTuning.getBaseSuspensionStrength() * normalMassShare
-            * BntPhysicsTuning.getDampingScale() * support;
+        double support = BntBeltTension.supportScale(contact.tension) * contact.support;
+        double springStrength = BntPhysicsTuning.SUSPENSION_GAIN * normalMassShare
+            * BntPhysicsTuning.SPRING_SCALE * support;
+        double dampingStrength = BntPhysicsTuning.SUSPENSION_GAIN * normalMassShare
+            * BntPhysicsTuning.DAMPING_SCALE * support;
 
         double approachSpeed = contact.velocity.y;
         double springImpulse = contact.penetration * springStrength * timeStep;

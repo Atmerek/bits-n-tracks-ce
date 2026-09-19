@@ -1,5 +1,6 @@
 package dev.qwxon.bitsntracks.access;
 
+import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
 
 public interface KineticBlockEntityPhysicsAccess {
@@ -97,4 +98,8 @@ public interface KineticBlockEntityPhysicsAccess {
     long bnt$getChainStopTick();
 
     void bnt$setChainStopTick(long var1);
+
+    int bnt$getTuning(BntTuning var1);
+
+    void bnt$setTuning(BntTuning var1, int var2);
 }

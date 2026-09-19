@@ -7,6 +7,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSolver;
@@ -34,6 +35,11 @@ public final class BntTrackFloor {
             || !(wheel instanceof KineticBlockEntityPhysicsAccess access)
             || level == null) {
             return 0.0;
+        }
+
+        KineticBlockEntity twin = BntCogwheelPairing.beltTwin(wheel);
+        if (twin != wheel) {
+            return at(level, twin);
         }
 
         long now = level.getGameTime();
