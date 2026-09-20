@@ -45,7 +45,7 @@ public class SuspensionToolItem extends Item {
     }
 
     public static MutableComponent scopeName(boolean wholeTrack) {
-        return Component.translatable(wholeTrack ? "bits_n_tracks.tuning.scope.track" : "bits_n_tracks.tuning.scope.cogwheel");
+        return Component.translatable(wholeTrack ? "bits_n_tracks.scope.track" : "bits_n_tracks.scope.cogwheel");
     }
 
     @Override

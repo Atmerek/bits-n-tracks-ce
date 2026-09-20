@@ -7,6 +7,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientRouteClick;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
@@ -35,6 +36,16 @@ import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 @EventBusSubscriber
 public class WrenchPhysicsHandler {
     public static final int FLAT_FACE = -2;
+
+    public static void alignmentModeFromClient(Player player, BntAlignmentModePayload payload) {
+        if (player == null) {
+            return;
+        }
+        ItemStack stack = player.getMainHandItem();
+        if (stack.getItem() instanceof CogAlignmentLeverItem) {
+            CogAlignmentLeverItem.setWholeTrack(stack, payload.wholeTrack());
+        }
+    }
 
     @SubscribeEvent
     public static void onLeftClickBlock(LeftClickBlock event) {

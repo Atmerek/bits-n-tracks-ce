@@ -6,6 +6,7 @@ import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -54,6 +55,17 @@ public final class BntCogwheelPairing {
         BlockPos partnerPos = pos.relative(direction);
         BlockState partner = level.getBlockState(partnerPos);
         return canPair(state, partner) && sideOf(partner) == BntWideSide.of(direction.getOpposite()) ? partnerPos : null;
+    }
+
+    public static int countWheels(Level level, Set<BlockPos> positions) {
+        int wheels = 0;
+        for (BlockPos pos : positions) {
+            BlockPos partnerPos = partnerPos(level, pos);
+            if (partnerPos == null || !positions.contains(partnerPos) || pos.asLong() < partnerPos.asLong()) {
+                wheels++;
+            }
+        }
+        return wheels;
     }
 
     public static KineticBlockEntity beltTwin(KineticBlockEntity wheel) {

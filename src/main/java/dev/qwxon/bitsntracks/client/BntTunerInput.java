@@ -1,6 +1,8 @@
 package dev.qwxon.bitsntracks.client;
 
+import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
+import dev.qwxon.bitsntracks.interaction.BntAlignmentModePayload;
 import dev.qwxon.bitsntracks.interaction.BntTuningModePayload;
 import dev.qwxon.bitsntracks.interaction.BntTuningPayload;
 import dev.qwxon.bitsntracks.physics.BntTuning;
@@ -37,6 +39,17 @@ public final class BntTunerInput {
             return;
         }
         ItemStack stack = player.getMainHandItem();
+        if (stack.getItem() instanceof CogAlignmentLeverItem) {
+            if (event.isAttack() && Screen.hasControlDown()) {
+                event.setCanceled(true);
+                event.setSwingHand(false);
+                if (!attackHandled && !attackWasDown) {
+                    attackHandled = true;
+                    changeAlignmentScope(minecraft, stack);
+                }
+            }
+            return;
+        }
         if (!(stack.getItem() instanceof SuspensionToolItem)) {
             return;
         }
@@ -68,6 +81,18 @@ public final class BntTunerInput {
         useWasDown = minecraft.options.keyUse.isDown();
         attackHandled = false;
         useHandled = false;
+    }
+
+    private static void changeAlignmentScope(Minecraft minecraft, ItemStack stack) {
+        boolean wholeTrack = !CogAlignmentLeverItem.wholeTrack(stack);
+        CogAlignmentLeverItem.setWholeTrack(stack, wholeTrack);
+        PacketDistributor.sendToServer(new BntAlignmentModePayload(wholeTrack));
+        minecraft.gui.setOverlayMessage(
+            Component.translatable("chat.bits_n_tracks.alignment.scope.selected",
+                    CogAlignmentLeverItem.scopeName(wholeTrack))
+                .withStyle(ChatFormatting.GOLD),
+            false);
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), wholeTrack ? 1.2F : 1.6F, 0.25F));
     }
 
     private static void changeMode(Minecraft minecraft, LocalPlayer player, ItemStack stack) {

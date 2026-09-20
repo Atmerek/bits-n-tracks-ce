@@ -44,6 +44,7 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -173,6 +174,17 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         return var5;
     }
 
+    /** Bits 'n' Bobs drops the chain to its cheap form past 24 blocks, measured against sublevel-local coordinates. */
+    @Redirect(
+        method = {"renderChain"},
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/phys/Vec3;closerThan(Lnet/minecraft/core/Position;D)Z"
+        )
+    )
+    private boolean bnt$keepTrackDetail(Vec3 camera, Position pos, double distance) {
+        return TrackModelRenderContext.isRenderingTrack() || camera.closerThan(pos, distance);
+    }
     @Redirect(
         method = {"renderChain"},
         at = @At(

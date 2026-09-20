@@ -23,6 +23,11 @@ public final class BntNetwork {
             (payload, context) -> context.enqueueWork(() -> BntTuningHandler.modeFromClient(context.player(), payload)));
 
         event.registrar("1").playToServer(
+            BntAlignmentModePayload.TYPE,
+            BntAlignmentModePayload.CODEC,
+            (payload, context) -> context.enqueueWork(() -> WrenchPhysicsHandler.alignmentModeFromClient(context.player(), payload)));
+
+        event.registrar("1").playToServer(
             BntTuningPayload.TYPE,
             BntTuningPayload.CODEC,
             (payload, context) -> context.enqueueWork(() -> BntTuningHandler.tuneFromClient(context.player(), payload)));

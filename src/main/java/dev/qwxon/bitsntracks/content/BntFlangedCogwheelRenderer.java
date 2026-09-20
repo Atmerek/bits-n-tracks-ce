@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.content;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -17,6 +18,10 @@ public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFl
         super(context);
     }
 
+    @Override
+    public int getViewDistance() {
+        return BntClientCompat.trackViewDistance();
+    }
     protected void renderSafe(BntFlangedCogwheelBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         if (!(be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isHiddenByLever())) {
             BlockState renderState = be.getBlockState();

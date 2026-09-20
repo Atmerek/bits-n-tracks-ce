@@ -78,7 +78,7 @@ public final class BntTuningHandler {
             BntChainEngagement.refresh(level, pos, engagementBefore);
         }
 
-        int wheels = countWheels(level, tuned);
+        int wheels = BntCogwheelPairing.countWheels(level, tuned);
         MutableComponent message = payload.wholeTrack()
             ? Component.translatable(
                 wheels == 1 ? "chat.bits_n_tracks.tuning.level.track.single" : "chat.bits_n_tracks.tuning.level.track",
@@ -88,16 +88,6 @@ public final class BntTuningHandler {
         player.displayClientMessage(message.withStyle(ChatFormatting.GOLD), true);
     }
 
-    private static int countWheels(Level level, Set<BlockPos> tuned) {
-        int wheels = 0;
-        for (BlockPos nodePos : tuned) {
-            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, nodePos);
-            if (partnerPos == null || !tuned.contains(partnerPos) || nodePos.asLong() < partnerPos.asLong()) {
-                wheels++;
-            }
-        }
-        return wheels;
-    }
 
     private static boolean withinReach(Level level, Player player, BlockPos pos) {
         Vec3 centre = Vec3.atCenterOf(pos);

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -18,6 +19,10 @@ public class HiddenCogwheelRenderer extends KineticBlockEntityRenderer<KineticBl
         super(context);
     }
 
+    @Override
+    public int getViewDistance() {
+        return BntClientCompat.trackViewDistance();
+    }
     protected RenderType getRenderType(KineticBlockEntity be, BlockState state) {
         return !state.is((Block)BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.get())
                 && !state.is((Block)BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.get())

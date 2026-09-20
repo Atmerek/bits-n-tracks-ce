@@ -34,6 +34,11 @@ public class BntClientCompat {
         return HiddenCogwheelCompat.getVisualVerticalTranslation(be, partialTick);
     }
 
+    /** Tracks are drawn by a block entity renderer, so they need the sublevel's reach rather than the default 64. */
+    public static int trackViewDistance() {
+        return Math.max(Minecraft.getInstance().options.getEffectiveRenderDistance() * 16, 64);
+    }
+
     public static float getPartialTick() {
         return Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
     }
