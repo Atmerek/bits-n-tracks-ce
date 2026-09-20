@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -59,6 +60,7 @@ public final class BntPhysicsEvents {
     private static final double BLOCKS_PER_SECOND_PER_RPM_RADIUS = Math.PI * 2.0 / 60.0;
     private static final int TRACTION_ITERATIONS = 8;
     private static final double MAX_COMMANDED_YAW_RATE = 20.0;
+    private static final Map<ServerSubLevel, Long> REPORTED = new WeakHashMap<>();
 
     private BntPhysicsEvents() {
     }
@@ -114,17 +116,19 @@ public final class BntPhysicsEvents {
                 }
             }
 
+            double beltPush = 0.0;
             if (!belt.isEmpty()) {
                 KineticBlockEntityPhysicsAccess carrier = (KineticBlockEntityPhysicsAccess)entry.getValue().get(0);
                 for (BntBeltContacts.BntBeltContact contact : belt.contacts()) {
                     BntBeltContacts.assignCarrier(contact, carrier);
-                    BntBeltContacts.apply(contact, belt.contacts().size(), timeStep);
+                    beltPush += BntBeltContacts.apply(contact, belt.contacts().size(), timeStep);
                 }
                 for (BntBeltContacts.BntBeltWeight weight : belt.weights()) {
                     BntBeltContacts.assignCarrier(weight, carrier);
                     BntBeltContacts.applyWeight(weight, level, timeStep);
                 }
             }
+            report(level, subLevel, entry.getValue().size(), nearGround, belt.contacts().size(), beltPush);
         }
 
         applyAllBatchedForces(level);
@@ -297,7 +301,8 @@ public final class BntPhysicsEvents {
 
         mixin.bnt$setExtension(Mth.clamp(maxExtension - wheelRadius, -suspensionRest * 3.0, suspensionRest));
 
-        double distance = suspensionRest / 6.0 + maxExtension + BntBeltHold.at(kbe.getLevel(), kbe);
+        double hold = BntBeltHold.at(kbe.getLevel(), kbe);
+        double distance = suspensionRest / 6.0 + maxExtension + hold;
         double springLength = Mth.clamp(distance - wheelRadius, -suspensionRest * 2.0, suspensionRest);
         KineticBlockEntity track = BntCogwheelPairing.beltTwin(kbe);
         CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)track.getBehaviour(CogwheelChainBehaviour.TYPE);
@@ -324,6 +329,9 @@ public final class BntPhysicsEvents {
         contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
         contact.loaded = extResult.minInteractingBlock != null && springLength < suspensionRest;
         contact.verticalSpeed = verticalSpeed;
+        contact.pos = kbe.getBlockPos();
+        contact.hold = hold;
+        contact.carried = carried;
         contact.stiffness = BntTuning.STIFFNESS.scale(kbe);
         contact.damping = BntTuning.DAMPING.scale(kbe);
         return contact;
@@ -352,6 +360,7 @@ public final class BntPhysicsEvents {
         double speedLimitImpulse = normalMassShare * (BntPhysicsTuning.getMaxSuspensionSpeed() + Math.abs(relVelY));
         double impulseCeiling = Math.min(maxImpulseVal, speedLimitImpulse);
         double springForce = Mth.clamp(rawSpringForce, -impulseCeiling, impulseCeiling);
+        contact.push = springForce;
         Vec3i rayHitNormal = contact.extResult.normal.getNormal();
         Vec3 localForce = new Vec3(springForce * rayHitNormal.getX(), springForce * rayHitNormal.getY(), springForce * rayHitNormal.getZ());
         if (contact.extResult.subLevel != null) {
@@ -416,6 +425,7 @@ public final class BntPhysicsEvents {
 
         for (BntPhysicsEvents.WheelContact contact : contacts) {
             if (contact.hasTraction) {
+                contact.yawRate = commandedYawRate;
                 double lateralSpeed = contact.localVelocity.dot(contact.sideD);
                 double scrubSpeed = commandedYawRate
                     * pivotScrub
@@ -547,6 +557,29 @@ public final class BntPhysicsEvents {
         deltaVelocity.fma(applied * inverseMass, axis);
         deltaAngularVelocity.fma(applied, transformed);
         return total;
+    }
+
+    private static void report(ServerLevel level, ServerSubLevel subLevel, int wheels,
+                               List<BntPhysicsEvents.WheelContact> contacts, int beltContacts, double beltPush) {
+        long now = level.getGameTime();
+        if (!BntDebugLog.enabled() || now % 20L != 0L || contacts.isEmpty() || Long.valueOf(now).equals(REPORTED.get(subLevel))) {
+            return;
+        }
+        REPORTED.put(subLevel, now);
+
+        StringBuilder line = new StringBuilder();
+        double yaw = 0.0;
+        for (BntPhysicsEvents.WheelContact contact : contacts) {
+            yaw = contact.yawRate;
+            line.append(String.format(" [%s %s comp%.2f hold%.2f floor%.2f push%.2f vy%.2f %s tgt%.2f lon%.2f lat%.2f]",
+                contact.pos.toShortString(), contact.loaded ? "on" : "off", contact.suspensionRest - contact.springLength,
+                contact.hold, contact.carried, contact.push, contact.verticalSpeed, contact.isDriven ? "drive" : "free",
+                contact.targetSpeed, contact.longitudinalImpulse, contact.lateralImpulse));
+        }
+        Vec3 at = subLevel.logicalPose().transformPosition(Vec3.atCenterOf(contacts.get(0).pos));
+        BntDebugLog.LOG.info("vehicle at {} wheels {} near ground {} belt contacts {} belt push {} yaw {}{}",
+            String.format("%.1f %.1f %.1f", at.x, at.y, at.z), wheels, contacts.size(), beltContacts,
+            String.format("%.2f", beltPush), String.format("%.2f", yaw), line);
     }
 
     private static void applyAllBatchedForces(ServerLevel level) {
@@ -801,6 +834,11 @@ public final class BntPhysicsEvents {
         double brakeStrength;
         double stiffness;
         double damping;
+        BlockPos pos;
+        double hold;
+        double carried;
+        double push;
+        double yawRate;
         double goalLongitudinal;
         double goalLateral;
         double limitLongitudinal;

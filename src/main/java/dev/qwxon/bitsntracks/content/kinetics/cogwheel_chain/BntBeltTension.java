@@ -6,6 +6,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import java.util.LinkedHashSet;
@@ -120,15 +121,24 @@ public final class BntBeltTension {
         Set<BlockPos> positions = new LinkedHashSet<>();
         positions.add(pos);
 
-        CogwheelChainBehaviour behaviour = behaviour(level.getBlockEntity(pos));
+        BlockPos linkPos = pos;
+        CogwheelChainBehaviour behaviour = behaviour(level.getBlockEntity(linkPos));
+        if (behaviour == null || !behaviour.isPartOfChain()) {
+            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+            CogwheelChainBehaviour partner = partnerPos == null ? null : behaviour(level.getBlockEntity(partnerPos));
+            if (partner != null && partner.isPartOfChain()) {
+                linkPos = partnerPos;
+                behaviour = partner;
+            }
+        }
         if (behaviour == null) {
             return positions;
         }
 
-        BlockPos controllerPos = pos;
+        BlockPos controllerPos = linkPos;
         CogwheelChain chain = behaviour.getControlledChain();
         if (chain == null && behaviour.getControllerOffset() != null) {
-            controllerPos = pos.offset(behaviour.getControllerOffset());
+            controllerPos = linkPos.offset(behaviour.getControllerOffset());
             CogwheelChainBehaviour controller = behaviour(level.getBlockEntity(controllerPos));
             if (controller != null) {
                 chain = controller.getControlledChain();

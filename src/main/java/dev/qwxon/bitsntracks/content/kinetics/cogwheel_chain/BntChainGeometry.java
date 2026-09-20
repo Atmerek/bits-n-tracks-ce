@@ -17,6 +17,8 @@ public final class BntChainGeometry {
     private static final double GRAZE_TOLERANCE = 1.0E-4;
     private static final double LEAVE_SLACK = 0.25;
     private static final double LOOPED_WRAP = Math.PI * 1.5;
+    private static final double NATURAL_FACE = -0.5;
+    private static final double REVERSE_WRAP = Math.PI;
     private static final int REWRAP_PASSES = 3;
 
     private BntChainGeometry() {
@@ -148,6 +150,11 @@ public final class BntChainGeometry {
     }
 
     public static Layout resolve(List<PathedCogwheelNode> pathNodes) {
+        return resolve(pathNodes, null);
+    }
+
+    /** Wheels terrain has pushed inside the loop stay on the belt while it still passes cleanly through them. */
+    public static Layout resolve(List<PathedCogwheelNode> pathNodes, Layout previous) {
         int count = pathNodes.size();
         Axis axis = sharedAxis(pathNodes);
         if (axis == null || count < 2) {
@@ -159,12 +166,76 @@ public final class BntChainGeometry {
         double[] radii = new double[count];
         fillLive(pathNodes, axis, xs, ys, radii);
 
+        boolean[] held = previous == null || previous.sides().length != count ? null : new boolean[count];
+        if (held != null) {
+            for (int node : previous.sequence()) {
+                if (node >= 0 && node < count) {
+                    held[node] = true;
+                }
+            }
+        }
+
+        Layout layout = null;
+        for (int pass = 0; pass <= count; pass++) {
+            layout = solve(xs, ys, radii, axis, pathNodes, held, previous);
+            if (held == null || layout == null || !shed(xs, ys, radii, layout, held)) {
+                break;
+            }
+        }
+        return layout;
+    }
+
+    private static boolean shed(double[] xs, double[] ys, double[] radii, Layout layout, boolean[] held) {
+        int[] sequence = layout.sequence();
+        int[] sides = layout.sides();
+        int length = sequence.length;
+        boolean shed = false;
+        for (int position = 0; position < length; position++) {
+            int node = sequence[position];
+            if (!held[node]) {
+                continue;
+            }
+
+            int previous = sequence[(position - 1 + length) % length];
+            int next = sequence[(position + 1) % length];
+            if (previous == node || next == node || previous == next) {
+                continue;
+            }
+
+            double[] incoming = BntBeltSolver.tangent(xs[previous], ys[previous], sides[previous] * radii[previous],
+                xs[node], ys[node], sides[node] * radii[node]);
+            double[] outgoing = BntBeltSolver.tangent(xs[node], ys[node], sides[node] * radii[node],
+                xs[next], ys[next], sides[next] * radii[next]);
+            if (incoming == null || outgoing == null) {
+                continue;
+            }
+            if (BntBeltSolver.wrap(sides[node], incoming[3], incoming[4], outgoing[1], outgoing[2]) > REVERSE_WRAP) {
+                held[node] = false;
+                shed = true;
+            }
+        }
+        return shed;
+    }
+
+    private static Layout solve(double[] xs, double[] ys, double[] radii, Axis axis,
+                                List<PathedCogwheelNode> pathNodes, boolean[] held, Layout previous) {
+        int count = pathNodes.size();
         Direction[] routes = routes(pathNodes);
         boolean[] requested = null;
         if (routes != null) {
             requested = new boolean[count];
             for (int i = 0; i < count; i++) {
                 requested[i] = routes[i] != null;
+            }
+        }
+        if (held != null) {
+            if (requested == null) {
+                requested = new boolean[count];
+            }
+            for (int i = 0; i < count; i++) {
+                if (held[i]) {
+                    requested[i] = true;
+                }
             }
         }
 
@@ -180,9 +251,10 @@ public final class BntChainGeometry {
             sides = orient(xs, ys, radii, sides, pathNodes, free);
         }
 
-        int[] sequence = BntBeltSolver.contactSequence(xs, ys, radii, sides, requested);
+        int[] order = previous == null ? null : previous.sequence();
+        int[] sequence = BntBeltSolver.contactSequence(xs, ys, radii, sides, requested, order);
         for (int pass = 0; pass < REWRAP_PASSES; pass++) {
-            int[] rewrapped = rewrap(xs, ys, radii, sides, sequence, pinned, requested);
+            int[] rewrapped = rewrap(xs, ys, radii, sides, sequence, pinned, requested, order);
             if (rewrapped == null) {
                 break;
             }
@@ -192,7 +264,7 @@ public final class BntChainGeometry {
     }
 
     private static int[] rewrap(double[] xs, double[] ys, double[] radii, int[] sides, int[] sequence,
-                                int[] pinned, boolean[] requested) {
+                                int[] pinned, boolean[] requested, int[] order) {
         int length = sequence.length;
         if (length < 3) {
             return null;
@@ -227,7 +299,7 @@ public final class BntChainGeometry {
                 changed = true;
             }
         }
-        return changed ? BntBeltSolver.contactSequence(xs, ys, radii, sides, requested) : null;
+        return changed ? BntBeltSolver.contactSequence(xs, ys, radii, sides, requested, order) : null;
     }
 
     private static int[] pins(double[] xs, double[] ys, double[] radii, Axis axis, Direction[] routes,
@@ -241,6 +313,9 @@ public final class BntChainGeometry {
             }
 
             double[] target = planarDirection(routes[node], axis);
+            if (agreement(xs, ys, radii, free, requested, pinned, node, target) > NATURAL_FACE) {
+                continue;
+            }
             int held = 0;
             double best = 0.0;
             for (int side = 1; side >= -1; side -= 2) {
@@ -296,7 +371,7 @@ public final class BntChainGeometry {
             return null;
         }
 
-        double arc = BntBeltSolver.sweep(sides[node], incoming[3], incoming[4], outgoing[1], outgoing[2]);
+        double arc = BntBeltSolver.wrap(sides[node], incoming[3], incoming[4], outgoing[1], outgoing[2]);
         if (arc > LOOPED_WRAP) {
             return null;
         }

@@ -15,6 +15,7 @@ import java.util.Set;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -62,7 +63,7 @@ public final class BntTuningHandler {
         }
 
         Map<BlockPos, Integer> engagementBefore = setting == BntTuning.TRAVEL ? BntChainEngagement.snapshot(level, pos) : null;
-        int tuned = 0;
+        Set<BlockPos> tuned = new LinkedHashSet<>();
         for (BlockPos nodePos : positions) {
             if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic
                 && kinetic instanceof KineticBlockEntityPhysicsAccess access
@@ -70,21 +71,32 @@ public final class BntTuningHandler {
                 access.bnt$setTuning(setting, value);
                 kinetic.setChanged();
                 kinetic.sendData();
-                tuned++;
+                tuned.add(nodePos);
             }
         }
         if (engagementBefore != null) {
             BntChainEngagement.refresh(level, pos, engagementBefore);
         }
 
-        Component scope = payload.wholeTrack()
-            ? Component.translatable("chat.bits_n_tracks.tuning.scope.track", tuned)
-            : Component.translatable("chat.bits_n_tracks.tuning.scope.cogwheel");
-        player.displayClientMessage(
-            Component.translatable("chat.bits_n_tracks.tuning.level",
-                    Component.translatable(setting.translationKey()), value, BntTuning.MAX, scope)
-                .withStyle(ChatFormatting.GOLD),
-            true);
+        int wheels = countWheels(level, tuned);
+        MutableComponent message = payload.wholeTrack()
+            ? Component.translatable(
+                wheels == 1 ? "chat.bits_n_tracks.tuning.level.track.single" : "chat.bits_n_tracks.tuning.level.track",
+                Component.translatable(setting.translationKey()), value, BntTuning.MAX, wheels)
+            : Component.translatable("chat.bits_n_tracks.tuning.level",
+                Component.translatable(setting.translationKey()), value, BntTuning.MAX);
+        player.displayClientMessage(message.withStyle(ChatFormatting.GOLD), true);
+    }
+
+    private static int countWheels(Level level, Set<BlockPos> tuned) {
+        int wheels = 0;
+        for (BlockPos nodePos : tuned) {
+            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, nodePos);
+            if (partnerPos == null || !tuned.contains(partnerPos) || nodePos.asLong() < partnerPos.asLong()) {
+                wheels++;
+            }
+        }
+        return wheels;
     }
 
     private static boolean withinReach(Level level, Player player, BlockPos pos) {

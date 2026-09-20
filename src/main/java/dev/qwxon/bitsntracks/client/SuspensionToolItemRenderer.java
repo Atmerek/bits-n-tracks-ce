@@ -39,7 +39,8 @@ public class SuspensionToolItemRenderer extends CustomRenderedItemModelRenderer 
                 BntShaderHand.markSolidDrawn();
             }
         }
-        if (pass != BntShaderHand.Pass.SOLID) {
+        boolean opaqueWorld = pass == BntShaderHand.Pass.NONE && transformType != ItemDisplayContext.GUI && BntShaderHand.packInUse();
+        if (pass != BntShaderHand.Pass.SOLID && !opaqueWorld) {
             renderer.render(SCREEN.get(), Sheets.translucentCullBlockSheet(), light);
         }
     }

@@ -11,6 +11,7 @@ public final class BntBeltSolver {
     private static final double TANGENT_TOLERANCE = 1.0E-6;
     private static final int MAX_CANDIDATES = 48;
     private static final double CLIP_TOLERANCE = 1.0E-4;
+    private static final double GRAZE_TURN = Math.PI / 6.0;
 
     private BntBeltSolver() {
     }
@@ -200,11 +201,9 @@ public final class BntBeltSolver {
             for (int position = 0; position < owners.size(); position++) {
                 int from = owners.get(position);
                 int to = owners.get((position + 1) % owners.size());
-                double detour = Math.hypot(xs[node] - xs[from], ys[node] - ys[from])
-                    + Math.hypot(xs[to] - xs[node], ys[to] - ys[node])
-                    - Math.hypot(xs[to] - xs[from], ys[to] - ys[from]);
-                if (detour < cheapest) {
-                    cheapest = detour;
+                double gap = gapToRun(xs, ys, radii, from, to, node);
+                if (gap < cheapest) {
+                    cheapest = gap;
                     at = position;
                 }
             }
@@ -218,6 +217,34 @@ public final class BntBeltSolver {
         return order;
     }
 
+    private static int bestGap(double[] xs, double[] ys, double[] radii, List<Integer> sequence, int node) {
+        int at = 0;
+        double cheapest = Double.MAX_VALUE;
+        for (int position = 0; position < sequence.size(); position++) {
+            double gap = gapToRun(xs, ys, radii, sequence.get(position), sequence.get((position + 1) % sequence.size()), node);
+            if (gap < cheapest) {
+                cheapest = gap;
+                at = position;
+            }
+        }
+        return at;
+    }
+
+    private static double gapToRun(double[] xs, double[] ys, double[] radii, int from, int to, int node) {
+        double dx = xs[to] - xs[from];
+        double dy = ys[to] - ys[from];
+        double length = Math.sqrt(dx * dx + dy * dy);
+        if (length < 1.0E-6) {
+            return Math.hypot(xs[node] - xs[from], ys[node] - ys[from]) - radii[node] - radii[from];
+        }
+
+        double along = ((xs[node] - xs[from]) * dx + (ys[node] - ys[from]) * dy) / (length * length);
+        double clamped = Math.max(0.0, Math.min(1.0, along));
+        double outward = ((xs[node] - xs[from]) * dy - (ys[node] - ys[from]) * dx) / length;
+        double reach = radii[from] + (radii[to] - radii[from]) * clamped;
+        return reach - radii[node] - outward + Math.abs(along - clamped) * length;
+    }
+
     public static double[] evaluate(double[] xs, double[] ys, double[] radii, int[] sides) {
         long crossingCount = crossings(xs, ys, radii, sides);
         if (crossingCount == Long.MAX_VALUE) {
@@ -227,7 +254,7 @@ public final class BntBeltSolver {
         if (length == Double.MAX_VALUE) {
             return null;
         }
-        return new double[]{crossingCount, countFlips(sides), length};
+        return new double[]{crossingCount, countInside(sides, outerSide(xs, ys)), length};
     }
 
     public static int[] contactSequence(double[] xs, double[] ys, double[] radii, int[] sides) {
@@ -235,18 +262,36 @@ public final class BntBeltSolver {
     }
 
     public static int[] contactSequence(double[] xs, double[] ys, double[] radii, int[] sides, boolean[] force) {
+        return contactSequence(xs, ys, radii, sides, force, null);
+    }
+
+    public static int[] contactSequence(double[] xs, double[] ys, double[] radii, int[] sides, boolean[] force, int[] order) {
         int count = xs.length;
         boolean[] touched = contacts(xs, ys, radii, force);
         List<Integer> sequence = new ArrayList<>(count);
-        int[] hull = hullOrder(xs, ys, radii, touched);
-        if (hull != null) {
-            for (int node : hull) {
+        for (int node : order == null ? new int[0] : order) {
+            if (node >= 0 && node < count && touched[node] && !sequence.contains(node)) {
                 sequence.add(node);
             }
+        }
+        if (sequence.size() < 2) {
+            sequence.clear();
+            int[] hull = hullOrder(xs, ys, radii, touched);
+            if (hull != null) {
+                for (int node : hull) {
+                    sequence.add(node);
+                }
+            } else {
+                for (int i = 0; i < count; i++) {
+                    if (touched[i]) {
+                        sequence.add(i);
+                    }
+                }
+            }
         } else {
-            for (int i = 0; i < count; i++) {
-                if (touched[i]) {
-                    sequence.add(i);
+            for (int node = 0; node < count; node++) {
+                if (touched[node] && !sequence.contains(node)) {
+                    sequence.add(bestGap(xs, ys, radii, sequence, node) + 1, node);
                 }
             }
         }
@@ -293,7 +338,7 @@ public final class BntBeltSolver {
             int deepest = -1;
             double deepestPenetration = CLIP_TOLERANCE;
             for (int candidate = 0; candidate < xs.length; candidate++) {
-                if (candidate == from || candidate == to) {
+                if (candidate == from || candidate == to || sequence.contains(candidate)) {
                     continue;
                 }
                 double along = ((xs[candidate] - startX) * dx + (ys[candidate] - startY) * dy) / lengthSquared;
@@ -418,6 +463,7 @@ public final class BntBeltSolver {
 
     private static int[] solveMixedSides(double[] xs, double[] ys, double[] radii, int[] pinned) {
         int count = xs.length;
+        int outer = outerSide(xs, ys);
         int[] best = null;
         long bestCrossings = Long.MAX_VALUE;
         int bestFlips = Integer.MAX_VALUE;
@@ -453,7 +499,7 @@ public final class BntBeltSolver {
                             if (!allowed(pinned, (step + 1) % count, nextSide)) {
                                 continue;
                             }
-                            double[] cost = stepCost(xs, ys, radii, step, previousSide, currentSide, nextSide);
+                            double[] cost = stepCost(xs, ys, radii, step, previousSide, currentSide, nextSide, outer);
                             if (cost == null) {
                                 continue;
                             }
@@ -486,7 +532,7 @@ public final class BntBeltSolver {
                     if (partial.step > count) {
                         examined++;
                         long crossings = crossings(xs, ys, radii, partial.sides);
-                        int flips = countFlips(partial.sides);
+                        int flips = countInside(partial.sides, outer);
                         double length = beltLength(xs, ys, radii, partial.sides);
                         if (length == Double.MAX_VALUE) {
                             continue;
@@ -511,7 +557,7 @@ public final class BntBeltSolver {
                         if (!allowed(pinned, (partial.step + 1) % count, nextSide)) {
                             continue;
                         }
-                        double[] cost = stepCost(xs, ys, radii, partial.step, previousSide, currentSide, nextSide);
+                        double[] cost = stepCost(xs, ys, radii, partial.step, previousSide, currentSide, nextSide, outer);
                         if (cost == null) {
                             continue;
                         }
@@ -539,7 +585,7 @@ public final class BntBeltSolver {
     }
 
     private static double[] stepCost(double[] xs, double[] ys, double[] radii,
-                                     int node, int previousSide, int currentSide, int nextSide) {
+                                     int node, int previousSide, int currentSide, int nextSide, int outer) {
         int count = xs.length;
         int previous = (node - 1 + count) % count;
         int current = node % count;
@@ -551,8 +597,8 @@ public final class BntBeltSolver {
         if (incoming == null || outgoing == null) {
             return null;
         }
-        double angle = sweep(currentSide, incoming[3], incoming[4], outgoing[1], outgoing[2]);
-        return new double[]{currentSide == nextSide ? 0.0 : 1.0, angle * radii[current] + outgoing[0]};
+        double angle = wrap(currentSide, incoming[3], incoming[4], outgoing[1], outgoing[2]);
+        return new double[]{nextSide == outer ? 0.0 : 1.0, angle * radii[current] + outgoing[0]};
     }
 
     /** Path length once round the order as written, every wrap taken the long way. */
@@ -570,7 +616,7 @@ public final class BntBeltSolver {
         }
         for (int i = 0; i < count; i++) {
             double[] incoming = runs[(i - 1 + count) % count];
-            total += sweep(sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]) * radii[i];
+            total += wrap(sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]) * radii[i];
         }
         return total;
     }
@@ -622,14 +668,23 @@ public final class BntBeltSolver {
         return total;
     }
 
-    private static int countFlips(int[] sides) {
-        int flips = 0;
-        for (int i = 0; i < sides.length; i++) {
-            if (sides[i] != sides[(i + 1) % sides.length]) {
-                flips++;
+    private static int countInside(int[] sides, int outer) {
+        int inside = 0;
+        for (int side : sides) {
+            if (side != outer) {
+                inside++;
             }
         }
-        return flips;
+        return inside;
+    }
+
+    static int outerSide(double[] xs, double[] ys) {
+        double area = 0.0;
+        for (int i = 0; i < xs.length; i++) {
+            int next = (i + 1) % xs.length;
+            area += xs[i] * ys[next] - xs[next] * ys[i];
+        }
+        return area < 0.0 ? 1 : -1;
     }
 
     static double[] tangent(double xi, double yi, double ai, double xj, double yj, double aj) {
@@ -652,6 +707,11 @@ public final class BntBeltSolver {
         };
     }
 
+    static double wrap(int side, double entryX, double entryY, double exitX, double exitY) {
+        double angle = sweep(side, entryX, entryY, exitX, exitY);
+        return angle > TAU - GRAZE_TURN ? 0.0 : angle;
+    }
+
     static double sweep(int side, double entryX, double entryY, double exitX, double exitY) {
         double angle = (Math.atan2(exitY, exitX) - Math.atan2(entryY, entryX)) * -side;
         angle %= TAU;
@@ -671,9 +731,11 @@ public final class BntBeltSolver {
 
         int primitives = count * 2;
         double[][] parts = new double[primitives][];
+        boolean[] grazed = new boolean[count];
         for (int i = 0; i < count; i++) {
             double[] incoming = runs[(i - 1 + count) % count];
-            double angle = sweep(sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]);
+            double angle = wrap(sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]);
+            grazed[i] = sweep(sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]) > Math.PI;
             parts[i * 2] = new double[]{
                 0.0, xs[i], ys[i], radii[i],
                 Math.atan2(incoming[4], incoming[3]), angle, -sides[i]
@@ -688,7 +750,7 @@ public final class BntBeltSolver {
         long found = 0;
         for (int i = 0; i < primitives; i++) {
             for (int j = i + 1; j < primitives; j++) {
-                if (j == i + 1 || (i == 0 && j == primitives - 1)) {
+                if (j == i + 1 || (i == 0 && j == primitives - 1) || bridged(i, j, grazed, primitives)) {
                     continue;
                 }
                 if (intersects(parts[i], parts[j])) {
@@ -697,6 +759,13 @@ public final class BntBeltSolver {
             }
         }
         return found;
+    }
+
+    private static boolean bridged(int i, int j, boolean[] grazed, int primitives) {
+        if ((i & 1) == 0 || (j & 1) == 0) {
+            return false;
+        }
+        return j == i + 2 ? grazed[(i + 1) / 2] : i == 1 && j == primitives - 1 && grazed[0];
     }
 
     private static boolean intersects(double[] a, double[] b) {

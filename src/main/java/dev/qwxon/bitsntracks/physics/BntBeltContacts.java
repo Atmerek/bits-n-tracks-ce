@@ -299,9 +299,9 @@ public final class BntBeltContacts {
     }
 
     /** Applies support and drag. */
-    public static void apply(BntBeltContact contact, int shareCount, double timeStep) {
+    public static double apply(BntBeltContact contact, int shareCount, double timeStep) {
         if (contact.carrier == null) {
-            return;
+            return 0.0;
         }
 
         double normalMassShare = contact.normalMass / Math.max(shareCount, 1);
@@ -320,7 +320,7 @@ public final class BntBeltContacts {
         double ceiling = normalMassShare * (BntPhysicsTuning.getMaxSuspensionSpeed() + Math.abs(approachSpeed));
         double normalImpulse = Mth.clamp(raw, 0.0, ceiling);
         if (normalImpulse <= 0.0) {
-            return;
+            return 0.0;
         }
 
         double grip = BntBeltTension.gripScale(contact.tension) * Math.max(contact.friction, 0.0);
@@ -337,6 +337,7 @@ public final class BntBeltContacts {
             contact.subLevel, contact.forcePoint,
             new Vector3d(localImpulse.x, localImpulse.y, localImpulse.z));
         contact.carrier.bnt$markQueuedForForceApplication();
+        return normalImpulse;
     }
 
     public static void assignCarrier(BntBeltContact contact, KineticBlockEntityPhysicsAccess carrier) {

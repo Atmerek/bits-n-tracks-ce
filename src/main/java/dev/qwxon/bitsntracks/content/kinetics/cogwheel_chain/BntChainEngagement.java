@@ -12,6 +12,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.physics.BntDebugLog;
 import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -128,17 +129,43 @@ public final class BntChainEngagement {
     }
 
     public static BntChainGeometry.Layout layout(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
+        return layout(level, controllerPos, nodes, null);
+    }
+
+    public static BntChainGeometry.Layout layout(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes,
+                                                 BntChainGeometry.Layout held) {
         Function<BlockPos, Vec3> previous = BntChainMotion.swapDisplacementSource(
             localPos -> alignmentDisplacement(level, controllerPos.offset(localPos)));
         Function<BlockPos, Direction> previousRoutes = BntChainMotion.swapRouteSource(
             localPos -> routeSide(level, controllerPos.offset(localPos)));
 
         try {
-            return BntChainGeometry.resolve(nodes);
+            return BntChainGeometry.resolve(nodes, held);
         } finally {
             BntChainMotion.swapDisplacementSource(previous);
             BntChainMotion.swapRouteSource(previousRoutes);
         }
+    }
+
+    public static boolean agreesWithSolver(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes,
+                                           BntChainGeometry.Layout layout) {
+        BntChainGeometry.Layout solved = layout(level, controllerPos, nodes, layout);
+        if (solved == null || solved.sides().length != layout.sides().length) {
+            return true;
+        }
+
+        boolean[] kept = engagement(layout, nodes.size());
+        boolean[] fresh = engagement(solved, nodes.size());
+        for (int i = 0; i < kept.length; i++) {
+            if (kept[i] && fresh[i] && layout.sides()[i] != solved.sides()[i]) {
+                if (BntDebugLog.enabled()) {
+                    BntDebugLog.LOG.info("{} chain {} dropped its saved belt {} for {}", BntDebugLog.side(level), controllerPos,
+                        BntDebugLog.layout(nodes, layout), BntDebugLog.layout(nodes, solved));
+                }
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean[] compute(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
@@ -332,6 +359,9 @@ public final class BntChainEngagement {
         BlockPos at = start.source;
         for (int step = 0; step < MAX_SOURCE_WALK; step++) {
             if (!walked.add(at)) {
+                if (BntDebugLog.enabled()) {
+                    BntDebugLog.LOG.info("stopped a loop of cogwheels driving each other with nothing generating {}", walked);
+                }
                 restore(level, detach(level, walked));
                 return true;
             }
@@ -426,6 +456,10 @@ public final class BntChainEngagement {
             access.bnt$setChainStopTick(now);
         }
 
+        if (BntDebugLog.enabled()) {
+            BntDebugLog.LOG.info("stopped {} instead of letting Create break it, speed {} network {}",
+                kinetic.getBlockPos().toShortString(), kinetic.getTheoreticalSpeed(), network.size());
+        }
         Set<BlockPos> stopped = detach(level, network);
         if (!standing) {
             restore(level, stopped);

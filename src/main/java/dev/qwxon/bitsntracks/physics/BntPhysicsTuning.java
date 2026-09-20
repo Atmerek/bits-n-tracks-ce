@@ -17,6 +17,7 @@ public final class BntPhysicsTuning {
     public static final double WHEEL_DAMPING = 0.3;
     public static final double BELT_SUPPORT = 0.6;
 
+    private static final BooleanValue DEBUG_LOGGING;
     private static final BooleanValue COGWHEEL_SUSPENSION_ENABLED;
     private static final BooleanValue TRACK_SUSPENSION_ENABLED;
     private static final DoubleValue SUSPENSION_SMOOTHING;
@@ -89,6 +90,10 @@ public final class BntPhysicsTuning {
 
     static {
         Builder builder = new Builder();
+
+        DEBUG_LOGGING = builder
+            .comment("Write belt layout changes, kinetic repairs and a once a second wheel summary for every vehicle to the log. Use it to diagnose a track that wraps its cogwheels wrongly or throws its vehicle.")
+            .define("debugLogging", false);
 
         builder.comment("Suspension response. Forces are sized per contact point: each cogwheel takes a share of the vehicle mass, so a long track does not apply the whole vehicle's suspension force once per wheel. Stiffness, damping, travel and spring strength are set on each cogwheel with the Suspension Tool.")
             .push("suspension");
@@ -241,6 +246,10 @@ public final class BntPhysicsTuning {
         builder.pop();
 
         SPEC = builder.build();
+    }
+
+    public static boolean isDebugLogging() {
+        return DEBUG_LOGGING.get();
     }
 
     public static boolean isBeltCollisionEnabled() {
