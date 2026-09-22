@@ -134,8 +134,10 @@ public class CogAlignmentLeverItem extends Item {
 
                         Set<BlockPos> moved = new LinkedHashSet<>();
                         if (moveAxis != null && wholeTrack) {
+                            boolean physics = access.bnt$isPhysicsEnabled();
                             for (BlockPos nodePos : collectChainPositions(level, pos)) {
-                                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntityPhysicsAccess nodeAccess) {
+                                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntityPhysicsAccess nodeAccess
+                                    && nodeAccess.bnt$isPhysicsEnabled() == physics) {
                                     shiftAxis(nodeAccess, moveAxis, delta, limit);
                                     moved.add(nodePos);
                                 }

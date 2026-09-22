@@ -32,7 +32,7 @@
     "item.bits_n_tracks.cog_alignment_lever.tooltip.control2": "Shift + Left-click a cogwheel face",
     "item.bits_n_tracks.cog_alignment_lever.tooltip.action2": "Brings the _far run_ of track all the way around the cogwheel, so clicking its top wraps the _bottom_ track over it and makes it turn _the other way_. The center returns it to _automatic_.",
     "item.bits_n_tracks.cog_alignment_lever.tooltip.control3": "Ctrl + Left-click",
-    "item.bits_n_tracks.cog_alignment_lever.tooltip.action3": "Switches between moving _one cogwheel_ and moving _every cogwheel_ on the track.",
+    "item.bits_n_tracks.cog_alignment_lever.tooltip.action3": "Switches between moving _one cogwheel_ and moving every cogwheel on the track that shares its _suspension physics_ setting.",
     "item.bits_n_tracks.suspension_tool": "Suspension Tool",
     "item.bits_n_tracks.suspension_tool.tooltip.summary": "Reads and tunes how _physics-enabled cogwheels_ behave. Offers _11 settings_ of customizability. Default is _4_.",
     "item.bits_n_tracks.suspension_tool.tooltip.condition1": "Looking at a physics-enabled cogwheel",
