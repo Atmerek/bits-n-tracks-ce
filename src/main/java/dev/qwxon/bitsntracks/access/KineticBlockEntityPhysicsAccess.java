@@ -24,6 +24,16 @@ public interface KineticBlockEntityPhysicsAccess {
 
     void bnt$setGroundDrop(long var1, double var3);
 
+    long bnt$getRawDropTick();
+
+    double bnt$getRawDrop();
+
+    void bnt$setRawDrop(long var1, double var3);
+
+    Object bnt$getTerrainCast();
+
+    void bnt$setTerrainCast(Object var1);
+
     boolean bnt$isLiftedUp();
 
     void bnt$setLiftedUp(boolean var1);

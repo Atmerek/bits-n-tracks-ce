@@ -12,7 +12,9 @@ import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
@@ -26,8 +28,13 @@ public final class BntBeltLinks {
     public static final int UNSET = 0;
     private static final int MAX_LINKS = 8192;
 
+    private static final double MIN_STRETCH = 0.8;
+    private static final double MAX_STRETCH = 1.25;
+
     private static final ThreadLocal<Double> LOOP_SCROLL = new ThreadLocal<>();
     private static final ThreadLocal<Double> LOOP_BELT = new ThreadLocal<>();
+    private static final ThreadLocal<Double> LOOP_DRAWN = new ThreadLocal<>();
+    private static final ThreadLocal<Map<Vec3, double[]>> LOOP_SPANS = ThreadLocal.withInitial(IdentityHashMap::new);
 
     private BntBeltLinks() {
     }
@@ -116,6 +123,56 @@ public final class BntBeltLinks {
     public static void clearLoop() {
         LOOP_BELT.remove();
         LOOP_SCROLL.remove();
+        LOOP_DRAWN.remove();
+        LOOP_SPANS.get().clear();
+    }
+
+    /** Where each segment of the drawn loop starts, keyed by the point it ends on, and how long the loop is. */
+    public static void beginSpans() {
+        LOOP_DRAWN.remove();
+        LOOP_SPANS.get().clear();
+    }
+
+    public static void addSpan(Vec3 to, double start, double length) {
+        LOOP_SPANS.get().put(to, new double[]{start, length});
+    }
+
+    public static void setDrawnLength(double drawn) {
+        LOOP_DRAWN.set(drawn);
+    }
+
+    /**
+     * Start and length of a drawn segment in belt units. The loop is scaled to a whole number of periods, so the
+     * pattern closes on itself rather than leaving a partial one where the path begins.
+     */
+    public static double[] onLoop(Vec3 to, double offset, double length, double period) {
+        double[] span = LOOP_SPANS.get().get(to);
+        Double drawn = LOOP_DRAWN.get();
+        Double scroll = LOOP_SCROLL.get();
+        if (span == null || drawn == null || scroll == null || drawn <= 1.0E-6 || period <= 1.0E-6) {
+            return new double[]{wrapScroll(offset, latchedRun(period)), length};
+        }
+
+        double run = closingRun(drawn, period);
+        double scale = run / drawn;
+        double folded = scroll % run;
+        if (folded < 0.0) {
+            folded += run;
+        }
+        return new double[]{folded + span[0] * scale, span[1] * scale};
+    }
+
+    private static double latchedRun(double period) {
+        return Math.max(1L, (long)Math.floor(beltLength() / period)) * period;
+    }
+
+    /** The latched belt, unless the drawn loop has drifted too far from it to stretch over. */
+    private static double closingRun(double drawn, double period) {
+        double latched = latchedRun(period);
+        double stretch = latched / drawn;
+        return stretch >= MIN_STRETCH && stretch <= MAX_STRETCH
+            ? latched
+            : Math.max(1L, Math.round(drawn / period)) * period;
     }
 
     /** Length of belt in the loop, which only moves when the lever does. */

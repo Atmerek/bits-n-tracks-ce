@@ -87,6 +87,12 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     @Unique
     private double bnt$groundDrop = 0.0;
     @Unique
+    private long bnt$rawDropTick = Long.MIN_VALUE;
+    @Unique
+    private double bnt$rawDrop = 0.0;
+    @Unique
+    private Object bnt$terrainCast;
+    @Unique
     private boolean bnt$liftedUp = false;
     @Unique
     private double bnt$maxAirExtension = 0.0;
@@ -342,6 +348,32 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     public void bnt$setGroundDrop(long gameTime, double drop) {
         this.bnt$groundDropTick = gameTime;
         this.bnt$groundDrop = drop;
+    }
+
+    @Override
+    public long bnt$getRawDropTick() {
+        return this.bnt$rawDropTick;
+    }
+
+    @Override
+    public double bnt$getRawDrop() {
+        return this.bnt$rawDrop;
+    }
+
+    @Override
+    public void bnt$setRawDrop(long gameTime, double drop) {
+        this.bnt$rawDropTick = gameTime;
+        this.bnt$rawDrop = drop;
+    }
+
+    @Override
+    public Object bnt$getTerrainCast() {
+        return this.bnt$terrainCast;
+    }
+
+    @Override
+    public void bnt$setTerrainCast(Object cast) {
+        this.bnt$terrainCast = cast;
     }
 
     @Override

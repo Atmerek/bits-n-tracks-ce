@@ -76,6 +76,12 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     private long bnt$latchedAt = Long.MIN_VALUE;
 
     @Unique
+    private long bnt$holdsCheckedAt = Long.MIN_VALUE;
+
+    @Unique
+    private boolean bnt$holds;
+
+    @Unique
     private BntChainGeometry.Layout bnt$latchedLayout(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
         double[] signature = BntChainEngagement.signature(level, controllerPos, nodes);
         BntChainGeometry.Layout restored = this.bnt$restoredLayout;
@@ -94,8 +100,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         if (this.bnt$latched != null
             && this.bnt$latched.sides().length == nodes.size()
             && Arrays.equals(signature, this.bnt$engagedDisplacements)
-            && (this.bnt$withinDwell(level)
-                || BntChainEngagement.stillHolds(level, controllerPos, nodes, this.bnt$latched))) {
+            && (this.bnt$withinDwell(level) || this.bnt$latchedStillHolds(level, controllerPos, nodes))) {
             return this.bnt$latched;
         }
 
@@ -123,6 +128,18 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     private void bnt$latch(Level level, BntChainGeometry.Layout layout) {
         this.bnt$latched = layout;
         this.bnt$latchedAt = level == null ? Long.MIN_VALUE : level.getGameTime();
+        this.bnt$holdsCheckedAt = Long.MIN_VALUE;
+    }
+
+    /** Every input to the check is held for the tick, so it only has to run once per tick. */
+    @Unique
+    private boolean bnt$latchedStillHolds(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
+        long now = level.getGameTime();
+        if (this.bnt$holdsCheckedAt != now) {
+            this.bnt$holds = BntChainEngagement.stillHolds(level, controllerPos, nodes, this.bnt$latched);
+            this.bnt$holdsCheckedAt = now;
+        }
+        return this.bnt$holds;
     }
 
     @Unique
@@ -257,6 +274,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$builtDisplacements = null;
         this.bnt$latched = null;
         this.bnt$latchedAt = Long.MIN_VALUE;
+        this.bnt$holdsCheckedAt = Long.MIN_VALUE;
         this.bnt$sidesPending = false;
         this.bnt$appliedLayout = null;
         this.bnt$engagedDisplacements = null;
@@ -386,6 +404,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
                 sides[i], node.isLarge(), node.rotationAxis(), node.localPos(), node.hasSmallCogwheelOffset()));
         }
         this.cogwheelNodes = updated;
+        this.bnt$holdsCheckedAt = Long.MIN_VALUE;
         this.updateInsideOutsideFlip();
     }
 }

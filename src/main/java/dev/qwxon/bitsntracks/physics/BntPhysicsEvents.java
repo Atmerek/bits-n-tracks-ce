@@ -22,6 +22,7 @@ import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -225,7 +226,17 @@ public final class BntPhysicsEvents {
                     return mixin.bnt$getLerpedExtension(partialTick);
                 } else {
                     ClientSubLevel subLevel = Sable.HELPER.getContainingClient(kbe);
-                    return subLevel == null ? 0.0 : computeRenderExtensionForPose(kbe, subLevel.renderPose(partialTick), subLevel);
+                    if (subLevel == null) {
+                        return 0.0;
+                    }
+                    if (partialTick != 1.0F) {
+                        return computeRenderExtensionForPose(kbe, subLevel.renderPose(partialTick), subLevel);
+                    }
+                    long now = level.getGameTime();
+                    if (mixin.bnt$getRawDropTick() != now) {
+                        mixin.bnt$setRawDrop(now, computeRenderExtensionForPose(kbe, subLevel.renderPose(1.0F), subLevel));
+                    }
+                    return mixin.bnt$getRawDrop();
                 }
             } else {
                 BlockState state = kbe.getBlockState();
@@ -679,6 +690,14 @@ public final class BntPhysicsEvents {
         double wheelRadius = CogwheelSizeHelper.getRadius(state.getBlock());
         double suspensionRest = CogwheelSizeHelper.getSuspensionRest(state.getBlock(), kbe);
         Vec3 sampleAxis = JOMLConversion.toMojang(normalD).normalize();
+        long now = kbe.getLevel().getGameTime();
+        double[] castKey = castKey(pose, wheelPosCenter, sampleAxis, wheelRadius, suspensionRest);
+        if (kbe instanceof KineticBlockEntityPhysicsAccess cached
+            && cached.bnt$getTerrainCast() instanceof BntPhysicsEvents.TerrainCast cast
+            && cast.matches(now, containingSubLevel, castKey)) {
+            return cast.result;
+        }
+
         double maxCastHeight = suspensionRest + 0.5 + CAST_HEADROOM;
         double minExtension = NO_GROUND;
         Direction minNormal = Direction.UP;
@@ -773,7 +792,23 @@ public final class BntPhysicsEvents {
             }
         }
 
-        return new BntPhysicsEvents.TerrainCastResult(minExtension, minNormal, minHitSubLevel, minInteractingBlock);
+        BntPhysicsEvents.TerrainCastResult result =
+            new BntPhysicsEvents.TerrainCastResult(minExtension, minNormal, minHitSubLevel, minInteractingBlock);
+        if (kbe instanceof KineticBlockEntityPhysicsAccess access) {
+            access.bnt$setTerrainCast(new BntPhysicsEvents.TerrainCast(now, containingSubLevel, castKey, result));
+        }
+        return result;
+    }
+
+    /** The rays a cast fires all lie in the plane through the wheel along its travel, so three points fix them. */
+    private static double[] castKey(Pose3dc pose, Vec3 centre, Vec3 sampleAxis, double wheelRadius, double suspensionRest) {
+        Vec3 origin = pose.transformPosition(centre);
+        Vec3 along = pose.transformPosition(centre.add(sampleAxis));
+        Vec3 up = pose.transformPosition(centre.add(0.0, 1.0, 0.0));
+        return new double[]{
+            centre.x, centre.y, centre.z, origin.x, origin.y, origin.z, along.x, along.y, along.z, up.x, up.y, up.z,
+            wheelRadius, suspensionRest
+        };
     }
 
     private static double[] getTerrainSampleOffsets(double wheelRadius) {
@@ -864,6 +899,13 @@ public final class BntPhysicsEvents {
             this.normal = normal;
             this.subLevel = subLevel;
             this.minInteractingBlock = minInteractingBlock;
+        }
+    }
+
+    /** Last cast a wheel fired, reused while the tick and the rays are the same. */
+    private record TerrainCast(long tick, SubLevel from, double[] key, BntPhysicsEvents.TerrainCastResult result) {
+        boolean matches(long now, SubLevel containing, double[] castKey) {
+            return this.tick == now && this.from == containing && Arrays.equals(this.key, castKey);
         }
     }
 }

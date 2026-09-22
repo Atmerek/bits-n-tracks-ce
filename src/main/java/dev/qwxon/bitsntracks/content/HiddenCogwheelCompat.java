@@ -15,6 +15,7 @@ import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -484,12 +485,9 @@ public final class HiddenCogwheelCompat {
                 return null;
             } else {
                 if (level.isClientSide) {
-                    try {
-                        Object subLevel = Sable.HELPER.getContainingClient(be);
-                        if (subLevel != null) {
-                            return (Level)subLevel.getClass().getMethod("getLevel").invoke(subLevel);
-                        }
-                    } catch (Exception var3) {
+                    Object subLevel = Sable.HELPER.getContainingClient(be);
+                    if (subLevel instanceof SubLevel containing) {
+                        return containing.getLevel();
                     }
                 } else {
                     ServerSubLevel subLevel = (ServerSubLevel)Sable.HELPER.getContaining(be);

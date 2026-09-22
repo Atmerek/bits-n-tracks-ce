@@ -17,6 +17,7 @@ public final class BntShaderHand {
     private static boolean solidDrawn;
     private static Object irisApi;
     private static Method packInUse;
+    private static Method shadowPass;
     private static boolean irisLooked;
 
     private BntShaderHand() {
@@ -43,21 +44,31 @@ public final class BntShaderHand {
     }
 
     public static boolean packInUse() {
+        return lookForIris() && askIris(packInUse);
+    }
+
+    public static boolean shadowPass() {
+        return lookForIris() && askIris(shadowPass);
+    }
+
+    private static boolean lookForIris() {
         if (!irisLooked) {
             irisLooked = true;
             try {
                 Class<?> api = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
                 irisApi = api.getMethod("getInstance").invoke(null);
                 packInUse = api.getMethod("isShaderPackInUse");
+                shadowPass = api.getMethod("isRenderingShadowPass");
             } catch (ReflectiveOperationException | LinkageError e) {
                 irisApi = null;
             }
         }
-        if (irisApi == null) {
-            return false;
-        }
+        return irisApi != null;
+    }
+
+    private static boolean askIris(Method question) {
         try {
-            return (boolean)packInUse.invoke(irisApi);
+            return (boolean)question.invoke(irisApi);
         } catch (ReflectiveOperationException e) {
             return false;
         }

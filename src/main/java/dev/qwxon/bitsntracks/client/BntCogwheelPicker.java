@@ -13,6 +13,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -89,38 +92,64 @@ public final class BntCogwheelPicker {
 
         private void scan(Vec3 from, Vec3 to) {
             AABB box = new AABB(from, to).inflate(SEARCH_MARGIN);
+            int minX = Mth.floor(box.minX);
+            int minY = Mth.floor(box.minY);
+            int minZ = Mth.floor(box.minZ);
+            int maxX = Mth.floor(box.maxX);
+            int maxY = Mth.floor(box.maxY);
+            int maxZ = Mth.floor(box.maxZ);
+            BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
-            for (BlockPos pos : BlockPos.betweenClosed(
-                Mth.floor(box.minX),
-                Mth.floor(box.minY),
-                Mth.floor(box.minZ),
-                Mth.floor(box.maxX),
-                Mth.floor(box.maxY),
-                Mth.floor(box.maxZ)
-            )) {
-                BlockState state = this.level.getBlockState(pos);
-                if (!HiddenCogwheelCompat.isFlangedCogwheelBlock(state)) {
-                    continue;
-                }
+            for (int chunkX = minX >> 4; chunkX <= maxX >> 4; chunkX++) {
+                for (int chunkZ = minZ >> 4; chunkZ <= maxZ >> 4; chunkZ++) {
+                    ChunkAccess chunk = this.level.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false);
+                    if (chunk == null) {
+                        continue;
+                    }
 
-                BlockEntity be = this.level.getBlockEntity(pos);
-                if (HiddenCogwheelCompat.getModelTranslation(be, this.partialTick).equals(Vec3.ZERO)) {
-                    continue;
-                }
+                    for (int sectionY = minY >> 4; sectionY <= maxY >> 4; sectionY++) {
+                        int index = chunk.getSectionIndexFromSectionY(sectionY);
+                        if (index < 0 || index >= chunk.getSectionsCount()) {
+                            continue;
+                        }
+                        LevelChunkSection section = chunk.getSection(index);
+                        if (section.hasOnlyAir() || !section.maybeHas(HiddenCogwheelCompat::isFlangedCogwheelBlock)) {
+                            continue;
+                        }
 
-                VoxelShape shape = state.getShape(this.level, pos);
-                BlockHitResult candidate = shape.clip(from, to, pos);
-                if (candidate == null) {
-                    continue;
+                        for (int x = Math.max(minX, chunkX << 4); x <= Math.min(maxX, (chunkX << 4) + 15); x++) {
+                            for (int y = Math.max(minY, sectionY << 4); y <= Math.min(maxY, (sectionY << 4) + 15); y++) {
+                                for (int z = Math.max(minZ, chunkZ << 4); z <= Math.min(maxZ, (chunkZ << 4) + 15); z++) {
+                                    BlockState state = section.getBlockState(x & 15, y & 15, z & 15);
+                                    if (HiddenCogwheelCompat.isFlangedCogwheelBlock(state)) {
+                                        this.consider(pos.set(x, y, z), state, from, to);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            }
+        }
 
-                double distance = distanceSqr(this.level, this.eye, candidate.getLocation());
-                if (distance < this.best) {
-                    this.best = distance;
-                    this.hit = new BlockHitResult(
-                        candidate.getLocation(), candidate.getDirection(), pos.immutable(), candidate.isInside()
-                    );
-                }
+        private void consider(BlockPos pos, BlockState state, Vec3 from, Vec3 to) {
+            BlockEntity be = this.level.getBlockEntity(pos);
+            if (HiddenCogwheelCompat.getModelTranslation(be, this.partialTick).equals(Vec3.ZERO)) {
+                return;
+            }
+
+            VoxelShape shape = state.getShape(this.level, pos);
+            BlockHitResult candidate = shape.clip(from, to, pos);
+            if (candidate == null) {
+                return;
+            }
+
+            double distance = distanceSqr(this.level, this.eye, candidate.getLocation());
+            if (distance < this.best) {
+                this.best = distance;
+                this.hit = new BlockHitResult(
+                    candidate.getLocation(), candidate.getDirection(), pos.immutable(), candidate.isInside()
+                );
             }
         }
     }
