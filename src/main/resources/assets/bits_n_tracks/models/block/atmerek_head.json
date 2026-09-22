@@ -1,0 +1,144 @@
+{
+  "textures": {
+    "skin": "bits_n_tracks:item/heads/atmerek",
+    "particle": "bits_n_tracks:item/heads/atmerek"
+  },
+  "elements": [
+    {
+      "from": [
+        4,
+        0,
+        4
+      ],
+      "to": [
+        12,
+        8,
+        12
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            2,
+            0,
+            4,
+            8
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            8
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            2,
+            16
+          ],
+          "texture": "#skin"
+        },
+        "north": {
+          "uv": [
+            2,
+            8,
+            4,
+            16
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4,
+            8,
+            6,
+            16
+          ],
+          "texture": "#skin"
+        },
+        "south": {
+          "uv": [
+            6,
+            8,
+            8,
+            16
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "from": [
+        3.5,
+        -0.5,
+        3.5
+      ],
+      "to": [
+        12.5,
+        8.5,
+        12.5
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            10,
+            0,
+            12,
+            8
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            12,
+            0,
+            14,
+            8
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            8,
+            8,
+            10,
+            16
+          ],
+          "texture": "#skin"
+        },
+        "north": {
+          "uv": [
+            10,
+            8,
+            12,
+            16
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            12,
+            8,
+            14,
+            16
+          ],
+          "texture": "#skin"
+        },
+        "south": {
+          "uv": [
+            14,
+            8,
+            16,
+            16
+          ],
+          "texture": "#skin"
+        }
+      }
+    }
+  ]
+}

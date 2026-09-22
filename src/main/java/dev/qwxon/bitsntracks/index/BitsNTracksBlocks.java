@@ -6,11 +6,14 @@ import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntHeadBlock;
+import dev.qwxon.bitsntracks.content.BntHeadBlockItem;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.material.MapColor;
 
 public class BitsNTracksBlocks {
@@ -136,6 +139,23 @@ public class BitsNTracksBlocks {
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
         .blockstate((c, p) -> {})
         .register();
+    public static final BlockEntry<BntHeadBlock> QWXONN_HEAD = head("qwxonn_head");
+    public static final BlockEntry<BntHeadBlock> ATMEREK_HEAD = head("atmerek_head");
+    public static final BlockEntry<BntHeadBlock> CUBESTER_HEAD = head("cubester_head");
+    public static final BlockEntry<BntHeadBlock> ALESRR_HEAD = head("alesrr_head");
+
+    private static BlockEntry<BntHeadBlock> head(String name) {
+        return ((BlockBuilder)BitsNTracks.REGISTRATE
+                .block(name, BntHeadBlock::new)
+                .initialProperties(SharedProperties::stone)
+                .properties(p -> p.sound(SoundType.BONE_BLOCK).mapColor(MapColor.WOOL))
+                .properties(p -> p.strength(1.0F).noOcclusion().pushReaction(PushReaction.DESTROY))
+                .addLayer(() -> RenderType::cutout)
+                .item(BntHeadBlockItem::new)
+                .build())
+            .blockstate((c, p) -> {})
+            .register();
+    }
 
     public static void init() {
     }

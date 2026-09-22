@@ -47,7 +47,11 @@ public class BntCreativeTabHelper {
             new ItemStack((ItemLike)BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.get())
+            new ItemStack((ItemLike)BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.get()),
+            new ItemStack((ItemLike)BitsNTracksBlocks.QWXONN_HEAD.get()),
+            new ItemStack((ItemLike)BitsNTracksBlocks.ATMEREK_HEAD.get()),
+            new ItemStack((ItemLike)BitsNTracksBlocks.CUBESTER_HEAD.get()),
+            new ItemStack((ItemLike)BitsNTracksBlocks.ALESRR_HEAD.get())
         )) {
             displayItems.add(itemx);
             searchItems.add(itemx);
