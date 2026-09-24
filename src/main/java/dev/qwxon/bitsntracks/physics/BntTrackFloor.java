@@ -18,7 +18,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
 /** The track surface a wheel stands on, bridging what a taut run crosses. */
@@ -142,9 +141,8 @@ public final class BntTrackFloor {
             }
 
             int probes = Mth.clamp((int)Math.round(span / BntPhysicsTuning.getBeltNodeSpacing()), 2, MAX_PROBES);
-            double rest = (BntBeltDrape.restOffset(nodes.get(previous)) + BntBeltDrape.restOffset(nodes.get(next))) * 0.5;
             double sag = BntBeltTension.sagFromSurplus(span, surplus * span / path);
-            double[] shape = BntBeltDrape.profile(from.subtract(base), along, probes, sag, rest, true);
+            double[] shape = BntBeltDrape.profile(from.subtract(base), along, probes, sag, true);
 
             double sample = reach * probes;
             int lower = Mth.clamp((int)Math.floor(sample), 0, probes);

@@ -243,10 +243,13 @@ public final class BntChainGeometry {
         int[] pinned = routes == null ? null : pins(xs, ys, radii, axis, routes, free, requested);
         int[] sides = BntBeltSolver.sides(xs, ys, radii, free, pinned);
         if (sides == null) {
-            sides = new int[count];
-            for (int i = 0; i < count; i++) {
-                sides[i] = pathNodes.get(i).side();
+            // Keep which way the chain turns, but drop any single wheel the belt cannot reach round.
+            int chirality = 0;
+            for (PathedCogwheelNode node : pathNodes) {
+                chirality += node.side();
             }
+            sides = new int[count];
+            Arrays.fill(sides, chirality >= 0 ? 1 : -1);
         } else if (pinned == null) {
             sides = orient(xs, ys, radii, sides, pathNodes, free);
         }

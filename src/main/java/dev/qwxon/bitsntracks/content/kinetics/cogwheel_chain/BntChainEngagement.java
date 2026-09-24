@@ -12,8 +12,10 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.physics.BntDebugLog;
 import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
+import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,12 +58,12 @@ public final class BntChainEngagement {
             return Vec3.ZERO;
         }
 
-        double y = access.bnt$getAlignmentOffsetY();
+        Vec3 displacement = new Vec3(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
         if (HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState())) {
-            y += HiddenCogwheelCompat.getManualVisualVerticalOffset(be);
-            y -= groundDrop(level, be, access);
+            displacement = displacement.add(0.0, HiddenCogwheelCompat.getManualVisualVerticalOffset(be), 0.0)
+                .add(BntSuspension.displacement(be, groundDrop(level, be, access)));
         }
-        return new Vec3(access.bnt$getAlignmentOffsetX(), y, access.bnt$getAlignmentOffsetZ());
+        return displacement;
     }
 
     /** The drop a wheel is drawn at, held steady for a tick and sticky across ticks. */
@@ -105,7 +107,7 @@ public final class BntChainEngagement {
                 signature[i * 5 + 1] = access.bnt$getAlignmentOffsetY();
                 signature[i * 5 + 2] = access.bnt$getAlignmentOffsetZ();
                 signature[i * 5 + 3] = access.bnt$getTrackRouteSide();
-                signature[i * 5 + 4] = HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState()) ? 1.0 : 0.0;
+                signature[i * 5 + 4] = HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState()) ? 2.0 + access.bnt$getSuspensionSide() : 0.0;
             } else {
                 signature[i * 5 + 3] = -1.0;
             }
@@ -166,10 +168,6 @@ public final class BntChainEngagement {
             }
         }
         return true;
-    }
-
-    public static boolean[] compute(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
-        return engagement(layout(level, controllerPos, nodes), nodes.size());
     }
 
     public static boolean[] engagement(BntChainGeometry.Layout layout, int count) {
@@ -318,8 +316,13 @@ public final class BntChainEngagement {
         return false;
     }
 
+    /** Whether the live speeds are the ones these sides ask for; a node's own side would agree with itself. */
     public static boolean drivesTogether(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes,
-                                         boolean[] engaged) {
+                                         boolean[] engaged, int[] sides) {
+        if (sides == null || sides.length != nodes.size()) {
+            return true;
+        }
+
         boolean seen = false;
         float reference = 0.0F;
         for (int i = 0; i < nodes.size(); i++) {
@@ -331,7 +334,8 @@ public final class BntChainEngagement {
                 continue;
             }
 
-            float carried = kinetic.getTheoreticalSpeed() * node.sideFactor();
+            float carried = kinetic.getTheoreticalSpeed()
+                * (float)(sides[i] * CogwheelSizeHelper.getChainRadius(node.isLarge(), node.hasSmallCogwheelOffset()));
             if (!seen) {
                 seen = true;
                 reference = carried;
@@ -340,6 +344,18 @@ public final class BntChainEngagement {
             }
         }
         return true;
+    }
+
+    /** Whether the sides these nodes carry describe a belt that can be drawn at all. */
+    public static boolean beltFits(List<PathedCogwheelNode> nodes) {
+        return BntBeltLinks.tautLength(nodes) > 0.0;
+    }
+
+    /** The same for a layout; wheels closer than their radii add up have no crossed run between them. */
+    public static boolean layoutFits(List<PathedCogwheelNode> nodes, BntChainGeometry.Layout layout) {
+        return layout == null
+            || layout.sides().length != nodes.size()
+            || beltFits(BntChainGeometry.applyLayout(nodes, layout));
     }
 
     /** Stops a loop of cogwheels driving each other with nothing generating. */

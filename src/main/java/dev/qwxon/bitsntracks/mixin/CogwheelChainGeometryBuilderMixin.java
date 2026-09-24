@@ -227,14 +227,13 @@ public class CogwheelChainGeometryBuilderMixin {
         Vec3 along = runEnd.subtract(runStart);
         double span = along.length();
         double sag = BntBeltTension.sagFromSurplus(span, surplus);
-        double restOffset = (BntBeltDrape.restOffset(owner) + BntBeltDrape.restOffset(next)) * 0.5;
         int probes = BntBeltDrape.probeCount(Math.sqrt(owner.localPos().distSqr(next.localPos())));
         boolean underside = (runStart.y + runEnd.y) * 0.5
             <= (BntChainMotion.liveCenter(owner).y + BntChainMotion.liveCenter(next).y) * 0.5;
         Vec3 seamStart = BntBeltDrape.seamOffset(owner);
         Vec3 seamRunStart = runStart.add(seamStart);
         Vec3 seamAlong = along.add(BntBeltDrape.seamOffset(next)).subtract(seamStart);
-        double[] offsets = BntBeltDrape.profile(seamRunStart, seamAlong, probes, sag, restOffset, underside);
+        double[] offsets = BntBeltDrape.profile(seamRunStart, seamAlong, probes, sag, underside);
 
         Vec3 base = BntChainMotion.liveCenter(owner).add(seamStart);
         double pitch = BntBeltLinks.pitch();

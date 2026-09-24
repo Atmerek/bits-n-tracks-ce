@@ -4,6 +4,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.block.EmptyFlangedGearBlock
 import com.kipti.bnb.registry.content.blocks.BnbKineticBlocks;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.minecraft.core.BlockPos;
@@ -111,6 +112,9 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
                     }
                 }
             }
+        }
+        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic) {
+            BntSuspension.detach(level, pos, kinetic, !player.isCreative());
         }
 
         return result;

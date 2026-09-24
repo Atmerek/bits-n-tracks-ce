@@ -7,6 +7,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
@@ -157,7 +158,7 @@ public class BntClientCompat {
             }
 
             float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
-            displacement = displacement.add(0.0, -HiddenCogwheelCompat.getHeldVisualDrop(nodeBe, partialTick), 0.0);
+            displacement = displacement.add(BntSuspension.displacement(nodeBe, HiddenCogwheelCompat.getHeldVisualDrop(nodeBe, partialTick)));
         }
 
         return displacement;

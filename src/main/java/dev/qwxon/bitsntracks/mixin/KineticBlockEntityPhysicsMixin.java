@@ -14,6 +14,7 @@ import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsRegistry;
 import dev.qwxon.bitsntracks.physics.BntTuning;
@@ -96,6 +97,12 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     private boolean bnt$liftedUp = false;
     @Unique
     private double bnt$maxAirExtension = 0.0;
+    @Unique
+    private double bnt$springImpulse = 0.0;
+    @Unique
+    private int bnt$suspensionSide = 0;
+    @Unique
+    private int bnt$suspensionFacing = 0;
     @Unique
     private final ForceTotal bnt$forceTotal = new ForceTotal();
     @Unique
@@ -397,6 +404,34 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     }
 
     @Override
+    public double bnt$getSpringImpulse() {
+        return this.bnt$springImpulse;
+    }
+
+    @Override
+    public void bnt$setSpringImpulse(double springImpulse) {
+        this.bnt$springImpulse = springImpulse;
+    }
+
+    @Override
+    public int bnt$getSuspensionSide() {
+        return this.bnt$suspensionSide;
+    }
+
+    @Override
+    public int bnt$getSuspensionFacing() {
+        return this.bnt$suspensionFacing;
+    }
+
+    @Override
+    public void bnt$setSuspension(int side, int facing) {
+        boolean attached = side != 0 && facing != 0;
+        this.bnt$suspensionSide = attached ? Mth.clamp(side, -BntSuspension.BOGIE, BntSuspension.BOGIE) : 0;
+        this.bnt$suspensionFacing = attached ? Integer.signum(facing) : 0;
+        this.bnt$springImpulse = 0.0;
+    }
+
+    @Override
     public ForceTotal bnt$getForceTotal() {
         return this.bnt$forceTotal;
     }
@@ -431,6 +466,11 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
                 this.bnt$lastExtension = this.bnt$extension;
                 if (self.getLevel() != null && self.getLevel().isClientSide) {
                     BntPhysicsEvents.updateClientVisual(self, this);
+                } else if (self.getLevel() != null
+                    && this.bnt$suspensionSide != 0
+                    && (self.getLevel().getGameTime() + self.getBlockPos().hashCode()) % 20L == 0L
+                    && !BntSuspension.stillHolds(self.getLevel(), self.getBlockPos(), self)) {
+                    BntSuspension.detach(self.getLevel(), self.getBlockPos(), self, true);
                 }
             }
         }
@@ -451,6 +491,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         this.bnt$beltTension = tag.contains("BntBeltTension") ? BntBeltTension.clamp(tag.getFloat("BntBeltTension")) : BntBeltTension.DEFAULT;
         this.bnt$beltLinks = tag.getInt("BntBeltLinks");
         this.bnt$beltFit = tag.getDouble("BntBeltFit");
+        this.bnt$setSuspension(tag.getInt("BntSuspensionSide"), tag.getInt("BntSuspensionFacing"));
         CompoundTag tuning = tag.getCompound("BntTuning");
         for (BntTuning setting : BntTuning.values()) {
             this.bnt$tuning[setting.ordinal()] = tuning.contains(setting.key()) ? BntTuning.clamp(tuning.getInt(setting.key())) : BntTuning.DEFAULT;
@@ -481,6 +522,10 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         tag.putFloat("BntBeltTension", this.bnt$beltTension);
         tag.putInt("BntBeltLinks", this.bnt$beltLinks);
         tag.putDouble("BntBeltFit", this.bnt$beltFit);
+        if (this.bnt$suspensionSide != 0) {
+            tag.putInt("BntSuspensionSide", this.bnt$suspensionSide);
+            tag.putInt("BntSuspensionFacing", this.bnt$suspensionFacing);
+        }
         CompoundTag tuning = new CompoundTag();
         for (BntTuning setting : BntTuning.values()) {
             if (this.bnt$tuning[setting.ordinal()] != BntTuning.DEFAULT) {

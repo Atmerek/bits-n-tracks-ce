@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import dev.qwxon.bitsntracks.client.BntClientKeyMappings;
 import dev.qwxon.bitsntracks.client.BntShaderHand;
+import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
 import dev.qwxon.bitsntracks.client.BntTunerGauge;
 import dev.qwxon.bitsntracks.client.BntTunerInput;
 import dev.qwxon.bitsntracks.client.CogAlignmentLeverItemRenderer;
@@ -46,6 +47,8 @@ public class BitsNTracksClient {
         modEventBus.addListener(BitsNTracksClient::registerClientExtensions);
         NeoForge.EVENT_BUS.addListener(BntClientKeyMappings::onClientTick);
         NeoForge.EVENT_BUS.addListener(BntTunerInput::onInteraction);
+        NeoForge.EVENT_BUS.addListener(BntSuspensionPlacement::onInteraction);
+        NeoForge.EVENT_BUS.addListener(BntSuspensionPlacement::onClientTick);
         NeoForge.EVENT_BUS.addListener(BntTunerInput::onClientTick);
         NeoForge.EVENT_BUS.addListener(BntTunerGauge::onClientTick);
         NeoForge.EVENT_BUS.addListener(BntTunerGauge::onRenderFrame);

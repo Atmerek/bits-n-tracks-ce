@@ -18,14 +18,11 @@ public final class BntPhysicsTuning {
     public static final double BELT_SUPPORT = 0.6;
 
     private static final BooleanValue DEBUG_LOGGING;
-    private static final BooleanValue COGWHEEL_SUSPENSION_ENABLED;
-    private static final BooleanValue TRACK_SUSPENSION_ENABLED;
     private static final DoubleValue SUSPENSION_SMOOTHING;
     private static final DoubleValue IMPULSE_SCALE;
     private static final DoubleValue BUMP_STOP_SCALE;
     private static final DoubleValue MAX_SUSPENSION_SPEED;
 
-    private static final DoubleValue COGWHEEL_MAX_IMPULSE_MULTIPLIER;
     private static final DoubleValue TRACK_MAX_IMPULSE_MULTIPLIER;
 
     private static final DoubleValue TINY_COLLISION_RADIUS;
@@ -97,12 +94,6 @@ public final class BntPhysicsTuning {
 
         builder.comment("Suspension response. Forces are sized per contact point: each cogwheel takes a share of the vehicle mass, so a long track does not apply the whole vehicle's suspension force once per wheel. Stiffness, damping, travel and spring strength are set on each cogwheel with the Suspension Tool.")
             .push("suspension");
-        COGWHEEL_SUSPENSION_ENABLED = builder
-            .comment("Apply suspension to cogwheels that are not part of a chain.")
-            .define("cogwheelSuspensionEnabled", false);
-        TRACK_SUSPENSION_ENABLED = builder
-            .comment("Apply suspension to cogwheels that are part of a track chain.")
-            .define("trackSuspensionEnabled", true);
         SUSPENSION_SMOOTHING = builder
             .comment("How fast a drawn wheel catches up to the terrain under it. One snaps to every block edge, lower eases the step out over several ticks.")
             .defineInRange("suspensionSmoothing", 0.7, 0.01, 1.0);
@@ -115,7 +106,6 @@ public final class BntPhysicsTuning {
         MAX_SUSPENSION_SPEED = builder
             .comment("Fastest a wheel may push its share of the vehicle off a surface, in blocks per second, on top of whatever it takes to stop the approach. Bounds the kick a wheel gets when it ends up buried in terrain or in another vehicle, which is what happens for a moment when a structure breaks in two.")
             .defineInRange("maxSuspensionSpeed", 6.0, 0.0, 1000.0);
-        COGWHEEL_MAX_IMPULSE_MULTIPLIER = builder.defineInRange("cogwheelMaxImpulseMultiplier", 1.0, 0.0, 100.0);
         TRACK_MAX_IMPULSE_MULTIPLIER = builder.defineInRange("trackMaxImpulseMultiplier", 1.0, 0.0, 100.0);
         builder.pop();
 
@@ -316,14 +306,6 @@ public final class BntPhysicsTuning {
         return BELT_MAX_HOLD.get();
     }
 
-    public static boolean isCogwheelSuspensionEnabled() {
-        return COGWHEEL_SUSPENSION_ENABLED.get();
-    }
-
-    public static boolean isTrackSuspensionEnabled() {
-        return TRACK_SUSPENSION_ENABLED.get();
-    }
-
     public static double getSuspensionSmoothing() {
         return SUSPENSION_SMOOTHING.get();
     }
@@ -338,10 +320,6 @@ public final class BntPhysicsTuning {
 
     public static double getMaxSuspensionSpeed() {
         return MAX_SUSPENSION_SPEED.get();
-    }
-
-    public static double getCogwheelMaxImpulseMultiplier() {
-        return COGWHEEL_MAX_IMPULSE_MULTIPLIER.get();
     }
 
     public static double getTrackMaxImpulseMultiplier() {

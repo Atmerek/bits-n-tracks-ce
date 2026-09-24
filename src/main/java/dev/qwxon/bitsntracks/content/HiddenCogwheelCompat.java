@@ -10,6 +10,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
@@ -65,10 +66,6 @@ public final class HiddenCogwheelCompat {
 
     public static boolean isTinyHiddenCogwheel(BlockState state) {
         return state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get());
-    }
-
-    public static boolean isHiddenChain(BlockState state) {
-        return isHiddenCogwheel(state);
     }
 
     public static boolean isHiddenFlangedCogwheel(BlockState state) {
@@ -286,12 +283,13 @@ public final class HiddenCogwheelCompat {
             return Vec3.ZERO;
         }
 
-        double y = access.bnt$getAlignmentOffsetY();
+        Vec3 translation = new Vec3(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
         if (isHiddenCogwheel(be.getBlockState())) {
-            y += getVisualVerticalTranslation(be, partialTick);
+            translation = translation.add(0.0, getManualVisualVerticalOffset(be), 0.0)
+                .add(BntSuspension.displacement(be, getHeldVisualDrop(be, partialTick)));
         }
 
-        return new Vec3(access.bnt$getAlignmentOffsetX(), y, access.bnt$getAlignmentOffsetZ());
+        return translation;
     }
 
     public static VoxelShape offsetShapeForSuspension(VoxelShape shape, BlockGetter getter, BlockPos pos) {

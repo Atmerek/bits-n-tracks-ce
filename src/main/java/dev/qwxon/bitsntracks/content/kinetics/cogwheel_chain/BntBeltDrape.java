@@ -6,7 +6,6 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension;
@@ -52,21 +51,9 @@ public final class BntBeltDrape {
         return BntCogwheelPairing.seamOffset(level.getBlockState(origin.offset(node.localPos())));
     }
 
-    /** Depth a flat run rests at, below the ground its wheels stand on. */
-    public static double restOffset(PathedCogwheelNode node) {
-        Level level = BntRadiusProvider.level();
-        BlockPos origin = BntRadiusProvider.origin();
-        if (level == null || origin == null) {
-            return 0.0;
-        }
-        double drawnRest = CogwheelSizeHelper.getDrawnRestRadius(
-            level.getBlockState(origin.offset(node.localPos())).getBlock());
-        return BntChainGeometry.trackRadius(node) - drawnRest;
-    }
-
     /** Run height against the straight line between its wheels, per sample. */
     public static double[] profile(
-        Vec3 runStart, Vec3 along, int probes, double sag, double restOffset, boolean underside
+        Vec3 runStart, Vec3 along, int probes, double sag, boolean underside
     ) {
         double[] ground = new double[probes + 1];
         Arrays.fill(ground, NO_SURFACE);
@@ -84,13 +71,12 @@ public final class BntBeltDrape {
                 for (int probe = 1; probe < probes; probe++) {
                     Vec3 chord = runStart.add(along.scale((double)probe / probes));
                     double raw = stage != null
-                        ? stagedSurfaceOffset(stage, base.add(chord), sag, restOffset)
-                        : surfaceOffset(level, base, pose, subLevel, chord, sag, restOffset);
+                        ? stagedSurfaceOffset(stage, base.add(chord), sag)
+                        : surfaceOffset(level, base, pose, subLevel, chord, sag);
                     if (raw <= NO_SURFACE) {
                         continue;
                     }
-                    double lift = raw - restOffset;
-                    ground[probe] = lift <= 0.0 ? lift : lift + Math.min(lift, clearance);
+                    ground[probe] = raw <= 0.0 ? raw : raw + Math.min(raw, clearance);
                 }
             }
         }
@@ -110,10 +96,10 @@ public final class BntBeltDrape {
 
     /** Ground height against the straight line, positive when above it. */
     private static double surfaceOffset(
-        Level level, Vec3 base, Pose3dc pose, SubLevel subLevel, Vec3 chord, double sag, double restOffset
+        Level level, Vec3 base, Pose3dc pose, SubLevel subLevel, Vec3 chord, double sag
     ) {
         double top = PROBE_ABOVE;
-        double bottom = Math.min(-(sag + PROBE_BELOW), restOffset - PROBE_BELOW);
+        double bottom = -(sag + PROBE_BELOW);
         Vec3 worldTop = pose.transformPosition(base.add(chord).add(0.0, top, 0.0));
         Vec3 worldBottom = pose.transformPosition(base.add(chord).add(0.0, bottom, 0.0));
 
@@ -134,9 +120,9 @@ public final class BntBeltDrape {
     }
 
     /** Same as surfaceOffset, against the ground a ponder scene draws. */
-    private static double stagedSurfaceOffset(BntPonderPhysics.Stage stage, Vec3 point, double sag, double restOffset) {
+    private static double stagedSurfaceOffset(BntPonderPhysics.Stage stage, Vec3 point, double sag) {
         double top = PROBE_ABOVE;
-        double bottom = Math.min(-(sag + PROBE_BELOW), restOffset - PROBE_BELOW);
+        double bottom = -(sag + PROBE_BELOW);
         Vec3 worldTop = stage.toWorld(point.add(0.0, top, 0.0));
         Vec3 worldBottom = stage.toWorld(point.add(0.0, bottom, 0.0));
         double reach = worldTop.y - worldBottom.y;

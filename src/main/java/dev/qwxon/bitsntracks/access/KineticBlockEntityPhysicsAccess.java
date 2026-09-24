@@ -42,6 +42,16 @@ public interface KineticBlockEntityPhysicsAccess {
 
     void bnt$setMaxAirExtension(double var1);
 
+    double bnt$getSpringImpulse();
+
+    void bnt$setSpringImpulse(double var1);
+
+    int bnt$getSuspensionSide();
+
+    int bnt$getSuspensionFacing();
+
+    void bnt$setSuspension(int side, int facing);
+
 
     ForceTotal bnt$getForceTotal();
 

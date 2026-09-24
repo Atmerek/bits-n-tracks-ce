@@ -1,6 +1,6 @@
 package dev.qwxon.bitsntracks.client;
 
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import net.minecraft.Util;
@@ -63,9 +63,7 @@ public final class BntTunerGauge {
             return null;
         }
         BlockPos pos = hit.getBlockPos();
-        return minecraft.level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled()
-            ? pos
-            : null;
+        return BntSuspension.hasPiece(minecraft.level.getBlockEntity(pos)) ? pos : null;
     }
 
     public static int readingAt(BlockPos pos, BntTuning setting) {

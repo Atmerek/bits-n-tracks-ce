@@ -7,6 +7,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
@@ -253,7 +254,7 @@ public final class BntBeltLinks {
         }
     }
 
-    /** Where a wheel is drawn, its visual seat less the drop terrain pulls it down to. */
+    /** Where a wheel is drawn, its visual seat moved by the drop terrain puts it at. */
     public static Vec3 drawnCentre(Level level, BlockPos controllerPos, PathedCogwheelNode node) {
         BlockPos nodePos = controllerPos.offset(node.localPos());
         BlockState state = level.getBlockState(nodePos);
@@ -266,7 +267,8 @@ public final class BntBeltLinks {
                 access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
         }
         if (be instanceof KineticBlockEntity kinetic) {
-            centre = centre.subtract(0.0, Math.max(0.0, BntPhysicsEvents.getRawRenderExtension(kinetic, 1.0F)), 0.0);
+            double drop = BntPhysicsEvents.getRawRenderExtension(kinetic, 1.0F);
+            centre = centre.add(BntSuspension.displacement(kinetic, BntSuspension.hasPiece(kinetic) ? drop : Math.max(0.0, drop)));
         }
         return centre;
     }
@@ -334,6 +336,13 @@ public final class BntBeltLinks {
             && level.getBlockEntity(controllerPos) instanceof KineticBlockEntityPhysicsAccess access
             ? Math.max(UNSET, access.bnt$getBeltLinks())
             : UNSET;
+    }
+
+    public static double fitAt(Level level, BlockPos controllerPos) {
+        return level != null
+            && level.getBlockEntity(controllerPos) instanceof KineticBlockEntityPhysicsAccess access
+            ? Math.max(0.0, access.bnt$getBeltFit())
+            : 0.0;
     }
 
     /** Link count of the chain at the level and origin set by the caller. */

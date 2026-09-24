@@ -12,6 +12,8 @@ public final class BntBeltSolver {
     private static final int MAX_CANDIDATES = 48;
     private static final double CLIP_TOLERANCE = 1.0E-4;
     private static final double GRAZE_TURN = Math.PI / 6.0;
+    /** Past this a bend is a lifted wheel's phantom loop, not an arc the belt really takes. */
+    private static final double PHANTOM_ARC = Math.PI * 1.5;
 
     private BntBeltSolver() {
     }
@@ -738,7 +740,7 @@ public final class BntBeltSolver {
             grazed[i] = sweep(sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]) > Math.PI;
             parts[i * 2] = new double[]{
                 0.0, xs[i], ys[i], radii[i],
-                Math.atan2(incoming[4], incoming[3]), angle, -sides[i]
+                Math.atan2(incoming[4], incoming[3]), angle > PHANTOM_ARC ? 0.0 : angle, -sides[i]
             };
             int next = (i + 1) % count;
             parts[i * 2 + 1] = new double[]{

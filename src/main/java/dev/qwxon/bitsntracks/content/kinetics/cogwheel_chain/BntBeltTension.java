@@ -53,7 +53,25 @@ public final class BntBeltTension {
     public static void apply(Level level, BlockPos pos, float tension) {
         BlockPos controller = controllerPos(level, pos);
         double fit = BntBeltLinks.fitLength(level, controller);
-        write(level, pos, tension, BntBeltLinks.linksFor(fit), fit);
+        int links = BntBeltLinks.linksFor(fit);
+        if (links <= BntBeltLinks.UNSET) {
+            // No path to measure, so the loop it already has is the best one there is.
+            write(level, pos, tension, BntBeltLinks.at(level, controller), BntBeltLinks.fitAt(level, controller));
+            return;
+        }
+        write(level, pos, tension, links, fit);
+    }
+
+    public static void refit(Level level, BlockPos pos) {
+        CogwheelChainBehaviour behaviour = behaviour(level.getBlockEntity(pos));
+        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+        BlockPos linkPos = (behaviour == null || !behaviour.isPartOfChain()) && partnerPos != null ? partnerPos : pos;
+        BlockPos controller = controllerPos(level, linkPos);
+        double fit = BntBeltLinks.fitLength(level, controller);
+        int links = BntBeltLinks.linksFor(fit);
+        if (links > BntBeltLinks.UNSET) {
+            write(level, controller, at(level, controller), links, fit);
+        }
     }
 
     /** Writes a tension and an already solved link count across the chain. */
