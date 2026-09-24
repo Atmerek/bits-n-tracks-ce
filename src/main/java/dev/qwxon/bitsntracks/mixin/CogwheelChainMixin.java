@@ -107,6 +107,9 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$engagedDisplacements = signature;
         this.bnt$repairAttempted = false;
         BntChainGeometry.Layout previous = this.bnt$latched != null ? this.bnt$latched : restored;
+        if (!BntChainEngagement.layoutFits(nodes, previous)) {
+            previous = null;
+        }
         this.bnt$latch(level, BntChainEngagement.layout(level, controllerPos, nodes, previous));
         if (BntDebugLog.enabled() && !bnt$sameLayout(previous, this.bnt$latched)) {
             BntDebugLog.LOG.info("{} chain {} relatched from {} to {}", BntDebugLog.side(level), controllerPos,
@@ -235,9 +238,10 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         boolean changed = this.bnt$sidesPending
             || applied == null
             || !Arrays.equals(applied, engaged)
+            || !BntChainEngagement.beltFits(nodes)
             || BntChainEngagement.hasSeveredDrive(level, controllerPos, nodes, engaged)
             || BntChainEngagement.hasSelfDrive(level, controllerPos, nodes);
-        if (!changed && BntChainEngagement.drivesTogether(level, controllerPos, nodes, engaged)) {
+        if (!changed && BntChainEngagement.drivesTogether(level, controllerPos, nodes, engaged, layout.sides())) {
             this.bnt$repairAttempted = false;
             return;
         }

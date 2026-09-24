@@ -4,6 +4,7 @@ import com.tterrag.registrate.util.entry.ItemEntry;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceItem;
 import net.minecraft.world.item.Item;
 
 public class BitsNTracksItems {
@@ -15,6 +16,10 @@ public class BitsNTracksItems {
     public static final ItemEntry<SuspensionToolItem> SUSPENSION_TOOL = BitsNTracks.REGISTRATE
         .item("suspension_tool", SuspensionToolItem::new)
         .properties(properties -> properties.stacksTo(1))
+        .register();
+
+    public static final ItemEntry<BntSuspensionPieceItem> SUSPENSION_PIECE = BitsNTracks.REGISTRATE
+        .item("suspension_piece", BntSuspensionPieceItem::new)
         .register();
 
     public static void init() {

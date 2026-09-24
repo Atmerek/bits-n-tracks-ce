@@ -67,6 +67,15 @@ public final class CogwheelSizeHelper {
         };
     }
 
+    public static double getTrackRadius(Block block) {
+        return switch (sizeOf(block)) {
+            case LARGE -> BntPhysicsTuning.getLargeTrackRadius();
+            case MEDIUM -> BntPhysicsTuning.getMediumTrackRadius();
+            case TINY -> BntPhysicsTuning.getTinyTrackRadius();
+            case SMALL -> BntPhysicsTuning.getSmallTrackRadius();
+        };
+    }
+
     public static double getChainRadius(Block block) {
         return switch (sizeOf(block)) {
             case LARGE -> LARGE_CHAIN_RADIUS;

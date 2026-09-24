@@ -215,8 +215,7 @@ public final class BntBeltHold {
 
             Vec3 along = end.subtract(start);
             int probes = Math.min(BntBeltDrape.probeCount(run[0]), MAX_CLIMB_PROBES);
-            double rest = (BntBeltDrape.restOffset(nodes.get(i)) + BntBeltDrape.restOffset(nodes.get(next))) * 0.5;
-            double[] shape = BntBeltDrape.profile(start.subtract(base), along, probes, 0.0, rest, true);
+            double[] shape = BntBeltDrape.profile(start.subtract(base), along, probes, 0.0, true);
 
             double stride = run[0] / probes;
             for (int probe = 0; probe < probes; probe++) {

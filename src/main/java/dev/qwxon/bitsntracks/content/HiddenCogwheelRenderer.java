@@ -5,6 +5,9 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
+import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
+import dev.qwxon.bitsntracks.content.suspension.BntBogieRenderer;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceRenderer;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -42,6 +45,13 @@ public class HiddenCogwheelRenderer extends KineticBlockEntityRenderer<KineticBl
                 ms.translate(translation.x, translation.y, translation.z);
                 renderRotatingBuffer(be, model, ms, buffer.getBuffer(this.getRenderType(be, renderState)), light);
                 ms.popPose();
+            }
+            BntSuspensionPieceRenderer.renderAttached(be, partialTicks, ms, buffer, light, overlay);
+            if (BntSuspensionPlacement.previewAt(be.getBlockPos())) {
+                BntSuspensionPieceRenderer.renderGhost(be, BntSuspensionPlacement.side(), BntSuspensionPlacement.facing(), partialTicks, ms, buffer);
+            }
+            if (BntSuspensionPlacement.bogiePreviewAt(be.getBlockPos())) {
+                BntBogieRenderer.renderGhost(be, BntSuspensionPlacement.bogieFacing(), BntSuspensionPlacement.bogieDrop(), ms, buffer);
             }
         }
     }

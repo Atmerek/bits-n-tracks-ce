@@ -1,9 +1,11 @@
 package dev.qwxon.bitsntracks.interaction;
 
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.physics.BntTuning;
@@ -48,7 +50,7 @@ public final class BntTuningHandler {
         }
         if (!withinReach(level, player, pos)
             || !(level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess target)
-            || !target.bnt$isPhysicsEnabled()) {
+            || !BntSuspension.hasPiece(level.getBlockEntity(pos))) {
             return;
         }
 
@@ -60,6 +62,9 @@ public final class BntTuningHandler {
             if (partnerPos != null) {
                 positions.add(partnerPos);
             }
+            if (BntSuspension.partner(level, nodePos, level.getBlockEntity(nodePos)) instanceof KineticBlockEntity bogie) {
+                positions.add(bogie.getBlockPos());
+            }
         }
 
         Map<BlockPos, Integer> engagementBefore = setting == BntTuning.TRAVEL ? BntChainEngagement.snapshot(level, pos) : null;
@@ -67,7 +72,7 @@ public final class BntTuningHandler {
         for (BlockPos nodePos : positions) {
             if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic
                 && kinetic instanceof KineticBlockEntityPhysicsAccess access
-                && access.bnt$isPhysicsEnabled()) {
+                && BntSuspension.hasPiece(kinetic)) {
                 access.bnt$setTuning(setting, value);
                 kinetic.setChanged();
                 kinetic.sendData();
@@ -76,6 +81,7 @@ public final class BntTuningHandler {
         }
         if (engagementBefore != null) {
             BntChainEngagement.refresh(level, pos, engagementBefore);
+            BntBeltRefit.queue(level, pos);
         }
 
         int wheels = BntCogwheelPairing.countWheels(level, tuned);

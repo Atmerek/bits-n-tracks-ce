@@ -9,7 +9,9 @@ import dev.qwxon.bitsntracks.client.BntClientRouteClick;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.Map;
 import net.minecraft.ChatFormatting;
@@ -81,6 +83,7 @@ public class WrenchPhysicsHandler {
                             }
 
                             BntChainEngagement.refresh(level, pos, engagementBefore);
+                            BntBeltRefit.queue(level, pos);
                             Component message = Component.translatable(
                                 "chat.bits_n_tracks.alignment.track.status",
                                 Component.translatable(newState
@@ -172,6 +175,7 @@ public class WrenchPhysicsHandler {
         }
 
         BntChainEngagement.refresh(level, pos, engagementBefore);
+        BntBeltRefit.queue(level, pos);
         player.displayClientMessage(
             (side < 0
                 ? Component.translatable("chat.bits_n_tracks.alignment.route.automatic")
@@ -205,7 +209,10 @@ public class WrenchPhysicsHandler {
         }
 
         BlockEntity be = level.getBlockEntity(pos);
-        if (be instanceof KineticBlockEntity && be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled() != enabled) {
+        if (be instanceof KineticBlockEntity kinetic && be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled() != enabled) {
+            if (!enabled) {
+                BntSuspension.detach(level, pos, kinetic, true);
+            }
             if (isCogwheelVariant(block)) {
                 swapCogwheelBlock(level, pos, state, be, enabled);
             } else {
