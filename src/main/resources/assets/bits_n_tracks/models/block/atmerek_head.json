@@ -1,4 +1,5 @@
 {
+  "render_type": "minecraft:cutout",
   "textures": {
     "skin": "bits_n_tracks:item/heads/atmerek",
     "particle": "bits_n_tracks:item/heads/atmerek"

@@ -6,8 +6,6 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
-import java.util.function.Consumer;
-import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -31,7 +29,6 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 
 public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
     private final CogwheelSize size;
@@ -100,21 +97,6 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
         return Shapes.empty();
     }
 
-    @SuppressWarnings("removal")
-    public void initializeClient(Consumer<IClientBlockExtensions> consumer) {
-        consumer.accept(new IClientBlockExtensions() {
-            public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-                BlockState originalState = HiddenCogwheelBlock.getOriginalParticleState(level, pos, state);
-                if (originalState == null) {
-                    return false;
-                } else {
-                    manager.destroy(pos, originalState);
-                    return true;
-                }
-            }
-        });
-    }
-
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         BlockState result = super.playerWillDestroy(level, pos, state, player);
         if (!level.isClientSide() && !player.isCreative() && level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
@@ -134,7 +116,7 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
         return result;
     }
 
-    private static BlockState getOriginalParticleState(Level level, BlockPos pos, BlockState state) {
+    public static BlockState getOriginalParticleState(Level level, BlockPos pos, BlockState state) {
         if (level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
             String originalBlock = access.bnt$getOriginalBlock();
             if (originalBlock != null && !originalBlock.isEmpty()) {

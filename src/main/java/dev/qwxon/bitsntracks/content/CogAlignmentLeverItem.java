@@ -1,9 +1,7 @@
 package dev.qwxon.bitsntracks.content;
 
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
-import dev.qwxon.bitsntracks.client.CogAlignmentLeverItemRenderer;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.index.BitsNTracksDataComponents;
@@ -12,7 +10,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -32,19 +29,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
 public class CogAlignmentLeverItem extends Item {
     public CogAlignmentLeverItem(Properties properties) {
         super(properties);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @SuppressWarnings("removal")
-    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-        consumer.accept(SimpleCustomRenderer.create(this, new CogAlignmentLeverItemRenderer()));
     }
 
     public static boolean wholeTrack(ItemStack stack) {

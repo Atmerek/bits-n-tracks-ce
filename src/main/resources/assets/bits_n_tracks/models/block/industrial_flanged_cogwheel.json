@@ -2,6 +2,7 @@
     "format_version": "1.21.6",
     "credit": "Made with Blockbench",
     "parent": "create:block/large_wheels",
+    "render_type": "minecraft:cutout",
     "texture_size": [
         32,
         32

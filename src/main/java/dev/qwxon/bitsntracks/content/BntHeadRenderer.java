@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RotationSegment;
+import net.neoforged.neoforge.client.model.data.ModelData;
 
 public class BntHeadRenderer implements BlockEntityRenderer<BntHeadBlockEntity> {
     private static final double WALL_LIFT = 0.25;
@@ -40,7 +41,10 @@ public class BntHeadRenderer implements BlockEntityRenderer<BntHeadBlockEntity> 
         }
 
         dispatcher.getModelRenderer()
-            .renderModel(ms.last(), buffer.getBuffer(RenderType.cutout()), state, model, 1.0F, 1.0F, 1.0F, light, overlay);
+            .renderModel(
+                ms.last(), buffer.getBuffer(RenderType.cutout()), state, model, 1.0F, 1.0F, 1.0F, light, overlay,
+                ModelData.EMPTY, RenderType.cutout()
+            );
         ms.popPose();
     }
 }

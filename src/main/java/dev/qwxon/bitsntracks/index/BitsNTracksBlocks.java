@@ -10,7 +10,6 @@ import dev.qwxon.bitsntracks.content.BntHeadBlock;
 import dev.qwxon.bitsntracks.content.BntHeadBlockItem;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.PushReaction;
@@ -35,14 +34,12 @@ public class BitsNTracksBlocks {
             .build())
         .blockstate((c, p) -> {})
         .register();
-    @SuppressWarnings("removal")
     public static final BlockEntry<BntFlangedCogwheelBlock> INDUSTRIAL_TINY_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
             .block("industrial_tiny_flanged_cogwheel", BntFlangedCogwheelBlock::tiny)
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
             .properties(p -> p.noOcclusion())
-            .addLayer(() -> RenderType::cutout)
             .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
             .item()
             .build())
@@ -82,40 +79,34 @@ public class BitsNTracksBlocks {
             .build())
         .blockstate((c, p) -> {})
         .register();
-    @SuppressWarnings("removal")
     public static final BlockEntry<BntFlangedCogwheelBlock> INDUSTRIAL_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
             .block("industrial_flanged_cogwheel", BntFlangedCogwheelBlock::small)
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
             .properties(p -> p.noOcclusion())
-            .addLayer(() -> RenderType::cutout)
             .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
             .item()
             .build())
         .blockstate((c, p) -> {})
         .register();
-    @SuppressWarnings("removal")
     public static final BlockEntry<BntFlangedCogwheelBlock> LARGE_INDUSTRIAL_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
             .block("large_industrial_flanged_cogwheel", BntFlangedCogwheelBlock::large)
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
             .properties(p -> p.noOcclusion())
-            .addLayer(() -> RenderType::cutout)
             .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
             .item()
             .build())
         .blockstate((c, p) -> {})
         .register();
-    @SuppressWarnings("removal")
     public static final BlockEntry<BntFlangedCogwheelBlock> MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
             .block("medium_industrial_flanged_cogwheel", BntFlangedCogwheelBlock::medium)
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
             .properties(p -> p.noOcclusion())
-            .addLayer(() -> RenderType::cutout)
             .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
             .item()
             .build())
@@ -150,7 +141,6 @@ public class BitsNTracksBlocks {
                 .initialProperties(SharedProperties::stone)
                 .properties(p -> p.sound(SoundType.BONE_BLOCK).mapColor(MapColor.WOOL))
                 .properties(p -> p.strength(1.0F).noOcclusion().pushReaction(PushReaction.DESTROY))
-                .addLayer(() -> RenderType::cutout)
                 .item(BntHeadBlockItem::new)
                 .build())
             .blockstate((c, p) -> {})
