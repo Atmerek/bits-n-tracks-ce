@@ -23,7 +23,13 @@ jobs:
 
       - name: Resolve dev version
         id: version
-        run: echo "version=${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+        run: |
+          base="$(sed -n 's/^mod_version=//p' gradle.properties | tr -d '[:space:]')"
+          if [ -z "$base" ]; then
+            echo "::error::mod_version not found in gradle.properties"
+            exit 1
+          fi
+          echo "version=${base}-dev.${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
 
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v5
