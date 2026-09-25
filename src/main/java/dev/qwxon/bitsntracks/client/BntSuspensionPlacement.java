@@ -81,7 +81,7 @@ public final class BntSuspensionPlacement {
             clear();
             return;
         }
-        if (first != null && (!BntSuspension.canPair(level.getBlockEntity(first)) || !inRange(player, level, first))) {
+        if (first != null && (!BntSuspension.canCarry(level.getBlockEntity(first)) || !inRange(player, level, first))) {
             first = null;
         }
         if (first != null) {
@@ -128,9 +128,10 @@ public final class BntSuspensionPlacement {
             return;
         }
 
-        side = across > SIDE_DEAD_ZONE ? 1 : across < -SIDE_DEAD_ZONE ? -1 : 0;
+        boolean chosen = selected.equals(first);
+        side = !chosen ? 0 : across > SIDE_DEAD_ZONE ? 1 : across < -SIDE_DEAD_ZONE ? -1 : 0;
         facing = side == 0 ? 0 : BntSuspension.facingFor(level, selected, state, side);
-        toward = first == null ? 0 : BntSuspension.towards(level, first, selected);
+        toward = first == null || chosen ? 0 : BntSuspension.towards(level, first, selected);
         lead = toward > 0 ? first : toward < 0 ? selected : null;
         bogieFacing = toward == 0 || !enough(player) ? 0 : BntSuspension.bogieFacing(level, first, toward);
         bogieDrop = toward == 0 ? 0.0F : BntSuspension.bogieDrop(level.getBlockEntity(first), be);
@@ -179,10 +180,12 @@ public final class BntSuspensionPlacement {
         useHandled = true;
         if (selected.equals(first)) {
             first = null;
-            player.displayClientMessage(Component.translatable("chat.bits_n_tracks.suspension.bogie.cleared"), true);
-        } else if (BntSuspension.canPair(player.level().getBlockEntity(selected))) {
+            player.displayClientMessage(Component.translatable("chat.bits_n_tracks.suspension.cleared"), true);
+        } else {
             first = selected;
-            player.displayClientMessage(Component.translatable("chat.bits_n_tracks.suspension.bogie.first"), true);
+            player.displayClientMessage(Component.translatable(BntSuspension.canPair(player.level().getBlockEntity(selected))
+                ? "chat.bits_n_tracks.suspension.first.pair"
+                : "chat.bits_n_tracks.suspension.first"), true);
         }
     }
 

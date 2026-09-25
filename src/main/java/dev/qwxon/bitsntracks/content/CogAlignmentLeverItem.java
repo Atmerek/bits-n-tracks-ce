@@ -135,7 +135,22 @@ public class CogAlignmentLeverItem extends Item {
                         }
 
                         Set<BlockPos> moved = new LinkedHashSet<>();
-                        if (moveAxis != null && wholeTrack) {
+                        if (moveAxis != null && moveAxis != Axis.Y && moveAxis != blockAxis && BntSuspension.isBogie(be)) {
+                            Vec3 across = BntSuspension.across(blockAxis);
+                            double outward = -Integer.signum(access.bnt$getSuspensionSide()) * delta * (moveAxis == Axis.X ? across.x : across.z);
+                            Set<BlockPos> spread = spreadBogies(level, wholeTrack ? collectChainPositions(level, pos) : Set.of(pos), outward, limit);
+                            if (spread.isEmpty()) {
+                                if (player != null) {
+                                    player.displayClientMessage(Component.translatable(outward < 0.0
+                                        ? "chat.bits_n_tracks.alignment.bogie.closest"
+                                        : "chat.bits_n_tracks.alignment.bogie.farthest"), true);
+                                }
+                                return InteractionResult.SUCCESS;
+                            }
+                            if (wholeTrack) {
+                                moved.addAll(spread);
+                            }
+                        } else if (moveAxis != null && wholeTrack) {
                             boolean physics = access.bnt$isPhysicsEnabled();
                             for (BlockPos nodePos : collectChainPositions(level, pos)) {
                                 BlockEntity nodeBe = level.getBlockEntity(nodePos);
@@ -152,20 +167,6 @@ public class CogAlignmentLeverItem extends Item {
                                     ((KineticBlockEntityPhysicsAccess)partner).bnt$setAlignmentOffsetY(nodeAccess.bnt$getAlignmentOffsetY());
                                 }
                             }
-                        } else if (moveAxis != null && moveAxis != Axis.Y && BntSuspension.partner(level, pos, be) instanceof KineticBlockEntity partner) {
-                            Vec3 across = BntSuspension.across(blockAxis);
-                            double outward = -Integer.signum(access.bnt$getSuspensionSide()) * delta * (moveAxis == Axis.X ? across.x : across.z);
-                            double spread = BntSuspension.bogieSpread(be);
-                            double next = Mth.clamp(spread + outward, BntSuspension.closestBogieSpread(state), limit);
-                            if (Math.abs(next - spread) < 1.0E-4) {
-                                if (player != null) {
-                                    player.displayClientMessage(Component.translatable(outward < 0.0
-                                        ? "chat.bits_n_tracks.alignment.bogie.closest"
-                                        : "chat.bits_n_tracks.alignment.bogie.farthest"), true);
-                                }
-                                return InteractionResult.SUCCESS;
-                            }
-                            BntSuspension.spreadBogie((KineticBlockEntity)be, partner, next);
                         } else if (moveAxis != null) {
                             shiftAxis(access, moveAxis, delta, limit, BntSuspension.isBogie(be));
                             if (BntSuspension.partner(level, pos, be) instanceof KineticBlockEntity partner) {
@@ -240,6 +241,26 @@ public class CogAlignmentLeverItem extends Item {
             case Z:
                 access.bnt$setAlignmentOffsetZ(Mth.clamp(access.bnt$getAlignmentOffsetZ() + delta, -limit, limit));
         }
+    }
+
+    private static Set<BlockPos> spreadBogies(Level level, Set<BlockPos> positions, double outward, float limit) {
+        Set<BlockPos> seen = new LinkedHashSet<>();
+        Set<BlockPos> spread = new LinkedHashSet<>();
+        for (BlockPos nodePos : positions) {
+            BlockEntity nodeBe = level.getBlockEntity(nodePos);
+            if (!seen.contains(nodePos) && BntSuspension.partner(level, nodePos, nodeBe) instanceof KineticBlockEntity partner) {
+                seen.add(nodePos);
+                seen.add(partner.getBlockPos());
+                double current = BntSuspension.bogieSpread(nodeBe);
+                double next = Mth.clamp(current + outward, BntSuspension.closestBogieSpread(nodeBe.getBlockState()), limit);
+                if (Math.abs(next - current) >= 1.0E-4) {
+                    BntSuspension.spreadBogie((KineticBlockEntity)nodeBe, partner, next);
+                    spread.add(nodePos);
+                    spread.add(partner.getBlockPos());
+                }
+            }
+        }
+        return spread;
     }
 
     private static Component shiftMessage(KineticBlockEntityPhysicsAccess access, Level level, BlockPos pos, int wheels) {

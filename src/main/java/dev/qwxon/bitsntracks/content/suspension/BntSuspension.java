@@ -133,19 +133,23 @@ public final class BntSuspension {
             || CogwheelSizeHelper.isTiny(be.getBlockState().getBlock()) != CogwheelSizeHelper.isTiny(partner.getBlockState().getBlock())) {
             return 0;
         }
-        BlockPos cell = pos.above();
-        BlockPos partnerCell = partnerPos.above();
-        if (!isOpen(level, cell) || !isOpen(level, partnerCell)
-            || facingPiece(level, pos.offset(step(axis, -toward)), axis, toward)
+        if (facingPiece(level, pos.offset(step(axis, -toward)), axis, toward)
             || facingPiece(level, partnerPos.offset(step(axis, toward)), axis, -toward)) {
             return 0;
         }
+        BlockPos cell = pos.above();
+        BlockPos partnerCell = partnerPos.above();
         for (int facing : new int[]{1, -1}) {
             if (holds(level, cell, axis, facing) || holds(level, partnerCell, axis, facing)) {
                 return facing;
             }
         }
-        return 0;
+        return hangs(level, cell) || hangs(level, partnerCell) ? 1 : 0;
+    }
+
+    private static boolean bogieMounted(Level level, BlockPos cell, BlockPos partnerCell, Axis axis, int facing) {
+        return holds(level, cell, axis, facing) || holds(level, partnerCell, axis, facing)
+            || hangs(level, cell) || hangs(level, partnerCell);
     }
 
     public static float bogieDrop(BlockEntity be, BlockEntity partner) {
@@ -166,10 +170,7 @@ public final class BntSuspension {
         int side = access.bnt$getSuspensionSide();
         int facing = access.bnt$getSuspensionFacing();
         if (Math.abs(side) == BOGIE) {
-            BlockPos cell = pos.above();
-            BlockPos partnerCell = pos.offset(step(axis, side)).above();
-            return partner(level, pos, be) != null && isOpen(level, cell) && isOpen(level, partnerCell)
-                && (holds(level, cell, axis, facing) || holds(level, partnerCell, axis, facing));
+            return partner(level, pos, be) != null && bogieMounted(level, pos.above(), pos.offset(step(axis, side)).above(), axis, facing);
         }
         return mounted(level, pos, axis, side, facing);
     }
@@ -199,9 +200,8 @@ public final class BntSuspension {
         return new BlockPos((int)Math.round(across.x), 0, (int)Math.round(across.z));
     }
 
-    private static boolean isOpen(Level level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        return state.isAir() || state.canBeReplaced() && state.getCollisionShape(level, pos).isEmpty();
+    private static boolean hangs(Level level, BlockPos cell) {
+        return level.getBlockState(cell).isFaceSturdy(level, cell, Direction.DOWN);
     }
 
     private static boolean holds(Level level, BlockPos cell, Axis axis, int facing) {
