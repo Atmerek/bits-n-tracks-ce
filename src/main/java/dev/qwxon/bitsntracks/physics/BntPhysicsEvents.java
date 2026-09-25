@@ -75,11 +75,14 @@ public final class BntPhysicsEvents {
     private static final double CONTACT_GAP = 1.0 / 32.0;
     private static final int ARM_ITERATIONS = 4;
     private static final double ARM_TOLERANCE = 1.0E-3;
-    private static final double MIN_LEVER = 0.05;
     private static final double RIGID_SLOP = 0.005;
     private static final double RIGID_BIAS = 0.2;
     private static final double ARM_SPRING_RATE = 0.15;
+    private static final double SHARE_MEMORY = 3.0;
+    private static final double WAKE_SHARE = 0.05;
+    private static final double GRIP_LOAD = 0.5;
     private static final Map<ServerSubLevel, Long> REPORTED = new WeakHashMap<>();
+    private static final Map<ServerSubLevel, double[]> SHARES = new WeakHashMap<>();
 
     private BntPhysicsEvents() {
     }
@@ -137,9 +140,12 @@ public final class BntPhysicsEvents {
                 contacts.add(fromBelt(beltContact, carrier));
             }
 
+            double share = wheelShare(subLevel, nearGround.size(), timeStep);
             if (!contacts.isEmpty()) {
-                solveSupport(level, subLevel, contacts, nearGround.size(), belt.contacts().size(), timeStep);
-                solveTraction(level, subLevel, contacts, loaded.size(), timeStep);
+                if (solveSupport(level, subLevel, contacts, share, belt.contacts().size(), timeStep)) {
+                    physicsSystem.getPipeline().wakeUp(subLevel);
+                }
+                solveTraction(level, subLevel, contacts, share, timeStep);
                 for (BntPhysicsEvents.WheelContact contact : contacts) {
                     applyContactForces(contact);
                 }
@@ -376,14 +382,11 @@ public final class BntPhysicsEvents {
         } else {
             double hold = BntBeltHold.at(kbe.getLevel(), kbe);
             double sprung = reach.rise() - hold;
-            double pressed = Mth.clamp(sprung, -down, up);
             contact.arm = true;
             contact.hold = hold;
             contact.compression = sprung;
             contact.overTravel = Math.max(0.0, sprung - up);
-            contact.armLever0 = arm.lever(arm.ride());
-            contact.armLever = Math.max(arm.lever(pressed), MIN_LEVER);
-            contact.armTurn = arm.elevation(pressed) - arm.elevation(arm.ride());
+            contact.armRise = Mth.clamp(sprung, -down, up) - arm.ride();
         }
         return contact;
     }
@@ -468,21 +471,30 @@ public final class BntPhysicsEvents {
         return contact;
     }
 
-    /** Springs and belt supports solved together as soft constraints. */
-    private static void solveSupport(
+    /** Wheels a body's weight is shared over, kept while some of them leave the ground so the rest do not stiffen. */
+    private static double wheelShare(ServerSubLevel subLevel, int wheels, double timeStep) {
+        double[] held = SHARES.computeIfAbsent(subLevel, ignored -> new double[1]);
+        if (wheels > 0) {
+            held[0] = Math.max(wheels, held[0] * Math.exp(-timeStep / SHARE_MEMORY));
+        }
+        return Math.max(held[0], 1.0);
+    }
+
+    /** Springs and belt supports solved together as soft constraints; true while the springs are still moving the body. */
+    private static boolean solveSupport(
         Level level, ServerSubLevel subLevel, List<BntPhysicsEvents.WheelContact> contacts,
-        int wheelShare, int beltShare, double timeStep
+        double wheelShare, int beltShare, double timeStep
     ) {
         MassData massData = subLevel.getMassTracker();
         if (massData == null || massData.isInvalid() || massData.getCenterOfMass() == null) {
-            return;
+            return false;
         }
 
         double inverseMass = massData.getInverseMass();
         Matrix3dc inverseInertia = massData.getInverseInertiaTensor();
         Vector3dc centerOfMass = massData.getCenterOfMass();
         if (!Double.isFinite(inverseMass) || inverseMass <= 0.0 || inverseInertia == null) {
-            return;
+            return false;
         }
 
         int count = contacts.size();
@@ -491,6 +503,8 @@ public final class BntPhysicsEvents {
         double[] bias = new double[count];
         double[] ceiling = new double[count];
         double[] accumulated = new double[count];
+        double[] resting = new double[count];
+        double[] tolerance = new double[count];
         Vector3d[] levers = new Vector3d[count];
         Vector3d[] responses = new Vector3d[count];
         double gravity = DimensionPhysicsData.getGravity(level).length();
@@ -499,7 +513,7 @@ public final class BntPhysicsEvents {
             BntPhysicsEvents.WheelContact contact = contacts.get(i);
             double massShare = contact.belt
                 ? contact.normalMass / Math.max(beltShare, 1)
-                : massData.getMass() / Math.max(wheelShare, 1);
+                : massData.getMass() / wheelShare;
             double gain;
             double springStrength;
             double dampingStrength;
@@ -519,14 +533,12 @@ public final class BntPhysicsEvents {
             } else if (contact.arm) {
                 gain = BntPhysicsTuning.SUSPENSION_GAIN * massShare;
                 double springRate = contact.stiffness * ARM_SPRING_RATE;
-                double turnStiffness = gain * BntPhysicsTuning.SPRING_SCALE * BntPhysicsTuning.WHEEL_SPRING * springRate
-                    / LEVEL_FOUR_DENOMINATOR * contact.armLever0 * contact.armLever0;
-                double turnDamping = gain * BntPhysicsTuning.DAMPING_SCALE * BntPhysicsTuning.WHEEL_DAMPING * contact.damping
-                    * Math.sqrt(springRate) * DAMPING_CALIBRATION * contact.armLever0 * contact.armLever0;
-                double torque = massShare * gravity * contact.armLever0 + turnStiffness * contact.armTurn;
-                springStrength = turnStiffness / (contact.armLever * contact.armLever);
-                dampingStrength = turnDamping / (contact.armLever * contact.armLever);
-                compression = turnStiffness > 0.0 ? torque * contact.armLever / turnStiffness + contact.overTravel : 0.0;
+                springStrength = gain * BntPhysicsTuning.SPRING_SCALE * BntPhysicsTuning.WHEEL_SPRING * springRate / LEVEL_FOUR_DENOMINATOR;
+                dampingStrength = gain * BntPhysicsTuning.DAMPING_SCALE * BntPhysicsTuning.WHEEL_DAMPING * contact.damping
+                    * Math.sqrt(springRate) * DAMPING_CALIBRATION;
+                compression = springStrength > 0.0
+                    ? massShare * gravity / springStrength + contact.armRise + contact.overTravel
+                    : 0.0;
                 impulseMultiplier = BntPhysicsTuning.getTrackMaxImpulseMultiplier();
                 headroomScale = Math.max(1.0, contact.stiffness);
                 bottomed = contact.overTravel > 0.0;
@@ -571,6 +583,8 @@ public final class BntPhysicsEvents {
             double ramp = contact.previousPush
                 + massShare * (BntPhysicsTuning.getMaxSuspensionSpeed() + Math.abs(contact.verticalSpeed));
             ceiling[i] = Math.max(0.0, Math.min(headroom, ramp));
+            resting[i] = Mth.clamp(timeStep * springStrength * compression, 0.0, ceiling[i]);
+            tolerance[i] = WAKE_SHARE * massShare * gravity * timeStep;
         }
 
         Vector3d fall = DimensionPhysicsData.getGravity(level).mul(timeStep);
@@ -596,9 +610,12 @@ public final class BntPhysicsEvents {
             }
         }
 
+        boolean moving = false;
         for (int i = 0; i < count; i++) {
             contacts.get(i).push = accumulated[i];
+            moving |= tolerance[i] > 0.0 && Math.abs(accumulated[i] - resting[i]) > tolerance[i];
         }
+        return moving;
     }
 
     private static void applyContactForces(BntPhysicsEvents.WheelContact contact) {
@@ -615,7 +632,7 @@ public final class BntPhysicsEvents {
     }
 
     private static void solveTraction(
-        Level level, ServerSubLevel subLevel, List<BntPhysicsEvents.WheelContact> contacts, int wheelCount, double timeStep
+        Level level, ServerSubLevel subLevel, List<BntPhysicsEvents.WheelContact> contacts, double wheelShare, double timeStep
     ) {
         MassData massData = subLevel.getMassTracker();
         if (massData == null || massData.isInvalid() || massData.getCenterOfMass() == null) {
@@ -629,7 +646,7 @@ public final class BntPhysicsEvents {
             return;
         }
 
-        double loadShare = massData.getMass() / Math.max(wheelCount, 1);
+        double loadShare = massData.getMass() / wheelShare;
         double gravity = DimensionPhysicsData.getGravity(level).length();
         double response = BntPhysicsTuning.getTractionResponse();
         double pivotScrub = BntPhysicsTuning.getPivotScrub();
@@ -656,8 +673,10 @@ public final class BntPhysicsEvents {
                 contact.limitLongitudinal = driveTraction * grip * carried;
                 contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * carried;
             } else {
-                contact.limitLongitudinal = driveTraction * grip * loadShare * timeStep;
-                contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * loadShare * timeStep;
+                double resting = GRIP_LOAD * loadShare * gravity * timeStep;
+                double load = resting > 0.0 ? Mth.clamp(contact.push / resting, 0.0, 1.0) : 1.0;
+                contact.limitLongitudinal = driveTraction * grip * loadShare * timeStep * load;
+                contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * loadShare * timeStep * load;
             }
         }
 
@@ -1101,9 +1120,7 @@ public final class BntPhysicsEvents {
         Vector3d localVelocity;
         double compression;
         double overTravel;
-        double armLever0;
-        double armLever;
-        double armTurn;
+        double armRise;
         double surfaceSpeed;
         double targetSpeed;
         double penetration;

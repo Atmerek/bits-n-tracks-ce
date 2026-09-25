@@ -32,6 +32,8 @@ public final class BntBeltHold {
     private static final double GRIP_SLOPE = 0.05;
     private static final double RELAX = 0.6;
     private static final double STEP = 1.0 / 8.0;
+    private static final double RELEASE = STEP / 8.0;
+    private static final long CARRY_TICKS = 3L;
     private static final int MAX_CLIMB_PROBES = 16;
 
     private BntBeltHold() {
@@ -65,9 +67,10 @@ public final class BntBeltHold {
         return access.bnt$getBeltHold();
     }
 
-    /** Lift a wheel may relax from, which is nothing unless it was solved on the previous tick. */
+    /** Lift a wheel may relax from, which is nothing unless it was solved in the last few ticks; the client's clock can skip one. */
     private static double carried(KineticBlockEntityPhysicsAccess access, long now) {
-        return access.bnt$getBeltHoldTick() == now - 1L ? access.bnt$getBeltHold() : 0.0;
+        long tick = access.bnt$getBeltHoldTick();
+        return tick >= now - CARRY_TICKS && tick <= now + CARRY_TICKS ? access.bnt$getBeltHold() : 0.0;
     }
 
     private static void solve(Level level, BlockPos controllerPos, long now) {
@@ -156,17 +159,14 @@ public final class BntBeltHold {
             if (toPrevious.lengthSqr() < FLAT || toNext.lengthSqr() < FLAT) {
                 continue;
             }
-            double slope = -(toPrevious.normalize().y + toNext.normalize().y);
-            if (slope > -GRIP_SLOPE) {
-                continue;
-            }
+            double slope = Math.min(0.0, GRIP_SLOPE - (toPrevious.normalize().y + toNext.normalize().y));
             gradient[i] = slope;
             weight += slope * slope;
         }
 
         for (int i = 0; i < count; i++) {
-            double step = weight < FLAT || gradient[i] >= 0.0
-                ? -STEP
+            double step = weight < FLAT ? -STEP
+                : gradient[i] >= 0.0 ? -RELEASE
                 : Mth.clamp(RELAX * excess * -gradient[i] / weight, -STEP, STEP);
             double lift = Mth.clamp(holds[i] + step, 0.0, Math.min(cap, drops[i]));
             BlockEntity be = level.getBlockEntity(controllerPos.offset(nodes.get(i).localPos()));

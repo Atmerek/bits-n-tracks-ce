@@ -9,7 +9,6 @@ import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -20,9 +19,11 @@ import net.minecraft.world.phys.Vec3;
 
 public final class BntSuspension {
     public static final int BOGIE = 2;
+    public static final double PIVOT = 0.5;
     private static final double BOGIE_REACH = 0.5;
     private static final double BOGIE_RISE = 0.5 * Math.tan(Math.PI / 8.0);
-    private static final double BOGIE_SAG = 0.1;
+    private static final double SAG = 0.1;
+    private static final double MEDIUM_DRAWN_RADIUS = 9.0 * Math.sqrt(2.0) / 16.0;
     private static final double SMALL_DRAWN_RADIUS = 9.0 / 16.0;
     private static final double TINY_DRAWN_RADIUS = 4.0 * Math.sqrt(2.0) / 16.0;
 
@@ -76,12 +77,8 @@ public final class BntSuspension {
         return axis == Axis.X ? new Vec3(1.0, 0.0, 0.0) : new Vec3(0.0, 0.0, 1.0);
     }
 
-    public static BlockPos anchor(BlockPos pos, Axis axis, int side) {
-        return pos.offset(step(axis, side)).above();
-    }
-
-    public static BlockPos rest(BlockPos anchor, Axis axis, int facing) {
-        return anchor.relative(Direction.get(facing > 0 ? Direction.AxisDirection.POSITIVE : Direction.AxisDirection.NEGATIVE, axis));
+    private static BlockPos rest(BlockPos cell, Axis axis, int facing) {
+        return cell.relative(Direction.get(facing > 0 ? Direction.AxisDirection.POSITIVE : Direction.AxisDirection.NEGATIVE, axis));
     }
 
     public static int facingFor(Level level, BlockPos pos, BlockState state, int side) {
@@ -89,17 +86,25 @@ public final class BntSuspension {
             return 0;
         }
         Axis axis = axis(state);
-        BlockPos anchor = anchor(pos, axis, side);
-        BlockPos neighbour = pos.offset(step(axis, side));
-        if (!isOpen(level, anchor) || facingPiece(level, neighbour, axis, -side) || isBogie(level.getBlockEntity(neighbour))) {
+        if (isBogie(level.getBlockEntity(pos.offset(step(axis, side))))) {
             return 0;
         }
         for (int facing : new int[]{1, -1}) {
-            if (holds(level, anchor, axis, facing)) {
+            if (mounted(level, pos, axis, side, facing)) {
                 return facing;
             }
         }
         return 0;
+    }
+
+    private static boolean mounted(Level level, BlockPos pos, Axis axis, int side, int facing) {
+        BlockPos over = pos.offset(step(axis, side));
+        for (BlockPos cell : new BlockPos[]{pos, over, pos.above(), over.above()}) {
+            if (holds(level, cell, axis, facing)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static BlockPos neighbour(BlockPos pos, BlockState state, int toward) {
@@ -166,12 +171,11 @@ public final class BntSuspension {
             return partner(level, pos, be) != null && isOpen(level, cell) && isOpen(level, partnerCell)
                 && (holds(level, cell, axis, facing) || holds(level, partnerCell, axis, facing));
         }
-        BlockPos anchor = anchor(pos, axis, side);
-        return isOpen(level, anchor) && holds(level, anchor, axis, facing);
+        return mounted(level, pos, axis, side, facing);
     }
 
     public static boolean sharesPivot(Level level, BlockPos pos, Axis axis, int side) {
-        return facingPiece(level, pos.offset(step(axis, side).multiply(2)), axis, -side);
+        return facingPiece(level, pos.offset(step(axis, side)), axis, -side);
     }
 
     public static KineticBlockEntity partner(Level level, BlockPos pos, BlockEntity be) {
@@ -200,8 +204,8 @@ public final class BntSuspension {
         return state.isAir() || state.canBeReplaced() && state.getCollisionShape(level, pos).isEmpty();
     }
 
-    private static boolean holds(Level level, BlockPos anchor, Axis axis, int facing) {
-        BlockPos rest = rest(anchor, axis, facing);
+    private static boolean holds(Level level, BlockPos cell, Axis axis, int facing) {
+        BlockPos rest = rest(cell, axis, facing);
         Direction toward = Direction.get(facing > 0 ? Direction.AxisDirection.NEGATIVE : Direction.AxisDirection.POSITIVE, axis);
         return level.getBlockState(rest).isFaceSturdy(level, rest, toward);
     }
@@ -262,14 +266,6 @@ public final class BntSuspension {
             return Math.min(travel, this.downCap);
         }
 
-        public double elevation(double rise) {
-            return Math.asin(Mth.clamp((this.reachUp + rise) / this.length, -1.0, 1.0));
-        }
-
-        public double lever(double rise) {
-            return this.length * Math.cos(this.elevation(rise));
-        }
-
         public Vec3 displacement(double rise) {
             double up = Math.max(-this.downCap, Math.min(this.upCap, rise));
             double height = this.reachUp + up;
@@ -291,10 +287,33 @@ public final class BntSuspension {
         Vec3 across = across(axis(be.getBlockState()));
         KineticBlockEntityPhysicsAccess access = (KineticBlockEntityPhysicsAccess)be;
         Vec3 alignment = new Vec3(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
-        double reachAcross = alignment.dot(across) - side;
-        double reachUp = alignment.y - 1.0;
+        double reachAcross = alignment.dot(across) - side * PIVOT;
+        double reachUp = alignment.y - PIVOT;
         double length = Math.hypot(reachAcross, reachUp);
-        return new Arm(across, side, reachAcross, reachUp, length, -reachUp, length + reachUp, 0.0);
+        double downCap = length + reachUp;
+        double ride = 0.0;
+        double halfway = halfwayToFacing(be, side);
+        if (halfway > 0.0) {
+            double approach = Math.max(0.0, halfway - drawnRadius(be.getBlockState()));
+            double spread = Math.max(0.0, Math.abs(reachAcross) - approach);
+            downCap = Math.min(downCap, Math.sqrt(Math.max(0.0, length * length - spread * spread)) + reachUp);
+            ride = Math.max(0.0, SAG - downCap);
+        }
+        return new Arm(across, side, reachAcross, reachUp, length, -reachUp, downCap, ride);
+    }
+
+    private static double halfwayToFacing(BlockEntity be, int side) {
+        Level level = be.getLevel();
+        if (level == null) {
+            return 0.0;
+        }
+        Axis axis = axis(be.getBlockState());
+        for (int cells = 1; cells <= 2; cells++) {
+            if (facingPiece(level, be.getBlockPos().offset(step(axis, side).multiply(cells)), axis, -side)) {
+                return cells * 0.5;
+            }
+        }
+        return 0.0;
     }
 
     private static Arm bogieArm(BlockEntity be, int side) {
@@ -303,11 +322,13 @@ public final class BntSuspension {
         double length = Math.hypot(reach, BOGIE_RISE);
         double radius = drawnRadius(be.getBlockState());
         double droop = Math.max(0.0, Math.sqrt(Math.max(0.0, length * length - radius * radius)) - BOGIE_RISE);
-        return new Arm(across(axis(be.getBlockState())), toward, -toward * reach, -BOGIE_RISE, length, 2.0 * BOGIE_RISE, droop, BOGIE_SAG);
+        return new Arm(across(axis(be.getBlockState())), toward, -toward * reach, -BOGIE_RISE, length, 2.0 * BOGIE_RISE, droop, SAG);
     }
 
     private static double drawnRadius(BlockState state) {
-        return CogwheelSizeHelper.isTiny(state.getBlock()) ? TINY_DRAWN_RADIUS : SMALL_DRAWN_RADIUS;
+        return CogwheelSizeHelper.isTiny(state.getBlock()) ? TINY_DRAWN_RADIUS
+            : CogwheelSizeHelper.isMedium(state.getBlock()) ? MEDIUM_DRAWN_RADIUS
+            : SMALL_DRAWN_RADIUS;
     }
 
     public static double bogieSpread(BlockEntity be) {
@@ -343,5 +364,10 @@ public final class BntSuspension {
     public static Vec3 displacement(BlockEntity be, double drop) {
         Arm arm = arm(be);
         return arm == null ? new Vec3(0.0, -drop, 0.0) : arm.displacement(-drop);
+    }
+
+    public static Vec3 restDisplacement(BlockEntity be) {
+        Arm arm = arm(be);
+        return arm == null ? Vec3.ZERO : arm.displacement(arm.ride());
     }
 }

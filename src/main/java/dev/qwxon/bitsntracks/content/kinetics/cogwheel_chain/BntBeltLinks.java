@@ -109,7 +109,7 @@ public final class BntBeltLinks {
 
     /** Length the loop carries over the path it has to clear, never negative. */
     public static double surplus(int links, float tension, double clearing) {
-        if (links <= UNSET) {
+        if (links <= UNSET || clearing <= 0.0) {
             return 0.0;
         }
         return Math.max(0.0, length(links) + slackLength(tension) - clearing);
@@ -218,7 +218,7 @@ public final class BntBeltLinks {
         return repeat <= 0.0 ? 1.0F : (float)(1.0 / repeat);
     }
 
-    /** Taut path the loop is fitted to, measured where the wheels are drawn. */
+    /** Taut path the loop is fitted to, measured with the suspension parked at its ride height. */
     public static double fitLength(Level level, BlockPos controllerPos) {
         List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
         if (nodes.size() < 2) {
@@ -229,7 +229,7 @@ public final class BntBeltLinks {
         try {
             BntRadiusProvider.setLevel(level);
             BntRadiusProvider.setOrigin(controllerPos);
-            return drawnTautLength(level, controllerPos, nodes);
+            return tautLength(level, controllerPos, nodes, true);
         } finally {
             BntRadiusProvider.setLevel(heldLevel);
             BntRadiusProvider.setOrigin(heldOrigin);
@@ -247,7 +247,7 @@ public final class BntBeltLinks {
         try {
             BntRadiusProvider.setLevel(level);
             BntRadiusProvider.setOrigin(controllerPos);
-            return linksFor(drawnTautLength(level, controllerPos, nodes));
+            return linksFor(tautLength(level, controllerPos, nodes, true));
         } finally {
             BntRadiusProvider.setLevel(heldLevel);
             BntRadiusProvider.setOrigin(heldOrigin);
@@ -256,6 +256,10 @@ public final class BntBeltLinks {
 
     /** Where a wheel is drawn, its visual seat moved by the drop terrain puts it at. */
     public static Vec3 drawnCentre(Level level, BlockPos controllerPos, PathedCogwheelNode node) {
+        return centre(level, controllerPos, node, false);
+    }
+
+    private static Vec3 centre(Level level, BlockPos controllerPos, PathedCogwheelNode node, boolean parked) {
         BlockPos nodePos = controllerPos.offset(node.localPos());
         BlockState state = level.getBlockState(nodePos);
         Vec3 centre = nodePos.getCenter()
@@ -266,15 +270,21 @@ public final class BntBeltLinks {
             centre = centre.add(
                 access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
         }
-        if (be instanceof KineticBlockEntity kinetic) {
+        if (be instanceof KineticBlockEntity kinetic && parked) {
+            centre = centre.add(BntSuspension.restDisplacement(kinetic));
+        } else if (be instanceof KineticBlockEntity kinetic) {
             double drop = BntPhysicsEvents.getRawRenderExtension(kinetic, 1.0F);
             centre = centre.add(BntSuspension.displacement(kinetic, BntSuspension.hasPiece(kinetic) ? drop : Math.max(0.0, drop)));
         }
         return centre;
     }
 
-    /** Taut path round the wheels where they are drawn, which is what the belt is fitted to. */
+    /** Taut path round the wheels where they are drawn. */
     public static double drawnTautLength(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
+        return tautLength(level, controllerPos, nodes, false);
+    }
+
+    private static double tautLength(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes, boolean parked) {
         int count = nodes == null ? 0 : nodes.size();
         Axis axis = count < 2 || level == null ? null : BntChainGeometry.sharedAxis(nodes);
         if (axis == null) {
@@ -286,7 +296,7 @@ public final class BntBeltLinks {
         double[] radii = new double[count];
         int[] sides = new int[count];
         for (int i = 0; i < count; i++) {
-            Vec3 centre = drawnCentre(level, controllerPos, nodes.get(i));
+            Vec3 centre = centre(level, controllerPos, nodes.get(i), parked);
             xs[i] = BntChainGeometry.planarX(centre, axis);
             ys[i] = BntChainGeometry.planarY(centre, axis);
             radii[i] = BntChainGeometry.trackRadius(nodes.get(i));

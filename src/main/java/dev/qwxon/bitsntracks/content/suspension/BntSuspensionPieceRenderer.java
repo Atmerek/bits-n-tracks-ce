@@ -55,7 +55,7 @@ public final class BntSuspensionPieceRenderer {
         var axis = BntSuspension.axis(be.getBlockState());
         Vec3 across = BntSuspension.across(axis);
         double seat = CogwheelSizeHelper.getVisualVerticalOffset(be.getBlockState().getBlock());
-        Vec3 pivot = CENTRE.add(0.0, seat + 1.0, 0.0).add(across.scale(side));
+        Vec3 pivot = CENTRE.add(0.0, seat + BntSuspension.PIVOT, 0.0).add(across.scale(side * BntSuspension.PIVOT));
         boolean holder = side > 0 || be.getLevel() == null || !BntSuspension.sharesPivot(be.getLevel(), be.getBlockPos(), axis, side);
         draw(pose, consumer, cog, pivot, across, BntSuspension.along(axis), side, facing, holder, color, light, overlay);
     }
@@ -65,7 +65,6 @@ public final class BntSuspensionPieceRenderer {
         int side, int facing, boolean holder, int color, int light, int overlay
     ) {
         Vec3 depth = along.scale(facing);
-        Vec3 sideways = across.scale(side);
         boolean reverse = side * facing < 0;
 
         Vec3 reach = pivot.subtract(cog);
@@ -107,18 +106,6 @@ public final class BntSuspensionPieceRenderer {
                 vs[k] = arm[at + 4];
             }
             Vec3 normal = armward.scale(arm[quad + 20]).add(normalward.scale(arm[quad + 21])).add(depth.scale(arm[quad + 22]));
-            quad(pose, consumer, corners, us, vs, normal, reverse, color, light, overlay);
-        }
-
-        float[] housing = BntSuspensionPieceModel.HOUSING;
-        for (int quad = 0; holder && quad < housing.length; quad += 23) {
-            for (int k = 0; k < 4; k++) {
-                int at = quad + k * 5;
-                corners[k] = pivot.add(sideways.scale(housing[at])).add(UP.scale(housing[at + 1])).add(depth.scale(housing[at + 2]));
-                us[k] = housing[at + 3];
-                vs[k] = housing[at + 4];
-            }
-            Vec3 normal = sideways.scale(housing[quad + 20]).add(UP.scale(housing[quad + 21])).add(depth.scale(housing[quad + 22]));
             quad(pose, consumer, corners, us, vs, normal, reverse, color, light, overlay);
         }
     }
