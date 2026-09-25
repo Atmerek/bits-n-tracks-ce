@@ -170,6 +170,10 @@ public final class BntChainEngagement {
         return true;
     }
 
+    public static boolean[] compute(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
+        return engagement(layout(level, controllerPos, nodes), nodes.size());
+    }
+
     public static boolean[] engagement(BntChainGeometry.Layout layout, int count) {
         boolean[] engaged = new boolean[count];
         if (layout == null) {

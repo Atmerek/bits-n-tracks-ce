@@ -23,7 +23,6 @@ public final class BntSuspensionPieceRenderer {
     private static final int GHOST = 0x9066FF66;
     private static final Vec3 UP = new Vec3(0.0, 1.0, 0.0);
     private static final Vec3 CENTRE = new Vec3(0.5, 0.5, 0.5);
-    private static final float ITEM_SCALE = 0.55F;
 
     private BntSuspensionPieceRenderer() {
     }
@@ -48,15 +47,6 @@ public final class BntSuspensionPieceRenderer {
         Vec3 cog = CENTRE.add(HiddenCogwheelCompat.getModelTranslation(be, partialTicks));
         draw(ms.last(), buffer.getBuffer(RenderType.entityTranslucent(TEXTURE)), be, cog, side, facing, GHOST,
             LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-    }
-
-    public static void renderItem(PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        ms.pushPose();
-        ms.scale(ITEM_SCALE, ITEM_SCALE, ITEM_SCALE);
-        ms.translate(-0.625, -0.625, 0.0);
-        draw(ms.last(), buffer.getBuffer(RenderType.entityCutout(TEXTURE)), Vec3.ZERO, new Vec3(1.0, 1.0, 0.0),
-            new Vec3(1.0, 0.0, 0.0), new Vec3(0.0, 0.0, 1.0), 1, 1, true, SOLID, light, overlay);
-        ms.popPose();
     }
 
     private static void draw(

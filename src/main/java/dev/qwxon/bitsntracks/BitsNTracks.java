@@ -25,6 +25,7 @@ import net.neoforged.fml.config.ModConfig.Type;
 @Mod("bits_n_tracks")
 public class BitsNTracks {
     public static final String MOD_ID = "bits_n_tracks";
+    public static final String NAME = "Bits 'n' Tracks";
     public static final CreateRegistrate REGISTRATE = (CreateRegistrate)CreateRegistrate.create("bits_n_tracks").defaultCreativeTab((ResourceKey)null);
 
     public BitsNTracks(IEventBus modEventBus, ModContainer modContainer) {

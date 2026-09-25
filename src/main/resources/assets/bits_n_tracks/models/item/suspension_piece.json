@@ -1,6 +1,1 @@
-{
-	"parent": "block/block",
-	"textures": {
-		"particle": "bits_n_tracks:block/suspension_piece"
-	}
-}
+{"parent": "item/generated", "textures": {"layer0": "bits_n_tracks:item/suspension_piece"}}

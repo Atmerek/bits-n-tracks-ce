@@ -21,6 +21,14 @@ public enum BntWideSide implements StringRepresentable {
         return this.name;
     }
 
+    public BntWideSide opposite() {
+        return switch (this) {
+            case NEGATIVE -> POSITIVE;
+            case POSITIVE -> NEGATIVE;
+            case NONE -> NONE;
+        };
+    }
+
     public Direction toDirection(Axis axis) {
         return switch (this) {
             case NEGATIVE -> Direction.fromAxisAndDirection(axis, AxisDirection.NEGATIVE);

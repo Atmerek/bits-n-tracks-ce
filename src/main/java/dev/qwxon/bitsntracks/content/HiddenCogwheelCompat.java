@@ -68,6 +68,10 @@ public final class HiddenCogwheelCompat {
         return state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get());
     }
 
+    public static boolean isHiddenChain(BlockState state) {
+        return isHiddenCogwheel(state);
+    }
+
     public static boolean isHiddenFlangedCogwheel(BlockState state) {
         return isHiddenCogwheel(state);
     }
