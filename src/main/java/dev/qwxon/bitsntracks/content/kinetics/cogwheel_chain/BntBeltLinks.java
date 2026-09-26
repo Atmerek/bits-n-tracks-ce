@@ -259,6 +259,11 @@ public final class BntBeltLinks {
         return centre(level, controllerPos, node, false);
     }
 
+    /** Where a wheel sits with its suspension parked at ride height. */
+    public static Vec3 parkedCentre(Level level, BlockPos controllerPos, PathedCogwheelNode node) {
+        return centre(level, controllerPos, node, true);
+    }
+
     private static Vec3 centre(Level level, BlockPos controllerPos, PathedCogwheelNode node, boolean parked) {
         BlockPos nodePos = controllerPos.offset(node.localPos());
         BlockState state = level.getBlockState(nodePos);

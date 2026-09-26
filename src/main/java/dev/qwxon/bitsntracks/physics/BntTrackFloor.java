@@ -90,6 +90,7 @@ public final class BntTrackFloor {
     ) {
         int count = nodes.size();
         Vec3[] seats = new Vec3[count];
+        Vec3[] parked = new Vec3[count];
         double[] xs = new double[count];
         double[] ys = new double[count];
         double[] radii = new double[count];
@@ -103,6 +104,7 @@ public final class BntTrackFloor {
             Vec3 centre = BntBeltLinks.drawnCentre(level, controllerPos, node);
             radii[i] = BntChainGeometry.trackRadius(node);
             seats[i] = centre.subtract(0.0, radii[i], 0.0);
+            parked[i] = BntBeltLinks.parkedCentre(level, controllerPos, node).subtract(0.0, radii[i], 0.0);
             xs[i] = BntChainGeometry.planarX(centre, axis);
             ys[i] = BntChainGeometry.planarY(centre, axis);
             sides[i] = node.side();
@@ -149,7 +151,7 @@ public final class BntTrackFloor {
             int lower = Mth.clamp((int)Math.floor(sample), 0, probes);
             int upper = Math.min(lower + 1, probes);
             double carried = Mth.lerp(sample - lower, shape[lower], shape[upper]);
-            double lift = Mth.lerp(reach, from.y, seats[next].y) + carried - seats[i].y;
+            double lift = Mth.lerp(reach, from.y, seats[next].y) + carried - seats[i].y - wrapped(parked[previous], parked[i], parked[next]);
             if (lift <= FLAT) {
                 continue;
             }
@@ -159,6 +161,17 @@ public final class BntTrackFloor {
                 access.bnt$setTrackLift(now, Math.min(lift, BntPhysicsTuning.getBeltMaxHold()));
             }
         }
+    }
+
+    /** How far a parked wheel already presses the run below its neighbours, which the loop was fitted around. */
+    private static double wrapped(Vec3 previous, Vec3 seat, Vec3 next) {
+        Vec3 along = next.subtract(previous);
+        double span = along.lengthSqr();
+        if (span < FLAT) {
+            return 0.0;
+        }
+        double reach = Mth.clamp(seat.subtract(previous).dot(along) / span, 0.0, 1.0);
+        return Math.max(0.0, previous.y + along.y * reach - seat.y);
     }
 
     private static List<PathedCogwheelNode> beltOrder(Level level, BlockPos controllerPos) {
