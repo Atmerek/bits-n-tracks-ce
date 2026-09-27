@@ -107,7 +107,7 @@ public final class BntChainEngagement {
                 signature[i * 5 + 1] = access.bnt$getAlignmentOffsetY();
                 signature[i * 5 + 2] = access.bnt$getAlignmentOffsetZ();
                 signature[i * 5 + 3] = access.bnt$getTrackRouteSide();
-                signature[i * 5 + 4] = HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState()) ? 2.0 + access.bnt$getSuspensionSide() : 0.0;
+                signature[i * 5 + 4] = HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState()) ? 1.0 + BntSuspension.BOGIE + access.bnt$getSuspensionSide() : 0.0;
             } else {
                 signature[i * 5 + 3] = -1.0;
             }
@@ -168,10 +168,6 @@ public final class BntChainEngagement {
             }
         }
         return true;
-    }
-
-    public static boolean[] compute(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
-        return engagement(layout(level, controllerPos, nodes), nodes.size());
     }
 
     public static boolean[] engagement(BntChainGeometry.Layout layout, int count) {

@@ -3,7 +3,6 @@ package dev.qwxon.bitsntracks.mixin;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviourVisual;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
-import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,8 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
     remap = false
 )
 public abstract class CogwheelChainBehaviourVisualMixin {
-    @Shadow
-    private KineticBlockEntity kineticBlockEntity;
     @Shadow
     private CogwheelChainBehaviour cogwheelChainBehaviour;
 

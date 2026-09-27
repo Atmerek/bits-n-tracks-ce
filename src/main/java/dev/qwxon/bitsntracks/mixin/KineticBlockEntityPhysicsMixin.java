@@ -12,6 +12,7 @@ import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
@@ -21,6 +22,8 @@ import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
+import java.util.Map;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -470,7 +473,10 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
                     && this.bnt$suspensionSide != 0
                     && (self.getLevel().getGameTime() + self.getBlockPos().hashCode()) % 20L == 0L
                     && !BntSuspension.stillHolds(self.getLevel(), self.getBlockPos(), self)) {
+                    Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(self.getLevel(), self.getBlockPos());
                     BntSuspension.detach(self.getLevel(), self.getBlockPos(), self, true);
+                    BntChainEngagement.refresh(self.getLevel(), self.getBlockPos(), engagementBefore);
+                    BntBeltRefit.queue(self.getLevel(), self.getBlockPos());
                 }
             }
         }

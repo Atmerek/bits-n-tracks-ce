@@ -7,6 +7,9 @@ import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
+import dev.qwxon.bitsntracks.index.BitsNTracksItems;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -27,6 +30,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -92,6 +97,16 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
                 ? new ItemStack((ItemLike)BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.get())
                 : new ItemStack((ItemLike)BnbKineticBlocks.SMALL_FLANGED_COGWHEEL.get());
         }
+    }
+
+    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        List<ItemStack> drops = super.getDrops(state, params);
+        if (params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof KineticBlockEntityPhysicsAccess access
+            && access.bnt$getSuspensionSide() != 0) {
+            drops = new ArrayList<>(drops);
+            drops.add(new ItemStack(BitsNTracksItems.SUSPENSION_PIECE.get()));
+        }
+        return drops;
     }
 
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {

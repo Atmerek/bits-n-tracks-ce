@@ -237,12 +237,10 @@ public final class BntSuspension {
             return 0;
         }
         int pieces = 1;
-        if (Math.abs(access.bnt$getSuspensionSide()) == BOGIE) {
-            pieces = BOGIE;
-            KineticBlockEntity partner = partner(level, pos, kinetic);
-            if (partner != null) {
-                clear(partner);
-            }
+        KineticBlockEntity partner = partner(level, pos, kinetic);
+        if (partner != null) {
+            clear(partner);
+            pieces++;
         }
         clear(kinetic);
         if (drop) {
