@@ -6,6 +6,7 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -23,6 +24,7 @@ public final class BntSuspension {
     private static final double BOGIE_REACH = 0.5;
     private static final double BOGIE_RISE = 0.5 * Math.tan(Math.PI / 8.0);
     private static final double SAG = 0.1;
+    private static final double LARGE_DRAWN_RADIUS = Math.hypot(16.0, 6.6) / 16.0;
     private static final double MEDIUM_DRAWN_RADIUS = 9.0 * Math.sqrt(2.0) / 16.0;
     private static final double SMALL_DRAWN_RADIUS = 9.0 / 16.0;
     private static final double TINY_DRAWN_RADIUS = 4.0 * Math.sqrt(2.0) / 16.0;
@@ -33,14 +35,17 @@ public final class BntSuspension {
     public static boolean supports(BlockState state) {
         return (state.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())
                 || state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get())
-                || state.is((Block)BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get()))
-            && !BntCogwheelPairing.isWide(state)
+                || state.is((Block)BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get())
+                || state.is((Block)BitsNTracksBlocks.LARGE_HIDDEN_FLANGED_COGWHEEL.get()))
             && state.hasProperty(BlockStateProperties.AXIS)
             && state.getValue(BlockStateProperties.AXIS) != Axis.Y;
     }
 
     public static boolean supportsBogie(BlockState state) {
-        return supports(state) && !state.is((Block)BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get());
+        return supports(state)
+            && !BntCogwheelPairing.isWide(state)
+            && (state.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())
+                || state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get()));
     }
 
     public static boolean hasPiece(BlockEntity be) {
@@ -86,15 +91,22 @@ public final class BntSuspension {
             return 0;
         }
         Axis axis = axis(state);
-        if (isBogie(level.getBlockEntity(pos.offset(step(axis, side))))) {
+        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+        if (isBogie(level.getBlockEntity(pos.offset(step(axis, side))))
+            || partnerPos != null && isBogie(level.getBlockEntity(partnerPos.offset(step(axis, side))))) {
             return 0;
         }
         for (int facing : new int[]{1, -1}) {
-            if (mounted(level, pos, axis, side, facing)) {
+            if (mounted(level, armEnd(level, pos, axis, facing), axis, side, facing)) {
                 return facing;
             }
         }
         return 0;
+    }
+
+    public static BlockPos armEnd(Level level, BlockPos pos, Axis axis, int facing) {
+        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+        return partnerPos != null && partnerPos.equals(rest(pos, axis, facing)) ? partnerPos : pos;
     }
 
     private static boolean mounted(Level level, BlockPos pos, Axis axis, int side, int facing) {
@@ -170,9 +182,10 @@ public final class BntSuspension {
         int side = access.bnt$getSuspensionSide();
         int facing = access.bnt$getSuspensionFacing();
         if (Math.abs(side) == BOGIE) {
-            return partner(level, pos, be) != null && bogieMounted(level, pos.above(), pos.offset(step(axis, side)).above(), axis, facing);
+            return supportsBogie(be.getBlockState()) && partner(level, pos, be) != null
+                && bogieMounted(level, pos.above(), pos.offset(step(axis, side)).above(), axis, facing);
         }
-        return mounted(level, pos, axis, side, facing);
+        return mounted(level, armEnd(level, pos, axis, facing), axis, side, facing);
     }
 
     public static boolean sharesPivot(Level level, BlockPos pos, Axis axis, int side) {
@@ -211,11 +224,31 @@ public final class BntSuspension {
     }
 
     public static void attach(KineticBlockEntity kinetic, int side, int facing) {
-        if (kinetic instanceof KineticBlockEntityPhysicsAccess access) {
-            access.bnt$setSuspension(side, facing);
-            kinetic.setChanged();
-            kinetic.sendData();
+        for (KineticBlockEntity cog : withWidePartner(kinetic)) {
+            if (cog instanceof KineticBlockEntityPhysicsAccess access) {
+                access.bnt$setSuspension(side, facing);
+                cog.setChanged();
+                cog.sendData();
+            }
         }
+    }
+
+    public static boolean heldByWidePartner(BlockEntity be) {
+        Level level = be.getLevel();
+        if (level == null || !(be instanceof KineticBlockEntityPhysicsAccess access) || Math.abs(access.bnt$getSuspensionSide()) == BOGIE) {
+            return false;
+        }
+        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, be.getBlockPos());
+        return partnerPos != null && level.getBlockEntity(partnerPos) instanceof KineticBlockEntityPhysicsAccess partner
+            && partner.bnt$getSuspensionSide() != 0;
+    }
+
+    private static List<KineticBlockEntity> withWidePartner(KineticBlockEntity kinetic) {
+        Level level = kinetic.getLevel();
+        BlockPos partnerPos = level == null ? null : BntCogwheelPairing.partnerPos(level, kinetic.getBlockPos());
+        return partnerPos != null && level.getBlockEntity(partnerPos) instanceof KineticBlockEntity partner
+            ? List.of(kinetic, partner)
+            : List.of(kinetic);
     }
 
     public static void attachBogie(KineticBlockEntity kinetic, KineticBlockEntity partner, int toward, int facing) {
@@ -241,6 +274,12 @@ public final class BntSuspension {
         if (partner != null) {
             clear(partner);
             pieces++;
+        } else if (Math.abs(access.bnt$getSuspensionSide()) != BOGIE) {
+            for (KineticBlockEntity cog : withWidePartner(kinetic)) {
+                if (cog != kinetic && ((KineticBlockEntityPhysicsAccess)cog).bnt$getSuspensionSide() != 0) {
+                    clear(cog);
+                }
+            }
         }
         clear(kinetic);
         if (drop) {
@@ -306,8 +345,9 @@ public final class BntSuspension {
             return 0.0;
         }
         Axis axis = axis(be.getBlockState());
+        BlockPos end = armEnd(level, be.getBlockPos(), axis, ((KineticBlockEntityPhysicsAccess)be).bnt$getSuspensionFacing());
         for (int cells = 1; cells <= 2; cells++) {
-            if (facingPiece(level, be.getBlockPos().offset(step(axis, side).multiply(cells)), axis, -side)) {
+            if (facingPiece(level, end.offset(step(axis, side).multiply(cells)), axis, -side)) {
                 return cells * 0.5;
             }
         }
@@ -325,6 +365,7 @@ public final class BntSuspension {
 
     private static double drawnRadius(BlockState state) {
         return CogwheelSizeHelper.isTiny(state.getBlock()) ? TINY_DRAWN_RADIUS
+            : CogwheelSizeHelper.isLarge(state.getBlock()) ? LARGE_DRAWN_RADIUS
             : CogwheelSizeHelper.isMedium(state.getBlock()) ? MEDIUM_DRAWN_RADIUS
             : SMALL_DRAWN_RADIUS;
     }

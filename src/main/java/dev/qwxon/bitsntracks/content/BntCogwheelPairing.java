@@ -4,6 +4,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBeha
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.Set;
@@ -96,6 +97,9 @@ public final class BntCogwheelPairing {
         to.bnt$setMaxAirExtension(from.bnt$getMaxAirExtension());
         for (BntTuning setting : BntTuning.values()) {
             to.bnt$setTuning(setting, from.bnt$getTuning(setting));
+        }
+        if (Math.abs(from.bnt$getSuspensionSide()) != BntSuspension.BOGIE && Math.abs(to.bnt$getSuspensionSide()) != BntSuspension.BOGIE) {
+            to.bnt$setSuspension(from.bnt$getSuspensionSide(), from.bnt$getSuspensionFacing());
         }
     }
 

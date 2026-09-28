@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
@@ -101,8 +102,10 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
 
     protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         List<ItemStack> drops = super.getDrops(state, params);
-        if (params.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof KineticBlockEntityPhysicsAccess access
-            && access.bnt$getSuspensionSide() != 0) {
+        BlockEntity be = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+        if (be instanceof KineticBlockEntityPhysicsAccess access
+            && access.bnt$getSuspensionSide() != 0
+            && !BntSuspension.heldByWidePartner(be)) {
             drops = new ArrayList<>(drops);
             drops.add(new ItemStack(BitsNTracksItems.SUSPENSION_PIECE.get()));
         }

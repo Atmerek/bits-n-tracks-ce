@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -35,6 +36,10 @@ public final class BntSuspensionPieceRenderer {
             BntBogieRenderer.renderAttached(be, partialTicks, ms, buffer, light, overlay);
             return;
         }
+        if (be.getLevel() != null && !BntSuspension.armEnd(
+            be.getLevel(), be.getBlockPos(), BntSuspension.axis(be.getBlockState()), access.bnt$getSuspensionFacing()).equals(be.getBlockPos())) {
+            return;
+        }
         Vec3 cog = CENTRE.add(HiddenCogwheelCompat.getModelTranslation(be, partialTicks));
         draw(ms.last(), buffer.getBuffer(RenderType.entityCutout(TEXTURE)), be, cog,
             access.bnt$getSuspensionSide(), access.bnt$getSuspensionFacing(), SOLID, light, overlay);
@@ -54,10 +59,12 @@ public final class BntSuspensionPieceRenderer {
     ) {
         var axis = BntSuspension.axis(be.getBlockState());
         Vec3 across = BntSuspension.across(axis);
+        BlockPos end = be.getLevel() == null ? be.getBlockPos() : BntSuspension.armEnd(be.getLevel(), be.getBlockPos(), axis, facing);
+        Vec3 shift = Vec3.atLowerCornerOf(end.subtract(be.getBlockPos()));
         double seat = CogwheelSizeHelper.getVisualVerticalOffset(be.getBlockState().getBlock());
-        Vec3 pivot = CENTRE.add(0.0, seat + BntSuspension.PIVOT, 0.0).add(across.scale(side * BntSuspension.PIVOT));
-        boolean holder = side > 0 || be.getLevel() == null || !BntSuspension.sharesPivot(be.getLevel(), be.getBlockPos(), axis, side);
-        draw(pose, consumer, cog, pivot, across, BntSuspension.along(axis), side, facing, holder, color, light, overlay);
+        Vec3 pivot = CENTRE.add(shift).add(0.0, seat + BntSuspension.PIVOT, 0.0).add(across.scale(side * BntSuspension.PIVOT));
+        boolean holder = side > 0 || be.getLevel() == null || !BntSuspension.sharesPivot(be.getLevel(), end, axis, side);
+        draw(pose, consumer, cog.add(shift), pivot, across, BntSuspension.along(axis), side, facing, holder, color, light, overlay);
     }
 
     private static void draw(
