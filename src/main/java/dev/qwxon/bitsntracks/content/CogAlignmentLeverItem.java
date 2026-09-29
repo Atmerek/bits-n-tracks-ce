@@ -161,18 +161,22 @@ public class CogAlignmentLeverItem extends Item {
                                 }
                             }
                             for (BlockPos nodePos : Set.copyOf(moved)) {
-                                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntityPhysicsAccess nodeAccess
-                                    && BntSuspension.partner(level, nodePos, level.getBlockEntity(nodePos)) instanceof KineticBlockEntity partner
-                                    && moved.add(partner.getBlockPos())) {
-                                    ((KineticBlockEntityPhysicsAccess)partner).bnt$setAlignmentOffsetY(nodeAccess.bnt$getAlignmentOffsetY());
+                                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntityPhysicsAccess nodeAccess) {
+                                    for (KineticBlockEntity cog : BntSuspension.bogieCogs(level, nodePos)) {
+                                        if (moved.add(cog.getBlockPos())) {
+                                            ((KineticBlockEntityPhysicsAccess)cog).bnt$setAlignmentOffsetY(nodeAccess.bnt$getAlignmentOffsetY());
+                                        }
+                                    }
                                 }
                             }
                         } else if (moveAxis != null) {
                             shiftAxis(access, moveAxis, delta, limit, BntSuspension.isBogie(be));
-                            if (BntSuspension.partner(level, pos, be) instanceof KineticBlockEntity partner) {
-                                ((KineticBlockEntityPhysicsAccess)partner).bnt$setAlignmentOffsetY(access.bnt$getAlignmentOffsetY());
-                                partner.setChanged();
-                                partner.sendData();
+                            for (KineticBlockEntity cog : BntSuspension.bogieCogs(level, pos)) {
+                                if (cog != be) {
+                                    ((KineticBlockEntityPhysicsAccess)cog).bnt$setAlignmentOffsetY(access.bnt$getAlignmentOffsetY());
+                                    cog.setChanged();
+                                    cog.sendData();
+                                }
                             }
                         }
 
@@ -249,14 +253,17 @@ public class CogAlignmentLeverItem extends Item {
         for (BlockPos nodePos : positions) {
             BlockEntity nodeBe = level.getBlockEntity(nodePos);
             if (!seen.contains(nodePos) && BntSuspension.partner(level, nodePos, nodeBe) instanceof KineticBlockEntity partner) {
-                seen.add(nodePos);
-                seen.add(partner.getBlockPos());
+                List<KineticBlockEntity> cogs = BntSuspension.bogieCogs(level, nodePos);
+                for (KineticBlockEntity cog : cogs) {
+                    seen.add(cog.getBlockPos());
+                }
                 double current = BntSuspension.bogieSpread(nodeBe);
                 double next = Mth.clamp(current + outward, BntSuspension.closestBogieSpread(nodeBe.getBlockState()), limit);
                 if (Math.abs(next - current) >= 1.0E-4) {
                     BntSuspension.spreadBogie((KineticBlockEntity)nodeBe, partner, next);
-                    spread.add(nodePos);
-                    spread.add(partner.getBlockPos());
+                    for (KineticBlockEntity cog : cogs) {
+                        spread.add(cog.getBlockPos());
+                    }
                 }
             }
         }
@@ -304,8 +311,8 @@ public class CogAlignmentLeverItem extends Item {
             if (partnerPos != null) {
                 result.add(partnerPos);
             }
-            if (BntSuspension.partner(level, nodePos, level.getBlockEntity(nodePos)) instanceof KineticBlockEntity bogie) {
-                result.add(bogie.getBlockPos());
+            for (KineticBlockEntity cog : BntSuspension.bogieCogs(level, nodePos)) {
+                result.add(cog.getBlockPos());
             }
         }
 

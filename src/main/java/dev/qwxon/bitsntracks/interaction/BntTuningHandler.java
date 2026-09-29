@@ -62,8 +62,8 @@ public final class BntTuningHandler {
             if (partnerPos != null) {
                 positions.add(partnerPos);
             }
-            if (BntSuspension.partner(level, nodePos, level.getBlockEntity(nodePos)) instanceof KineticBlockEntity bogie) {
-                positions.add(bogie.getBlockPos());
+            for (KineticBlockEntity cog : BntSuspension.bogieCogs(level, nodePos)) {
+                positions.add(cog.getBlockPos());
             }
         }
 

@@ -6,6 +6,7 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,6 +21,7 @@ import net.minecraft.world.phys.Vec3;
 
 public final class BntSuspension {
     public static final int BOGIE = 2;
+    public static final int WIDE_BOGIE = 3;
     public static final double PIVOT = 0.5;
     private static final double BOGIE_REACH = 0.5;
     private static final double BOGIE_RISE = 0.5 * Math.tan(Math.PI / 8.0);
@@ -42,8 +44,15 @@ public final class BntSuspension {
     }
 
     public static boolean supportsBogie(BlockState state) {
+        return pairable(state) && !BntCogwheelPairing.isWide(state);
+    }
+
+    public static boolean supportsWideBogie(BlockState state) {
+        return pairable(state) && BntCogwheelPairing.isWide(state);
+    }
+
+    private static boolean pairable(BlockState state) {
         return supports(state)
-            && !BntCogwheelPairing.isWide(state)
             && (state.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())
                 || state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get()));
     }
@@ -56,7 +65,11 @@ public final class BntSuspension {
     }
 
     public static boolean isBogie(BlockEntity be) {
-        return hasPiece(be) && Math.abs(((KineticBlockEntityPhysicsAccess)be).bnt$getSuspensionSide()) == BOGIE;
+        return hasPiece(be) && Math.abs(((KineticBlockEntityPhysicsAccess)be).bnt$getSuspensionSide()) >= BOGIE;
+    }
+
+    public static boolean isWideBogie(BlockEntity be) {
+        return hasPiece(be) && Math.abs(((KineticBlockEntityPhysicsAccess)be).bnt$getSuspensionSide()) == WIDE_BOGIE;
     }
 
     public static boolean canCarry(BlockEntity be) {
@@ -67,7 +80,7 @@ public final class BntSuspension {
     }
 
     public static boolean canPair(BlockEntity be) {
-        return canCarry(be) && supportsBogie(be.getBlockState());
+        return canCarry(be) && pairable(be.getBlockState());
     }
 
     public static Axis axis(BlockState state) {
@@ -126,11 +139,20 @@ public final class BntSuspension {
     public static int towards(Level level, BlockPos from, BlockPos to) {
         BlockState state = level.getBlockState(from);
         BlockState other = level.getBlockState(to);
-        if (!supportsBogie(state) || !supportsBogie(other) || axis(state) != axis(other)) {
+        boolean wide = supportsWideBogie(state) && supportsWideBogie(other);
+        if (!wide && !(supportsBogie(state) && supportsBogie(other)) || axis(state) != axis(other)) {
             return 0;
         }
         Axis axis = axis(state);
-        return to.equals(from.offset(step(axis, 1))) ? 1 : to.equals(from.offset(step(axis, -1))) ? -1 : 0;
+        int toward = to.equals(from.offset(step(axis, 1))) ? 1 : to.equals(from.offset(step(axis, -1))) ? -1 : 0;
+        if (toward != 0 && wide) {
+            BlockPos fromHalf = BntCogwheelPairing.partnerPos(level, from);
+            BlockPos toHalf = BntCogwheelPairing.partnerPos(level, to);
+            if (fromHalf == null || toHalf == null || !toHalf.equals(fromHalf.offset(step(axis, toward)))) {
+                return 0;
+            }
+        }
+        return toward;
     }
 
     public static int bogieFacing(Level level, BlockPos pos, int toward) {
@@ -141,27 +163,51 @@ public final class BntSuspension {
         Axis axis = axis(be.getBlockState());
         BlockPos partnerPos = pos.offset(step(axis, toward));
         BlockEntity partner = level.getBlockEntity(partnerPos);
-        if (!canPair(partner) || axis(partner.getBlockState()) != axis
+        if (!canPair(partner) || towards(level, pos, partnerPos) != toward
             || CogwheelSizeHelper.isTiny(be.getBlockState().getBlock()) != CogwheelSizeHelper.isTiny(partner.getBlockState().getBlock())) {
             return 0;
         }
-        if (facingPiece(level, pos.offset(step(axis, -toward)), axis, toward)
-            || facingPiece(level, partnerPos.offset(step(axis, toward)), axis, -toward)) {
-            return 0;
+        for (BlockPos half : station(level, pos)) {
+            if (!canCarry(level.getBlockEntity(half)) || facingPiece(level, half.offset(step(axis, -toward)), axis, toward)) {
+                return 0;
+            }
         }
-        BlockPos cell = pos.above();
-        BlockPos partnerCell = partnerPos.above();
+        for (BlockPos half : station(level, partnerPos)) {
+            if (!canCarry(level.getBlockEntity(half)) || facingPiece(level, half.offset(step(axis, toward)), axis, -toward)) {
+                return 0;
+            }
+        }
         for (int facing : new int[]{1, -1}) {
-            if (holds(level, cell, axis, facing) || holds(level, partnerCell, axis, facing)) {
+            if (heldAtEnd(level, pos, partnerPos, axis, facing)) {
                 return facing;
             }
         }
-        return hangs(level, cell) || hangs(level, partnerCell) ? 1 : 0;
+        return hangsOver(level, pos, partnerPos) ? 1 : 0;
     }
 
-    private static boolean bogieMounted(Level level, BlockPos cell, BlockPos partnerCell, Axis axis, int facing) {
-        return holds(level, cell, axis, facing) || holds(level, partnerCell, axis, facing)
-            || hangs(level, cell) || hangs(level, partnerCell);
+    private static boolean bogieMounted(Level level, BlockPos pos, BlockPos partnerPos, Axis axis, int facing) {
+        return heldAtEnd(level, pos, partnerPos, axis, facing) || hangsOver(level, pos, partnerPos);
+    }
+
+    private static boolean heldAtEnd(Level level, BlockPos pos, BlockPos partnerPos, Axis axis, int facing) {
+        return holds(level, armEnd(level, pos, axis, facing).above(), axis, facing)
+            || holds(level, armEnd(level, partnerPos, axis, facing).above(), axis, facing);
+    }
+
+    private static boolean hangsOver(Level level, BlockPos pos, BlockPos partnerPos) {
+        for (BlockPos station : new BlockPos[]{pos, partnerPos}) {
+            for (BlockPos half : station(level, station)) {
+                if (hangs(level, half.above())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static List<BlockPos> station(Level level, BlockPos pos) {
+        BlockPos half = BntCogwheelPairing.partnerPos(level, pos);
+        return half == null ? List.of(pos) : List.of(pos, half);
     }
 
     public static float bogieDrop(BlockEntity be, BlockEntity partner) {
@@ -181,11 +227,21 @@ public final class BntSuspension {
         Axis axis = axis(be.getBlockState());
         int side = access.bnt$getSuspensionSide();
         int facing = access.bnt$getSuspensionFacing();
-        if (Math.abs(side) == BOGIE) {
-            return supportsBogie(be.getBlockState()) && partner(level, pos, be) != null
-                && bogieMounted(level, pos.above(), pos.offset(step(axis, side)).above(), axis, facing);
+        if (Math.abs(side) >= BOGIE) {
+            KineticBlockEntity partner = partner(level, pos, be);
+            boolean whole = Math.abs(side) == WIDE_BOGIE
+                ? supportsWideBogie(be.getBlockState()) && partner != null
+                    && sameStation(level, pos, side) && sameStation(level, partner.getBlockPos(), -side)
+                : supportsBogie(be.getBlockState()) && partner != null;
+            return whole && bogieMounted(level, pos, pos.offset(step(axis, side)), axis, facing);
         }
         return mounted(level, armEnd(level, pos, axis, facing), axis, side, facing);
+    }
+
+    private static boolean sameStation(Level level, BlockPos pos, int side) {
+        BlockPos half = BntCogwheelPairing.partnerPos(level, pos);
+        return half != null && level.getBlockEntity(half) instanceof KineticBlockEntityPhysicsAccess access
+            && access.bnt$getSuspensionSide() == side;
     }
 
     public static boolean sharesPivot(Level level, BlockPos pos, Axis axis, int side) {
@@ -252,33 +308,54 @@ public final class BntSuspension {
     }
 
     public static void attachBogie(KineticBlockEntity kinetic, KineticBlockEntity partner, int toward, int facing) {
-        float drop = bogieDrop(kinetic, partner);
-        for (KineticBlockEntity cog : new KineticBlockEntity[]{kinetic, partner}) {
+        int type = BntCogwheelPairing.isWide(kinetic.getBlockState()) ? WIDE_BOGIE : BOGIE;
+        List<KineticBlockEntity> lead = withWidePartner(kinetic);
+        List<KineticBlockEntity> cogs = new ArrayList<>(lead);
+        cogs.addAll(withWidePartner(partner));
+        float drop = 0.0F;
+        for (KineticBlockEntity cog : cogs) {
+            drop = Math.min(drop, ((KineticBlockEntityPhysicsAccess)cog).bnt$getAlignmentOffsetY());
+        }
+        for (KineticBlockEntity cog : cogs) {
             if (cog instanceof KineticBlockEntityPhysicsAccess access) {
                 access.bnt$setAlignmentOffsetX(0.0F);
                 access.bnt$setAlignmentOffsetY(drop);
                 access.bnt$setAlignmentOffsetZ(0.0F);
-                access.bnt$setSuspension((cog == kinetic ? toward : -toward) * BOGIE, facing);
+                access.bnt$setSuspension((lead.contains(cog) ? toward : -toward) * type, facing);
                 cog.setChanged();
                 cog.sendData();
             }
         }
     }
 
+    public static List<KineticBlockEntity> bogieCogs(Level level, BlockPos pos) {
+        if (!(level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic)) {
+            return List.of();
+        }
+        KineticBlockEntity partner = partner(level, pos, kinetic);
+        if (partner == null) {
+            return List.of(kinetic);
+        }
+        List<KineticBlockEntity> cogs = new ArrayList<>(isWideBogie(kinetic) ? withWidePartner(kinetic) : List.of(kinetic));
+        cogs.addAll(isWideBogie(kinetic) ? withWidePartner(partner) : List.of(partner));
+        return cogs;
+    }
+
     public static int detach(Level level, BlockPos pos, KineticBlockEntity kinetic, boolean drop) {
         if (!(kinetic instanceof KineticBlockEntityPhysicsAccess access) || access.bnt$getSuspensionSide() == 0) {
             return 0;
         }
+        int side = Math.abs(access.bnt$getSuspensionSide());
         int pieces = 1;
+        List<KineticBlockEntity> cogs = new ArrayList<>(side == BOGIE ? List.of(kinetic) : withWidePartner(kinetic));
         KineticBlockEntity partner = partner(level, pos, kinetic);
         if (partner != null) {
-            clear(partner);
             pieces++;
-        } else if (Math.abs(access.bnt$getSuspensionSide()) != BOGIE) {
-            for (KineticBlockEntity cog : withWidePartner(kinetic)) {
-                if (cog != kinetic && ((KineticBlockEntityPhysicsAccess)cog).bnt$getSuspensionSide() != 0) {
-                    clear(cog);
-                }
+            cogs.addAll(side == WIDE_BOGIE ? withWidePartner(partner) : List.of(partner));
+        }
+        for (KineticBlockEntity cog : cogs) {
+            if (cog != kinetic && ((KineticBlockEntityPhysicsAccess)cog).bnt$getSuspensionSide() != 0) {
+                clear(cog);
             }
         }
         clear(kinetic);
@@ -317,7 +394,7 @@ public final class BntSuspension {
             return null;
         }
         int side = ((KineticBlockEntityPhysicsAccess)be).bnt$getSuspensionSide();
-        return Math.abs(side) == BOGIE ? bogieArm(be, side) : arm(be, side);
+        return Math.abs(side) >= BOGIE ? bogieArm(be, side) : arm(be, side);
     }
 
     public static Arm arm(BlockEntity be, int side) {
@@ -384,7 +461,9 @@ public final class BntSuspension {
     }
 
     public static void spreadBogie(KineticBlockEntity kinetic, KineticBlockEntity partner, double spread) {
-        for (KineticBlockEntity cog : new KineticBlockEntity[]{kinetic, partner}) {
+        List<KineticBlockEntity> cogs = new ArrayList<>(withWidePartner(kinetic));
+        cogs.addAll(withWidePartner(partner));
+        for (KineticBlockEntity cog : cogs) {
             if (cog instanceof KineticBlockEntityPhysicsAccess access) {
                 Vec3 across = across(axis(cog.getBlockState()));
                 double offset = -Integer.signum(access.bnt$getSuspensionSide()) * spread;

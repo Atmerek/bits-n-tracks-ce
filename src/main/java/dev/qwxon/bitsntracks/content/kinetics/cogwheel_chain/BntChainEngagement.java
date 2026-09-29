@@ -107,7 +107,7 @@ public final class BntChainEngagement {
                 signature[i * 5 + 1] = access.bnt$getAlignmentOffsetY();
                 signature[i * 5 + 2] = access.bnt$getAlignmentOffsetZ();
                 signature[i * 5 + 3] = access.bnt$getTrackRouteSide();
-                signature[i * 5 + 4] = HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState()) ? 1.0 + BntSuspension.BOGIE + access.bnt$getSuspensionSide() : 0.0;
+                signature[i * 5 + 4] = HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState()) ? 1.0 + BntSuspension.WIDE_BOGIE + access.bnt$getSuspensionSide() : 0.0;
             } else {
                 signature[i * 5 + 3] = -1.0;
             }

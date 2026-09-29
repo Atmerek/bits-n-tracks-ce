@@ -29,10 +29,15 @@ public final class BntBogieRenderer {
     }
 
     public static void renderAttached(KineticBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        if (!(be instanceof KineticBlockEntityPhysicsAccess access) || access.bnt$getSuspensionSide() != BntSuspension.BOGIE || be.getLevel() == null) {
+        if (!(be instanceof KineticBlockEntityPhysicsAccess access) || be.getLevel() == null
+            || access.bnt$getSuspensionSide() != BntSuspension.BOGIE && access.bnt$getSuspensionSide() != BntSuspension.WIDE_BOGIE) {
             return;
         }
         Axis axis = BntSuspension.axis(be.getBlockState());
+        boolean wide = access.bnt$getSuspensionSide() == BntSuspension.WIDE_BOGIE;
+        if (wide && !BntSuspension.armEnd(be.getLevel(), be.getBlockPos(), axis, access.bnt$getSuspensionFacing()).equals(be.getBlockPos())) {
+            return;
+        }
         Vec3 away = BntSuspension.across(axis).scale(-1.0);
         Vec3 lead = BntSuspension.displacement(be, HiddenCogwheelCompat.getHeldVisualDrop(be, partialTicks));
         KineticBlockEntity partner = BntSuspension.partner(be.getLevel(), be.getBlockPos(), be);
@@ -41,26 +46,29 @@ public final class BntBogieRenderer {
         double drop = Math.max(0.0, -access.bnt$getAlignmentOffsetY());
         double spread = away.x * access.bnt$getAlignmentOffsetX() + away.z * access.bnt$getAlignmentOffsetZ();
         BntBogiePose pose = new BntBogiePose(spread + lead.dot(away), lead.y, trailing.dot(away) - spread, trailing.y, drop);
-        draw(ms.last(), buffer.getBuffer(RenderType.entityCutout(TEXTURE)), be, away, access.bnt$getSuspensionFacing(), pose, SOLID, light, overlay);
+        draw(ms.last(), buffer.getBuffer(RenderType.entityCutout(TEXTURE)), be, away, access.bnt$getSuspensionFacing(), wide, Vec3.ZERO, pose, SOLID, light, overlay);
     }
 
     public static void renderGhost(KineticBlockEntity be, int facing, double drop, PoseStack ms, MultiBufferSource buffer) {
-        if (!BntSuspension.supportsBogie(be.getBlockState())) {
+        boolean wide = BntSuspension.supportsWideBogie(be.getBlockState());
+        if (!wide && !BntSuspension.supportsBogie(be.getBlockState()) || be.getLevel() == null) {
             return;
         }
-        Vec3 away = BntSuspension.across(BntSuspension.axis(be.getBlockState())).scale(-1.0);
-        draw(ms.last(), buffer.getBuffer(RenderType.entityTranslucent(TEXTURE)), be, away, facing,
+        Axis axis = BntSuspension.axis(be.getBlockState());
+        Vec3 away = BntSuspension.across(axis).scale(-1.0);
+        Vec3 shift = Vec3.atLowerCornerOf(BntSuspension.armEnd(be.getLevel(), be.getBlockPos(), axis, facing).subtract(be.getBlockPos()));
+        draw(ms.last(), buffer.getBuffer(RenderType.entityTranslucent(TEXTURE)), be, away, facing, wide, wide ? shift : Vec3.ZERO,
             new BntBogiePose(0.0, 0.0, 0.0, 0.0, drop), GHOST, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
     }
 
     private static void draw(
-        PoseStack.Pose pose, VertexConsumer consumer, KineticBlockEntity be, Vec3 away, int facing, BntBogiePose bogie,
-        int color, int light, int overlay
+        PoseStack.Pose pose, VertexConsumer consumer, KineticBlockEntity be, Vec3 away, int facing, boolean wide, Vec3 shift,
+        BntBogiePose bogie, int color, int light, int overlay
     ) {
-        Vec3 depth = BntSuspension.along(BntSuspension.axis(be.getBlockState())).scale(-facing);
-        Vec3 origin = CENTRE.add(0.0, CogwheelSizeHelper.getVisualVerticalOffset(be.getBlockState().getBlock()), 0.0);
+        Vec3 depth = BntSuspension.along(BntSuspension.axis(be.getBlockState())).scale(wide ? facing : -facing);
+        Vec3 origin = CENTRE.add(shift).add(0.0, CogwheelSizeHelper.getVisualVerticalOffset(be.getBlockState().getBlock()), 0.0);
         boolean reverse = away.dot(UP.cross(depth)) < 0.0;
-        float[] quads = BntBogieModel.QUADS;
+        float[] quads = wide ? BntWideBogieModel.QUADS : BntBogieModel.QUADS;
         Vec3[] corners = new Vec3[4];
         float[] us = new float[4];
         float[] vs = new float[4];

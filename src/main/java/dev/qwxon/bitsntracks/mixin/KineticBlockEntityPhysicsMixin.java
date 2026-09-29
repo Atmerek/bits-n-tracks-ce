@@ -429,7 +429,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     @Override
     public void bnt$setSuspension(int side, int facing) {
         boolean attached = side != 0 && facing != 0;
-        this.bnt$suspensionSide = attached ? Mth.clamp(side, -BntSuspension.BOGIE, BntSuspension.BOGIE) : 0;
+        this.bnt$suspensionSide = attached ? Mth.clamp(side, -BntSuspension.WIDE_BOGIE, BntSuspension.WIDE_BOGIE) : 0;
         this.bnt$suspensionFacing = attached ? Integer.signum(facing) : 0;
         this.bnt$springImpulse = 0.0;
     }

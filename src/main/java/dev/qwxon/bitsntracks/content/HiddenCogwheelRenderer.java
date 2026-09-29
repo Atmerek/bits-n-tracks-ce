@@ -7,6 +7,7 @@ import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
 import dev.qwxon.bitsntracks.content.suspension.BntBogieRenderer;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceRenderer;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.createmod.catnip.render.SuperByteBuffer;
@@ -38,6 +39,9 @@ public class HiddenCogwheelRenderer extends KineticBlockEntityRenderer<KineticBl
     protected void renderSafe(KineticBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         if (!(be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isHiddenByLever())) {
             BlockState renderState = HiddenCogwheelCompat.toVisibleRenderState(be.getBlockState(), be);
+            if (renderState != null && BntSuspension.isWideBogie(be) && renderState.hasProperty(BntCogwheelPairing.WIDE)) {
+                renderState = renderState.setValue(BntCogwheelPairing.WIDE, BntWideSide.NONE);
+            }
             if (renderState != null) {
                 SuperByteBuffer model = this.getRotatedModel(be, renderState);
                 ms.pushPose();
