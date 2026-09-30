@@ -28,6 +28,7 @@ public final class BntPonderScenes {
             .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::tracks);
 
         helper.forComponents(BitsNTracksItems.COG_ALIGNMENT_LEVER.getId())
-            .addStoryBoard("bob", BntBobScenes::collisions);
+            .addStoryBoard("bob", BntBobScenes::collisions)
+            .addStoryBoard("bob", BntBobScenes::customizing);
     }
 }

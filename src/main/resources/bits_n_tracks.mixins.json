@@ -38,6 +38,7 @@
         "BntCreativeModeInventoryScreenMixin",
         "BntItemPickerMenuMixin",
         "BntGameRendererPickMixin",
+        "PonderSceneTransformMixin",
         "compat.IrisHandRendererMixin",
         "accessor.CreativeModeInventoryScreenAccessor"
     ],

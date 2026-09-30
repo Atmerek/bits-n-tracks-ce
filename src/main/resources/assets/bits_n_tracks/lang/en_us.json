@@ -272,5 +272,14 @@
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_6": "§7You §7can §7do §7that §7by §7left-clicking §7a §7flanged §7cogwheel §7with §7the §7Cog §7Alignment §7Lever",
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_7": "After every cogwheel you want to have collision has been enabled, you can assemble your contraption and observe how it behaves!",
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_8": "Now when you power the track...",
-    "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_9": "Your vehicle will move!"
+    "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_9": "Your vehicle will move!",
+
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.header": "Customizing tracks with the C.A.L.",
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_1": "There are many things Bob likes about his tracks, and one of them is being able to do whatever he wants with them.",
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_2": "In fact. There's everything §lyou§r want to customize your tracks with.",
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_3": "First thing you can do, is §emove §ealready-placed §ecogwheels §ehowever §eyou §ewant §ethem§r.",
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_4": "§7You §7can §7shift §7cogwheels §7up §7to §716 §7pixels, §7in §7all §7directions",
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_5": "Secondly, you can decide §ewhat §eway §ethe §etrack §ewraps §earound §eit§r.",
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_6": "By selecting what side the belts wraps around of, the routing is switched from §aautomatic§r to §emanual",
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_7": "Just look at how happy Bob is to have all this freedom."
 }

@@ -1,0 +1,28 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": false,
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "bits_n_tracks:industrial_belt"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "N": {
+      "tag": "c:nuggets/iron"
+    }
+  },
+  "pattern": [
+    "BIB",
+    "N N",
+    "BIB",
+    "N N",
+    "BIB"
+  ],
+  "result": {
+    "count": 6,
+    "id": "bits_n_tracks:tank_tread"
+  },
+  "show_notification": false
+}

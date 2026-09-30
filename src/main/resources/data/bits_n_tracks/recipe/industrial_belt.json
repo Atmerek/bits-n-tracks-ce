@@ -5,16 +5,17 @@
     "B": {
       "item": "create:belt_connector"
     },
-    "I": {
-      "item": "create:iron_sheet"
+    "N": {
+      "tag": "c:nuggets/iron"
     }
   },
   "pattern": [
-    "II",
-    "BB"
+    " B ",
+    "NNN",
+    " B "
   ],
   "result": {
-    "count": 1,
+    "count": 2,
     "id": "bits_n_tracks:industrial_belt"
   }
 }
