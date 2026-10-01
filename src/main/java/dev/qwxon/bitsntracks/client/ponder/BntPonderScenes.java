@@ -25,10 +25,18 @@ public final class BntPonderScenes {
         helper.forComponents(
                 BitsNTracksItems.TANK_TREAD.getId(),
                 BitsNTracksItems.INDUSTRIAL_BELT.getId())
-            .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::tracks);
+            .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::tracks)
+            .addStoryBoard("bob", BntBobScenes::tension);
 
         helper.forComponents(BitsNTracksItems.COG_ALIGNMENT_LEVER.getId())
             .addStoryBoard("bob", BntBobScenes::collisions)
-            .addStoryBoard("bob", BntBobScenes::customizing);
+            .addStoryBoard("bob", BntBobScenes::customizing)
+            .addStoryBoard("bob", BntBobScenes::tension)
+            .addStoryBoard("bob_obstacle", BntSuspensionScenes::singleArm)
+            .addStoryBoard("bob_bogie", BntSuspensionScenes::bogie);
+
+        helper.forComponents(BitsNTracksItems.SUSPENSION_PIECE.getId())
+            .addStoryBoard("bob_obstacle", BntSuspensionScenes::singleArm)
+            .addStoryBoard("bob_bogie", BntSuspensionScenes::bogie);
     }
 }

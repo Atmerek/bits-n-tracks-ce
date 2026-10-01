@@ -52,7 +52,8 @@ public class BntCreativeTabHelper {
             new ItemStack((ItemLike)BitsNTracksBlocks.QWXONN_HEAD.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.ATMEREK_HEAD.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.CUBESTER_HEAD.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.ALESRR_HEAD.get())
+            new ItemStack((ItemLike)BitsNTracksBlocks.ALESRR_HEAD.get()),
+            new ItemStack((ItemLike)BitsNTracksBlocks.SPECIAL_THANKS_HEAD.get())
         )) {
             displayItems.add(itemx);
             searchItems.add(itemx);

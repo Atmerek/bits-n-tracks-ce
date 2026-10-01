@@ -11,7 +11,6 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelCh
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.createmod.catnip.math.Pointing;
@@ -267,35 +266,6 @@ public final class BntFlangedCogwheelScenes {
         scene.world().modifyBlocks(partners, state -> withWideSide(state, BntWideSide.POSITIVE), false);
         scene.world().showSection(partners, Direction.SOUTH);
         scene.idle(25);
-        caption(scene, "By using the Cog Alignment Lever on a run of track...");
-        scene.addKeyframe();
-
-        Vec3 wideRun = run.add(0.0, 0.0, -0.5);
-        ItemStack lever = BitsNTracksItems.COG_ALIGNMENT_LEVER.asStack();
-        Vec3 lowerRun = util.vector().of(4.5, 1.4, 4.5);
-        List<TextWindowElement> labels = new ArrayList<>();
-        int[] durations = new int[19];
-        for (int i = 0; i < durations.length; i++) {
-            int percent = Math.abs(i - 9) * 10 + 10;
-            labels.add(percentLabel(builder, percent, lowerRun));
-            durations[i] = i == 0 ? 10 : i == 9 ? 38 : i == 18 ? 33 : 8;
-        }
-        scene.addInstruction(new BntLabelSequenceInstruction(labels, durations));
-        scene.overlay().showControls(wideRun, Pointing.DOWN, 95).rightClick().whileSneaking().withItem(lever);
-        scene.idle(10);
-        for (int step = 9; step >= 1; step--) {
-            tension(scene, wheels, step / 10.0F);
-            scene.idle(8);
-        }
-        scene.idle(30);
-        scene.overlay().showControls(wideRun, Pointing.DOWN, 80).rightClick().withItem(lever);
-        for (int step = 2; step <= 10; step++) {
-            tension(scene, wheels, step / 10.0F);
-            scene.idle(8);
-        }
-        scene.idle(25);
-        caption(scene, "You can change the tension of the system");
-        caption(scene, "This directly influences the track's behaviour, ranging from suspension implications to grip and terrain adaptability");
         scene.markAsFinished();
     }
 
@@ -375,10 +345,6 @@ public final class BntFlangedCogwheelScenes {
             chain.putString("chain_type", type.toString());
             chain.putString("returned_item", BuiltInRegistries.ITEM.getKey(belt.getItem()).toString());
         }, true);
-    }
-
-    static void tension(CreateSceneBuilder scene, Selection wheels, float tension) {
-        scene.world().modifyBlockEntityNBT(wheels, KineticBlockEntity.class, tag -> tag.putFloat("BntBeltTension", tension), false);
     }
 
     static PonderInstruction startFacing(float yaw) {

@@ -216,7 +216,9 @@ public final class BntPhysicsEvents {
     public static double getHeldRenderExtension(KineticBlockEntity kbe, float partialTick) {
         double staged = BntPonderPhysics.wheelDrop(kbe);
         if (!Double.isNaN(staged)) {
-            return staged;
+            return staged <= 0.0
+                ? staged
+                : Math.max(0.0, staged - BntBeltHold.at(kbe.getLevel(), kbe) - BntTrackFloor.at(kbe.getLevel(), kbe));
         }
 
         Level level = kbe.getLevel();
@@ -391,6 +393,16 @@ public final class BntPhysicsEvents {
         return contact;
     }
 
+    public static double armSpring(double stiffness) {
+        return BntPhysicsTuning.SUSPENSION_GAIN * BntPhysicsTuning.SPRING_SCALE * BntPhysicsTuning.WHEEL_SPRING
+            * stiffness * ARM_SPRING_RATE / LEVEL_FOUR_DENOMINATOR;
+    }
+
+    public static double armDamping(double stiffness, double damping) {
+        return BntPhysicsTuning.SUSPENSION_GAIN * BntPhysicsTuning.DAMPING_SCALE * BntPhysicsTuning.WHEEL_DAMPING
+            * damping * Math.sqrt(stiffness * ARM_SPRING_RATE) * DAMPING_CALIBRATION;
+    }
+
     /** How far a cogwheel has to rise from its seat for its contact circle to rest on the terrain. */
     private record Reach(double rise, BntPhysicsEvents.TerrainCastResult cast, boolean grounded) {
     }
@@ -497,6 +509,58 @@ public final class BntPhysicsEvents {
             return false;
         }
 
+        double gravity = DimensionPhysicsData.getGravity(level).length();
+        Vector3d fall = DimensionPhysicsData.getGravity(level).mul(timeStep);
+        Vector3d deltaVelocity = subLevel.logicalPose().transformNormalInverse(fall);
+        return solveSupport(contacts, massData.getMass(), inverseMass, inverseInertia, centerOfMass, gravity, deltaVelocity,
+            wheelShare, beltShare, timeStep);
+    }
+
+    public record SupportContact(
+        Vector3dc point, double speed, boolean arm, double rise, double up, double down, double ride,
+        double stiffness, double damping, double previousPush
+    ) {
+    }
+
+    /** The support solver for a body outside Sable: contacts push along +Y, and each contact's push comes back. */
+    public static double[] solveSupport(
+        List<SupportContact> supports, double mass, Matrix3dc inverseInertia, Vector3dc centerOfMass, double gravity, double timeStep
+    ) {
+        List<BntPhysicsEvents.WheelContact> contacts = new ArrayList<>(supports.size());
+        for (SupportContact support : supports) {
+            BntPhysicsEvents.WheelContact contact = new BntPhysicsEvents.WheelContact();
+            contact.forcePoint = new Vector3d(support.point());
+            contact.normal = new Vector3d(0.0, 1.0, 0.0);
+            contact.localVelocity = new Vector3d(0.0, support.speed(), 0.0);
+            contact.verticalSpeed = support.speed();
+            contact.previousPush = support.previousPush();
+            contact.stiffness = support.stiffness();
+            contact.damping = support.damping();
+            contact.arm = support.arm();
+            contact.loaded = true;
+            if (support.arm()) {
+                contact.compression = support.rise();
+                contact.overTravel = Math.max(0.0, support.rise() - support.up());
+                contact.armRise = Mth.clamp(support.rise(), -support.down(), support.up()) - support.ride();
+            } else {
+                contact.penetration = support.rise();
+                contact.compression = support.rise();
+            }
+            contacts.add(contact);
+        }
+        solveSupport(contacts, mass, 1.0 / mass, inverseInertia, centerOfMass, gravity,
+            new Vector3d(0.0, -gravity * timeStep, 0.0), contacts.size(), 0, timeStep);
+        double[] pushes = new double[contacts.size()];
+        for (int i = 0; i < pushes.length; i++) {
+            pushes[i] = contacts.get(i).push;
+        }
+        return pushes;
+    }
+
+    private static boolean solveSupport(
+        List<BntPhysicsEvents.WheelContact> contacts, double mass, double inverseMass, Matrix3dc inverseInertia,
+        Vector3dc centerOfMass, double gravity, Vector3d deltaVelocity, double wheelShare, int beltShare, double timeStep
+    ) {
         int count = contacts.size();
         double[] inverseEffectiveMass = new double[count];
         double[] softness = new double[count];
@@ -507,13 +571,12 @@ public final class BntPhysicsEvents {
         double[] tolerance = new double[count];
         Vector3d[] levers = new Vector3d[count];
         Vector3d[] responses = new Vector3d[count];
-        double gravity = DimensionPhysicsData.getGravity(level).length();
 
         for (int i = 0; i < count; i++) {
             BntPhysicsEvents.WheelContact contact = contacts.get(i);
             double massShare = contact.belt
                 ? contact.normalMass / Math.max(beltShare, 1)
-                : massData.getMass() / wheelShare;
+                : mass / wheelShare;
             double gain;
             double springStrength;
             double dampingStrength;
@@ -532,10 +595,8 @@ public final class BntPhysicsEvents {
                 bottomed = false;
             } else if (contact.arm) {
                 gain = BntPhysicsTuning.SUSPENSION_GAIN * massShare;
-                double springRate = contact.stiffness * ARM_SPRING_RATE;
-                springStrength = gain * BntPhysicsTuning.SPRING_SCALE * BntPhysicsTuning.WHEEL_SPRING * springRate / LEVEL_FOUR_DENOMINATOR;
-                dampingStrength = gain * BntPhysicsTuning.DAMPING_SCALE * BntPhysicsTuning.WHEEL_DAMPING * contact.damping
-                    * Math.sqrt(springRate) * DAMPING_CALIBRATION;
+                springStrength = massShare * armSpring(contact.stiffness);
+                dampingStrength = massShare * armDamping(contact.stiffness, contact.damping);
                 compression = springStrength > 0.0
                     ? massShare * gravity / springStrength + contact.armRise + contact.overTravel
                     : 0.0;
@@ -587,8 +648,6 @@ public final class BntPhysicsEvents {
             tolerance[i] = WAKE_SHARE * massShare * gravity * timeStep;
         }
 
-        Vector3d fall = DimensionPhysicsData.getGravity(level).mul(timeStep);
-        Vector3d deltaVelocity = subLevel.logicalPose().transformNormalInverse(fall);
         Vector3d deltaAngularVelocity = new Vector3d();
         Vector3d pointVelocity = new Vector3d();
 

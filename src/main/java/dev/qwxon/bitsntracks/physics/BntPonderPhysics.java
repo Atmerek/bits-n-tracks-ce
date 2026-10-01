@@ -21,6 +21,8 @@ public final class BntPonderPhysics {
         double groundAt(double x, double z);
 
         double epoch();
+
+        long tick();
     }
 
     public static void setStage(Level level, Stage stage) {
@@ -29,6 +31,11 @@ public final class BntPonderPhysics {
 
     public static Stage stage(Level level) {
         return level == null || STAGES.isEmpty() ? null : STAGES.get(level);
+    }
+
+    public static long clock(Level level) {
+        Stage stage = stage(level);
+        return stage == null ? level.getGameTime() : stage.tick();
     }
 
     public static double wheelDrop(BlockEntity be) {

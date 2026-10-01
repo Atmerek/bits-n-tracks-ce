@@ -52,7 +52,7 @@ public final class BntBeltHold {
             return at(level, twin);
         }
 
-        long now = level.getGameTime();
+        long now = BntPonderPhysics.clock(level);
         if (access.bnt$getBeltHoldTick() == now) {
             return access.bnt$getBeltHold();
         }

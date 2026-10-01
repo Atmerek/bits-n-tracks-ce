@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "item": "create:stressometer"
+    },
+    "N": {
+      "tag": "c:nuggets/zinc"
+    },
+    "P": {
+      "item": "create:sturdy_sheet"
+    },
+    "R": {
+      "item": "create:shaft"
+    }
+  },
+  "pattern": [
+    " G ",
+    "NPN",
+    " R "
+  ],
+  "result": {
+    "count": 1,
+    "id": "bits_n_tracks:suspension_tool"
+  }
+}

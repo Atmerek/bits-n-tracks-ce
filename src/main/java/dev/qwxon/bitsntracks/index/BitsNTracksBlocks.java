@@ -134,6 +134,7 @@ public class BitsNTracksBlocks {
     public static final BlockEntry<BntHeadBlock> ATMEREK_HEAD = head("atmerek_head");
     public static final BlockEntry<BntHeadBlock> CUBESTER_HEAD = head("cubester_head");
     public static final BlockEntry<BntHeadBlock> ALESRR_HEAD = head("alesrr_head");
+    public static final BlockEntry<BntHeadBlock> SPECIAL_THANKS_HEAD = head("special_thanks_head");
 
     private static BlockEntry<BntHeadBlock> head(String name) {
         return ((BlockBuilder)BitsNTracks.REGISTRATE

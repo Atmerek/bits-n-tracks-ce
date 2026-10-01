@@ -41,7 +41,7 @@ public final class BntTrackFloor {
             return at(level, twin);
         }
 
-        long now = level.getGameTime();
+        long now = BntPonderPhysics.clock(level);
         if (access.bnt$getTrackLiftTick() == now) {
             return access.bnt$getTrackLift();
         }

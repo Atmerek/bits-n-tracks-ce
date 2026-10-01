@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "N": {
+      "tag": "c:nuggets/zinc"
+    },
+    "P": {
+      "item": "create:sturdy_sheet"
+    },
+    "R": {
+      "item": "create:shaft"
+    },
+    "S": {
+      "item": "simulated:spring"
+    }
+  },
+  "pattern": [
+    "PS ",
+    "SR ",
+    "  N"
+  ],
+  "result": {
+    "count": 1,
+    "id": "bits_n_tracks:suspension_piece"
+  }
+}

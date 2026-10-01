@@ -40,7 +40,8 @@ public class BitsNTracksBlockEntityTypes {
             BitsNTracksBlocks.QWXONN_HEAD,
             BitsNTracksBlocks.ATMEREK_HEAD,
             BitsNTracksBlocks.CUBESTER_HEAD,
-            BitsNTracksBlocks.ALESRR_HEAD
+            BitsNTracksBlocks.ALESRR_HEAD,
+            BitsNTracksBlocks.SPECIAL_THANKS_HEAD
         )
         .renderer(() -> BntHeadRenderer::new)
         .register();
