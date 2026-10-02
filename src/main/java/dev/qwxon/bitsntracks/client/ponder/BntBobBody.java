@@ -41,6 +41,7 @@ final class BntBobBody {
         double ride;
         double rise;
         double hold;
+        double floor;
         double push;
         double shown;
         double shownBefore;
@@ -157,7 +158,7 @@ final class BntBobBody {
                 Vec3 point = world(wheel.at(wheel.rise)).add(0.0, -wheel.radius, 0.0);
                 double speed = heaveRate + rollRate * (point.x - pivot.x) - pitchRate * (point.z - pivot.z);
                 supports.add(new BntPhysicsEvents.SupportContact(new Vector3d(point.x, point.y, point.z), speed,
-                    wheel.arm != null, rise - wheel.hold, wheel.upCap, wheel.downCap, wheel.ride, STIFFNESS, DAMPING, wheel.push));
+                    wheel.arm != null, rise + wheel.floor - wheel.hold, wheel.upCap, wheel.downCap, wheel.ride, STIFFNESS, DAMPING, wheel.push));
                 order.add(wheel);
             }
         }

@@ -171,8 +171,9 @@ public final class BntBeltContacts {
         for (int i = 0; i < count; i++) {
             PathedCogwheelNode node = nodes.get(i);
             BlockPos nodePos = controllerPos.offset(node.localPos());
-            Vec3 centre = BntBeltLinks.drawnCentre(level, controllerPos, node);
             BlockEntity nodeBe = level.getBlockEntity(nodePos);
+            Vec3 centre = BntBeltLinks.drawnCentre(level, controllerPos, node)
+                .add(0.0, nodeBe instanceof KineticBlockEntity wheel ? BntTrackFloor.at(level, wheel) : 0.0, 0.0);
             support[i] = BntTuning.SUPPORT.scale(nodeBe);
             planarU[i] = BntChainGeometry.planarX(centre, axis);
             planarV[i] = BntChainGeometry.planarY(centre, axis);
