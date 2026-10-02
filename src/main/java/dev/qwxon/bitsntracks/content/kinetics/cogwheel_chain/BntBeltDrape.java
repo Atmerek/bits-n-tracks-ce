@@ -55,6 +55,12 @@ public final class BntBeltDrape {
     public static double[] profile(
         Vec3 runStart, Vec3 along, int probes, double sag, boolean underside
     ) {
+        return profile(runStart, along, probes, sag, underside, true);
+    }
+
+    public static double[] profile(
+        Vec3 runStart, Vec3 along, int probes, double sag, boolean underside, boolean clear
+    ) {
         double[] ground = new double[probes + 1];
         Arrays.fill(ground, NO_SURFACE);
 
@@ -67,7 +73,7 @@ public final class BntBeltDrape {
             if (stage != null || subLevel != null) {
                 Pose3dc pose = subLevel == null ? null
                     : level.isClientSide ? BntClientCompat.drawnPose(subLevel) : subLevel.logicalPose();
-                double clearance = BntPhysicsTuning.getBeltSurfaceClearance();
+                double clearance = clear ? BntPhysicsTuning.getBeltSurfaceClearance() : 0.0;
                 for (int probe = 1; probe < probes; probe++) {
                     Vec3 chord = runStart.add(along.scale((double)probe / probes));
                     double raw = stage != null

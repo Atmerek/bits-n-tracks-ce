@@ -118,14 +118,16 @@ public final class BntBeltHold {
         for (int i = 0; i < count; i++) {
             PathedCogwheelNode node = nodes.get(i);
             BlockEntity be = level.getBlockEntity(controllerPos.offset(node.localPos()));
+            double floor = 0.0;
             if (be instanceof KineticBlockEntity kinetic) {
-                drops[i] = Math.max(0.0, BntPhysicsEvents.getRawRenderExtension(kinetic, 1.0F));
+                floor = BntTrackFloor.at(level, kinetic);
+                drops[i] = Math.max(0.0, BntPhysicsEvents.getRawRenderExtension(kinetic, 1.0F) - floor);
             }
             if (be instanceof KineticBlockEntityPhysicsAccess access) {
                 holds[i] = access.bnt$getBeltHold();
                 powered[i] = access.bnt$isPhysicsEnabled();
             }
-            centres[i] = BntBeltLinks.drawnCentre(level, controllerPos, node).add(0.0, holds[i], 0.0);
+            centres[i] = BntBeltLinks.drawnCentre(level, controllerPos, node).add(0.0, holds[i] + floor, 0.0);
             xs[i] = BntChainGeometry.planarX(centres[i], axis);
             ys[i] = BntChainGeometry.planarY(centres[i], axis);
             radii[i] = BntChainGeometry.trackRadius(node);

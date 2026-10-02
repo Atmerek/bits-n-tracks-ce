@@ -4,6 +4,7 @@ import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.physics.BntBeltHold;
+import dev.qwxon.bitsntracks.physics.BntTrackFloor;
 import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.ArrayList;
@@ -371,7 +372,9 @@ final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
 
     private void readHolds(PonderLevel level) {
         for (BntBobBody.Wheel wheel : wheels.values()) {
-            wheel.hold = level.getBlockEntity(wheel.pos) instanceof KineticBlockEntity kinetic ? BntBeltHold.at(level, kinetic) : 0.0;
+            KineticBlockEntity kinetic = level.getBlockEntity(wheel.pos) instanceof KineticBlockEntity found ? found : null;
+            wheel.hold = kinetic == null ? 0.0 : BntBeltHold.at(level, kinetic);
+            wheel.floor = kinetic == null ? 0.0 : BntTrackFloor.at(level, kinetic);
         }
     }
 

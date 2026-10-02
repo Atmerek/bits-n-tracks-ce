@@ -13,11 +13,13 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSolver;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
 /** The track surface a wheel stands on, bridging what a taut run crosses. */
@@ -96,6 +98,7 @@ public final class BntTrackFloor {
         double[] heights = new double[count];
         int[] sides = new int[count];
         boolean[] powered = new boolean[count];
+        double[] room = new double[count];
         double averageY = 0.0;
 
         for (int i = 0; i < count; i++) {
@@ -107,8 +110,9 @@ public final class BntTrackFloor {
             xs[i] = BntChainGeometry.planarX(centre, axis);
             ys[i] = BntChainGeometry.planarY(centre, axis);
             sides[i] = node.side();
-            powered[i] = level.getBlockEntity(controllerPos.offset(node.localPos()))
-                instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled();
+            BlockEntity be = level.getBlockEntity(controllerPos.offset(node.localPos()));
+            powered[i] = be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled();
+            room[i] = powered[i] && be instanceof KineticBlockEntity wheel ? room(wheel) : 0.0;
             heights[i] = centre.y;
             averageY += centre.y;
         }
@@ -122,6 +126,7 @@ public final class BntTrackFloor {
             BntBeltLinks.at(level, controllerPos), BntBeltTension.at(level, controllerPos), path);
 
         Vec3 base = Vec3.atLowerCornerOf(controllerPos);
+        double[] lifts = new double[count];
         for (int i = 0; i < count; i++) {
             int previous = (i - 1 + count) % count;
             int next = (i + 1) % count;
@@ -150,16 +155,64 @@ public final class BntTrackFloor {
             int lower = Mth.clamp((int)Math.floor(sample), 0, probes);
             int upper = Math.min(lower + 1, probes);
             double carried = Mth.lerp(sample - lower, shape[lower], shape[upper]);
-            double lift = Mth.lerp(reach, from.y, seats[next].y) + carried - seats[i].y - wrapped(parked[previous], parked[i], parked[next]);
-            if (lift <= FLAT) {
+            lifts[i] = Mth.lerp(reach, from.y, seats[next].y) + carried - seats[i].y - wrapped(parked[previous], parked[i], parked[next]);
+        }
+
+        double[] over = new double[count];
+        for (int i = 0; i < count; i++) {
+            int next = (i + 1) % count;
+            if (next == i || room[i] <= FLAT && room[next] <= FLAT || heights[i] > averageY + FLAT || heights[next] > averageY + FLAT) {
                 continue;
             }
+            riseOver(seats[i].subtract(base), seats[next].subtract(base), room[i] > FLAT, room[next] > FLAT, surplus, path, over, i, next);
+        }
+        for (int i = 0; i < count; i++) {
+            lifts[i] = Math.max(lifts[i], Math.min(over[i], room[i]));
+        }
 
-            if (level.getBlockEntity(controllerPos.offset(nodes.get(i).localPos()))
-                instanceof KineticBlockEntityPhysicsAccess access) {
-                access.bnt$setTrackLift(now, Math.min(lift, BntPhysicsTuning.getBeltMaxHold()));
+        for (int i = 0; i < count; i++) {
+            if (powered[i] && lifts[i] > FLAT
+                && level.getBlockEntity(controllerPos.offset(nodes.get(i).localPos())) instanceof KineticBlockEntityPhysicsAccess access) {
+                access.bnt$setTrackLift(now, Math.min(lifts[i], BntPhysicsTuning.getBeltMaxHold()));
             }
         }
+    }
+
+    /** Lift the wheels at either end of a bottom run need for the run to pass over what stands under it. */
+    private static void riseOver(
+        Vec3 start, Vec3 end, boolean startFree, boolean endFree, double surplus, double path, double[] lifts, int first, int second
+    ) {
+        Vec3 along = end.subtract(start);
+        double span = along.length();
+        if (span < FLAT) {
+            return;
+        }
+
+        int probes = Mth.clamp((int)Math.round(span / BntPhysicsTuning.getBeltNodeSpacing()), 2, MAX_PROBES);
+        double[] shape = BntBeltDrape.profile(start, along, probes, BntBeltTension.sagFromSurplus(span, surplus * span / path), true, false);
+        for (int probe = 1; probe < probes; probe++) {
+            double push = shape[probe];
+            if (push <= FLAT) {
+                continue;
+            }
+            double far = (double)probe / probes;
+            double near = 1.0 - far;
+            double share = (startFree ? near * near : 0.0) + (endFree ? far * far : 0.0);
+            if (share < FLAT) {
+                continue;
+            }
+            if (startFree) {
+                lifts[first] = Math.max(lifts[first], push * near / share);
+            }
+            if (endFree) {
+                lifts[second] = Math.max(lifts[second], push * far / share);
+            }
+        }
+    }
+
+    private static double room(KineticBlockEntity wheel) {
+        BntSuspension.Arm arm = BntSuspension.arm(wheel);
+        return arm == null ? 0.0 : Math.max(0.0, arm.upTravel(BntSuspension.travel(wheel)) + BntPhysicsEvents.getRawRenderExtension(wheel, 1.0F));
     }
 
     /** How far a parked wheel already presses the run below its neighbours, which the loop was fitted around. */
