@@ -1,5 +1,6 @@
 package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 
+import com.kipti.bnb.content.kinetics.cogwheel_chain.render.ChainQuadBuilder.VertexEmitter;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.List;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -84,7 +85,7 @@ public final class BntTankTread {
      */
     public record Target(
         VertexConsumer consumer, Matrix4f pose, Vector3f normal, int lightFrom, int lightTo, Vec3 relTo, Vec3 eye,
-        boolean links
+        boolean links, BntTrackSink sink
     ) {
     }
 
@@ -97,23 +98,26 @@ public final class BntTankTread {
             return;
         }
 
-        Segment segment = new Segment(target, source, destination, frameTopOutward ? 1.0 : -1.0);
-        double end = start + span;
-        long first = (long)Math.floor(start / CELL) - 1L;
-        long last = (long)Math.ceil(end / CELL) + 1L;
+        double rate = target.sink() == null ? 0.0 : target.sink().scrollRate();
+        double ahead = target.sink() == null ? 0.0 : Math.abs(rate) * target.sink().reach();
+        Segment segment = new Segment(target, source, destination, frameTopOutward ? 1.0 : -1.0, rate / span);
+        double from = rate < 0.0 ? start - ahead : start;
+        double to = rate > 0.0 ? start + span + ahead : start + span;
+        long first = (long)Math.floor(from / CELL) - 1L;
+        long last = (long)Math.ceil(to / CELL) + 1L;
 
         for (long plate = first; plate <= last; plate++) {
             double base = plate * CELL;
             for (Part part : wide ? WIDE : NARROW) {
                 if (!part.link() || target.links()) {
-                    place(segment, start, span, base + part.at(), part);
+                    place(segment, start, span, from, to, base + part.at(), part);
                 }
             }
         }
     }
 
-    private static void place(Segment segment, double offset, double length, double at, Part part) {
-        if (at < offset || at >= offset + length) {
+    private static void place(Segment segment, double offset, double length, double from, double to, double at, Part part) {
+        if (at < from || at >= to) {
             return;
         }
 
@@ -140,7 +144,7 @@ public final class BntTankTread {
 
         Vec3 seat = centre.add(across.scale(part.across())).add(thick.scale(part.up()));
         box(segment, seat, across.scale(part.halfWidth()), thick.scale(part.halfThick()),
-            forward.scale(part.halfLength()), part.uv());
+            forward.scale(part.halfLength()), part.uv(), along);
     }
 
     private static Vec3 sourceCentre(List<Vec3> points) {
@@ -152,8 +156,12 @@ public final class BntTankTread {
         return length < 1.0E-9 ? Vec3.ZERO : v.scale(1.0 / length);
     }
 
-    private static void box(Segment segment, Vec3 c, Vec3 w, Vec3 t, Vec3 l, float[][] uv) {
+    private static void box(Segment segment, Vec3 c, Vec3 w, Vec3 t, Vec3 l, float[][] uv, double along) {
         Target target = segment.target;
+        if (target.sink() != null) {
+            target.sink().box(uv, c, w, t, l, segment.lightAt(c), segment.drift, along, segment.alongRate);
+            return;
+        }
         int visible = visibleFaces(target.eye(), c, w, t, l);
         if (visible == 0) {
             return;
@@ -269,6 +277,40 @@ public final class BntTankTread {
         }
     }
 
+    public static void unitBox(float[][] uv, boolean mirrored, VertexEmitter out) {
+        double[] cx = new double[8];
+        double[] cy = new double[8];
+        double[] cz = new double[8];
+        for (int corner = 0; corner < 8; corner++) {
+            cx[corner] = (corner & 4) != 0 ? 1.0 : -1.0;
+            cy[corner] = (corner & 2) != 0 ? 1.0 : -1.0;
+            cz[corner] = (corner & 1) != 0 ? 1.0 : -1.0;
+        }
+        for (int face = 0; face < 6; face++) {
+            int[] corners = FACE_CORNERS[face];
+            int a = corners[0];
+            int b = corners[1];
+            int d = corners[2];
+            int e = corners[3];
+            double nx = (cy[b] - cy[a]) * (cz[e] - cz[a]) - (cz[b] - cz[a]) * (cy[e] - cy[a]);
+            double ny = (cz[b] - cz[a]) * (cx[e] - cx[a]) - (cx[b] - cx[a]) * (cz[e] - cz[a]);
+            double nz = (cx[b] - cx[a]) * (cy[e] - cy[a]) - (cy[b] - cy[a]) * (cx[e] - cx[a]);
+            double ox = (cx[a] + cx[d]) * 0.5;
+            double oy = (cy[a] + cy[d]) * 0.5;
+            double oz = (cz[a] + cz[d]) * 0.5;
+            boolean flip = (nx * ox + ny * oy + nz * oz < 0.0) != mirrored;
+            float[] faceUv = uv[face];
+            int turn = (int)faceUv[4];
+            for (int i = 0; i < 4; i++) {
+                int corner = flip ? corners[3 - i] : corners[i];
+                int st = (i + turn) & 3;
+                float u = st < 2 ? faceUv[0] : faceUv[2];
+                float v = st == 0 || st == 3 ? faceUv[1] : faceUv[3];
+                out.emit((float)cx[corner], (float)cy[corner], (float)(cz[corner] * 0.5 + 0.5), u, v, 0.0F, 1.0F, 0.0F);
+            }
+        }
+    }
+
     private static int lerpPackedLight(int from, int to, float t) {
         int block = (int)Mth.lerp(t, from & 65535, to & 65535);
         int sky = (int)Mth.lerp(t, from >> 16 & 65535, to >> 16 & 65535);
@@ -296,6 +338,8 @@ public final class BntTankTread {
         private final double facing;
         private final Vec3 forward;
         private final double lengthSqr;
+        private final double alongRate;
+        private final Vec3 drift;
         private final Vector3f scratch = new Vector3f();
         private final double[] cx = new double[8];
         private final double[] cy = new double[8];
@@ -304,13 +348,16 @@ public final class BntTankTread {
         private final float[] py = new float[8];
         private final float[] pz = new float[8];
 
-        private Segment(Target target, List<Vec3> source, List<Vec3> destination, double facing) {
+        private Segment(Target target, List<Vec3> source, List<Vec3> destination, double facing, double alongRate) {
             this.target = target;
             this.source = source;
             this.destination = destination;
             this.facing = facing;
-            this.forward = unit(sourceCentre(destination).subtract(sourceCentre(source)));
+            Vec3 run = sourceCentre(destination).subtract(sourceCentre(source));
+            this.forward = unit(run);
             this.lengthSqr = target.relTo().lengthSqr();
+            this.alongRate = alongRate;
+            this.drift = run.scale(alongRate);
         }
 
         /** Light blended along the segment at the box's middle, as the vertices each were before. */

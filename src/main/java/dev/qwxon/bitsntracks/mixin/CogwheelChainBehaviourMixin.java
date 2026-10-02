@@ -9,6 +9,7 @@ import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntVisualized;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
@@ -18,6 +19,7 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -172,6 +174,11 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         cancellable = true
     )
     private void bnt$forceDynamicRenderer(CallbackInfoReturnable<Boolean> cir) {
+        BlockEntity be = ((CogwheelChainBehaviour)(Object)this).getBlockEntity();
+        if (BntVisualized.ownType(be)) {
+            cir.setReturnValue(!BntVisualized.drawn(be));
+            return;
+        }
         if (this.bnt$isTrackModel() || HiddenCogwheelCompat.shouldForceDynamicRenderer((CogwheelChainBehaviour)(Object)this)) {
             cir.setReturnValue(true);
         }

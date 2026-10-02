@@ -28,20 +28,27 @@ public class HiddenCogwheelRenderer extends KineticBlockEntityRenderer<KineticBl
         return BntClientCompat.trackViewDistance();
     }
     protected RenderType getRenderType(KineticBlockEntity be, BlockState state) {
-        return !state.is((Block)BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.get())
-                && !state.is((Block)BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.get())
-                && !state.is((Block)BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.get())
-                && !state.is((Block)BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.get())
-            ? super.getRenderType(be, state)
-            : RenderType.cutout();
+        return isIndustrial(state) ? RenderType.cutout() : super.getRenderType(be, state);
+    }
+
+    public static BlockState modelState(KineticBlockEntity be) {
+        BlockState renderState = HiddenCogwheelCompat.toVisibleRenderState(be.getBlockState(), be);
+        if (renderState != null && BntSuspension.isWideBogie(be) && renderState.hasProperty(BntCogwheelPairing.WIDE)) {
+            renderState = renderState.setValue(BntCogwheelPairing.WIDE, BntWideSide.NONE);
+        }
+        return renderState;
+    }
+
+    public static boolean isIndustrial(BlockState state) {
+        return state.is((Block)BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.get())
+            || state.is((Block)BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.get())
+            || state.is((Block)BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.get())
+            || state.is((Block)BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.get());
     }
 
     protected void renderSafe(KineticBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
         if (!(be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isHiddenByLever())) {
-            BlockState renderState = HiddenCogwheelCompat.toVisibleRenderState(be.getBlockState(), be);
-            if (renderState != null && BntSuspension.isWideBogie(be) && renderState.hasProperty(BntCogwheelPairing.WIDE)) {
-                renderState = renderState.setValue(BntCogwheelPairing.WIDE, BntWideSide.NONE);
-            }
+            BlockState renderState = BntVisualized.drawn(be) ? null : modelState(be);
             if (renderState != null) {
                 SuperByteBuffer model = this.getRotatedModel(be, renderState);
                 ms.pushPose();
@@ -50,7 +57,9 @@ public class HiddenCogwheelRenderer extends KineticBlockEntityRenderer<KineticBl
                 renderRotatingBuffer(be, model, ms, buffer.getBuffer(this.getRenderType(be, renderState)), light);
                 ms.popPose();
             }
-            BntSuspensionPieceRenderer.renderAttached(be, partialTicks, ms, buffer, light, overlay);
+            if (!BntVisualized.drawn(be)) {
+                BntSuspensionPieceRenderer.renderAttached(be, partialTicks, ms, buffer, light, overlay);
+            }
             if (BntSuspensionPlacement.previewAt(be.getBlockPos())) {
                 BntSuspensionPieceRenderer.renderGhost(be, BntSuspensionPlacement.side(), BntSuspensionPlacement.facing(), partialTicks, ms, buffer);
             }
