@@ -21,28 +21,21 @@ import org.jetbrains.annotations.Nullable;
 public final class BntTunerGauge {
     public static final float REST_ANGLE = -180.0F;
     public static final float STEP_ANGLE = 30.0F;
-    private static final float HIGH_STOP = 172.0F;
-    private static final float SPRING = 300.0F;
-    private static final float DAMPING = 12.5F;
-    private static final float BOUNCE = 0.35F;
-    private static final float TREMOR = 130.0F;
     private static final float TURN_KICK = 8.0F;
     private static final float PITCH_KICK = 8.0F;
     private static final float LIFT_KICK = 260.0F;
     private static final float LIMIT_KICK = 120.0F;
     private static final double MAX_FRAME = 0.1;
-    private static final double SUBSTEP = 1.0 / 240.0;
 
-    private static float angle = REST_ANGLE;
-    private static float velocity;
+    private static final BntTunerNeedle NEEDLE = new BntTunerNeedle();
     private static float target = REST_ANGLE;
     private static boolean measuring;
     private static boolean held;
     private static long lastNanos = -1L;
-    private static double clock;
     private static float lastTurn;
     private static float lastPitchTurn;
     private static double lastLift;
+    private static float staged = Float.NaN;
 
     private BntTunerGauge() {
     }
@@ -52,8 +45,19 @@ public final class BntTunerGauge {
     }
 
     public static float needleAngle(ItemStack stack) {
+        if (!Float.isNaN(staged)) {
+            return staged;
+        }
         LocalPlayer player = Minecraft.getInstance().player;
-        return held && player != null && stack == player.getMainHandItem() ? angle : REST_ANGLE;
+        return held && player != null && stack == player.getMainHandItem() ? NEEDLE.angle() : REST_ANGLE;
+    }
+
+    public static void stage(float angle) {
+        staged = angle;
+    }
+
+    public static void unstage() {
+        staged = Float.NaN;
     }
 
     @Nullable
@@ -72,15 +76,14 @@ public final class BntTunerGauge {
     }
 
     public static void kick(int direction) {
-        velocity += LIMIT_KICK * Integer.signum(direction);
+        NEEDLE.push(LIMIT_KICK * Integer.signum(direction));
     }
 
     public static void onClientTick(ClientTickEvent.Post event) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || !(player.getMainHandItem().getItem() instanceof SuspensionToolItem)) {
             held = false;
-            angle = REST_ANGLE;
-            velocity = 0.0F;
+            NEEDLE.rest();
             target = REST_ANGLE;
             measuring = false;
             return;
@@ -94,10 +97,10 @@ public final class BntTunerGauge {
         float pitchTurn = player.getXRot() - player.xRotO;
         double lift = player.getDeltaMovement().y;
         if (held) {
-            float radians = angle * Mth.DEG_TO_RAD;
-            velocity += TURN_KICK * (turn - lastTurn) * Mth.cos(radians)
+            float radians = NEEDLE.angle() * Mth.DEG_TO_RAD;
+            NEEDLE.push(TURN_KICK * (turn - lastTurn) * Mth.cos(radians)
                 + PITCH_KICK * (pitchTurn - lastPitchTurn) * Mth.sin(radians)
-                + LIFT_KICK * (float)(lift - lastLift) * Mth.sin(radians);
+                + LIFT_KICK * (float)(lift - lastLift) * Mth.sin(radians));
         }
         lastTurn = turn;
         lastPitchTurn = pitchTurn;
@@ -112,28 +115,6 @@ public final class BntTunerGauge {
         if (!held || Minecraft.getInstance().isPaused()) {
             return;
         }
-
-        double remaining = Math.min(elapsed, MAX_FRAME);
-        while (remaining > 0.0) {
-            double step = Math.min(remaining, SUBSTEP);
-            remaining -= step;
-            clock += step;
-            float tremor = measuring ? TREMOR * tremor(clock) : 0.0F;
-            float acceleration = SPRING * (target - angle) - DAMPING * velocity + tremor;
-            velocity += acceleration * (float)step;
-            angle += velocity * (float)step;
-            if (angle < REST_ANGLE) {
-                angle = REST_ANGLE;
-                velocity = velocity < 0.0F ? -velocity * BOUNCE : velocity;
-            } else if (angle > HIGH_STOP) {
-                angle = HIGH_STOP;
-                velocity = velocity > 0.0F ? -velocity * BOUNCE : velocity;
-            }
-        }
-    }
-
-    private static float tremor(double time) {
-        double tau = Math.PI * 2.0;
-        return (float)(Math.sin(tau * 1.3 * time) + 0.6 * Math.sin(tau * 2.9 * time + 1.1) + 0.4 * Math.sin(tau * 5.3 * time + 2.3));
+        NEEDLE.advance(Math.min(elapsed, MAX_FRAME), target, measuring);
     }
 }

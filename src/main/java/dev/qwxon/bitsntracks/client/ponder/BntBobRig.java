@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.ParrotElement;
 import net.createmod.ponder.api.element.WorldSectionElement;
@@ -25,6 +26,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
@@ -49,6 +51,7 @@ final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
     private static final int ARC_COLOUR = 0xFFD94A;
     private static final float ARC_WIDTH = 1.0F / 32.0F;
     private static final int SETTLE_STEPS = 400;
+    private static final float OUTLINE_WIDTH = 1.0F / 16.0F;
 
     private enum Kind {
         ROW, STEP
@@ -102,6 +105,7 @@ final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
     private int sweepStart = -1;
     private int arcUntil = -1;
     private double arcFace;
+    private AABB outlined;
 
     BntBobRig(SceneBuildingUtil util, Vec3 seat, double rest) {
         this.seat = seat;
@@ -286,6 +290,10 @@ final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
         });
     }
 
+    PonderInstruction outline(AABB box) {
+        return PonderInstruction.simple(scene -> outlined = box);
+    }
+
     PonderInstruction sweep(int keep, double face) {
         return PonderInstruction.simple(scene -> {
             sweepStart = tick;
@@ -315,6 +323,7 @@ final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
         holdFrom = null;
         sweepStart = -1;
         arcUntil = -1;
+        outlined = null;
         arcs.clear();
         for (BntBobBody.Wheel wheel : wheels.values()) {
             wheel.arm = null;
@@ -406,6 +415,11 @@ final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
             sweep();
         }
         drawArcs(scene);
+        if (outlined != null) {
+            Vec3 centre = outlined.getCenter();
+            scene.getOutliner().chaseAABB(outlined, outlined.move(body.world(centre).subtract(centre)))
+                .colored(PonderPalette.GREEN.getColor()).lineWidth(OUTLINE_WIDTH);
+        }
         pose(scene, false);
         moveRoad();
         moveObstacles();

@@ -6,10 +6,13 @@ import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
+import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
+import java.util.List;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
+import net.createmod.ponder.api.element.InputElementBuilder;
 import net.createmod.ponder.api.element.ParrotElement;
 import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.level.PonderLevel;
@@ -40,6 +43,11 @@ public final class BntSuspensionScenes {
     private static final double ARM_FACE = 7.03;
     private static final double BOGIE_FACE = 7.13;
     private static final Vec3 EAST_TRACK = new Vec3(6.5, 2.75, 5.0);
+    private static final Vec3 WEST_TRACK = new Vec3(2.5, 2.75, 4.5);
+    private static final float WEST_TURN = -55.0F;
+    private static final float ACROSS_TURN = 180.0F;
+    private static final int MODE_TICKS = 30;
+    private static final int TUNE_TICKS = 8;
 
     private BntSuspensionScenes() {
     }
@@ -292,6 +300,118 @@ public final class BntSuspensionScenes {
         stop(scene, util, resting);
         scene.idle(10);
         scene.markAsFinished();
+    }
+
+    public static void configuring(SceneBuilder builder, SceneBuildingUtil util) {
+        CreateSceneBuilder scene = new CreateSceneBuilder(builder);
+        scene.title("suspension_tool_configuring", "Configuring suspension with the Suspension Tool");
+        scene.configureBasePlate(0, 0, 9);
+        scene.scaleSceneView(0.9F);
+
+        ItemStack tool = BitsNTracksItems.SUSPENSION_TOOL.asStack();
+        double rest = BntBobScenes.restingDrop();
+        Vec3 resting = new Vec3(0.0, -rest, 0.0);
+        double seat = CogwheelSizeHelper.getVisualVerticalOffset(BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get());
+        BlockPos assembler = util.grid().at(4, 5, 7);
+        BlockPos first = util.grid().at(2, 2, 3);
+        List<BlockPos> bogie = List.of(util.grid().at(6, 2, 3), util.grid().at(6, 2, 4));
+        Vec3 westTop = new Vec3(2.0, 3.0 + seat, 3.5).add(resting);
+        Vec3 eastTop = new Vec3(7.0, 3.0 + seat, 4.0).add(resting);
+
+        BntBobRig rig = new BntBobRig(util, BntBobScenes.SEAT, rest);
+        BntToolDial dial = new BntToolDial();
+        Selection whole = BntBobScenes.wholeOf(BntBobScenes.rowsOf(util, BntBobScenes.blocksOfBob(builder)));
+        ElementLink<WorldSectionElement> plate = scene.world().showIndependentSectionImmediately(util.select().fromTo(0, 0, 0, 8, 0, 8));
+        ElementLink<WorldSectionElement> bob = scene.world().showIndependentSectionImmediately(whole);
+        ElementLink<ParrotElement> parrot = scene.special().createBirb(BntBobScenes.SEAT, BntBobScenes.Perched::new);
+        rig.bind(bob, plate, parrot);
+        scene.world().modifyBlockEntity(assembler, BlockEntity.class, be -> BntBobScenes.flickLever(be, true));
+        scene.addInstruction(rig.driver());
+        for (int z = 3; z <= 6; z++) {
+            BlockPos wheel = util.grid().at(2, 2, z);
+            scene.world().modifyBlockEntity(wheel, KineticBlockEntity.class, be -> mount(be, 1, 1));
+            scene.addInstruction(rig.suspend(wheel));
+        }
+        for (int lead = 4; lead <= 6; lead += 2) {
+            pair(scene, rig, util.grid().at(6, 2, lead), util.grid().at(6, 2, lead - 1), -1);
+        }
+        scene.addInstruction(rig.settle());
+        scene.addInstruction(dial.place());
+        scene.idle(20);
+
+        BntBobScenes.caption(scene, "Any mod that has suspension of course has to add a way to tune it based on your needs, "
+            + "and this is what the Suspension Tool is useful for", 110);
+
+        scene.addInstruction(BntPonderCamera.glide(WEST_TRACK.add(resting), TRACK_ZOOM, ZOOM_TILT, WEST_TURN, 35));
+        scene.idle(45);
+        BntBobScenes.caption(scene, "The Suspension Tool has " + BntBobScenes.tint(ChatFormatting.YELLOW, "4 different modes") + ChatFormatting.RESET
+            + " and " + BntBobScenes.tint(ChatFormatting.GOLD, "different groupings") + ChatFormatting.RESET + ".", 100);
+
+        scene.addInstruction(dial.raise(true));
+        scene.idle(45);
+        scene.addInstruction(rig.outline(new AABB(first)));
+        scene.addInstruction(dial.look(first));
+        scene.idle(40);
+
+        BntBobScenes.caption(scene, "Visual aid on the tool's gauge will tell you the magnitude shift for each setting.", 90);
+
+        for (int i = 1; i <= BntTuning.values().length; i++) {
+            scene.overlay().showControls(westTop, Pointing.DOWN, 15).leftClick().whileSneaking().withItem(tool);
+            scene.idle(6);
+            scene.addInstruction(dial.mode(BntTuning.byIndex(i)));
+            scene.idle(MODE_TICKS);
+        }
+        scene.idle(10);
+
+        scene.overlay().showText(120).text("By right-clicking you increase, shift-right-click to decrease the value.");
+        scene.addKeyframe();
+        scene.idle(30);
+        tuneThrough(scene, dial, List.of(first), westTop, tool);
+
+        scene.addInstruction(rig.outline(null));
+        scene.addInstruction(dial.look(null));
+        scene.addInstruction(BntPonderCamera.glide(EAST_TRACK.add(resting), TRACK_ZOOM, 0.0F, ACROSS_TURN, 50));
+        scene.idle(60);
+        scene.addInstruction(rig.outline(new AABB(bogie.get(0)).minmax(new AABB(bogie.get(1)))));
+        scene.addInstruction(dial.look(bogie.get(0)));
+        scene.idle(30);
+        scene.overlay().showText(120).text("Changing the values of a VDSS, changes the individual values of BOTH cogwheels.");
+        scene.addKeyframe();
+        scene.idle(30);
+        tuneThrough(scene, dial, bogie, eastTop, tool);
+
+        scene.addInstruction(rig.outline(null));
+        scene.addInstruction(dial.look(null));
+        scene.idle(20);
+        scene.addInstruction(dial.raise(false));
+        scene.addInstruction(BntPonderCamera.glideHome(-ZOOM_TILT, -(WEST_TURN + ACROSS_TURN), 40));
+        scene.idle(50);
+
+        BntBobScenes.caption(scene, "Suspension values are saved on the cogwheel, even after a suspension piece has been removed", 100);
+        scene.markAsFinished();
+    }
+
+    private static void tuneThrough(CreateSceneBuilder scene, BntToolDial dial, List<BlockPos> cogs, Vec3 at, ItemStack tool) {
+        tune(scene, dial, cogs, at, tool, BntTuning.DEFAULT, BntTuning.MAX);
+        scene.idle(20);
+        tune(scene, dial, cogs, at, tool, BntTuning.MAX, BntTuning.MIN);
+        scene.idle(20);
+        tune(scene, dial, cogs, at, tool, BntTuning.MIN, BntTuning.DEFAULT);
+        scene.idle(30);
+    }
+
+    private static void tune(CreateSceneBuilder scene, BntToolDial dial, List<BlockPos> cogs, Vec3 at, ItemStack tool, int from, int to) {
+        int step = Integer.signum(to - from);
+        InputElementBuilder controls = scene.overlay().showControls(at, Pointing.DOWN, Math.abs(to - from) * TUNE_TICKS + 10)
+            .rightClick().withItem(tool);
+        if (step < 0) {
+            controls.whileSneaking();
+        }
+        scene.idle(6);
+        for (int value = from + step; value != to + step; value += step) {
+            scene.addInstruction(dial.tune(cogs, value));
+            scene.idle(TUNE_TICKS);
+        }
     }
 
     private static void stop(CreateSceneBuilder scene, SceneBuildingUtil util, Vec3 resting) {

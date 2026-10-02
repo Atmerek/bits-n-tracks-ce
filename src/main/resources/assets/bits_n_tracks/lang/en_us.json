@@ -307,5 +307,13 @@
     "bits_n_tracks.ponder.suspension_piece_bogie.text_3": "The second suspension system involves mounting 2 cogwheels together to form a §ebogie§r.",
     "bits_n_tracks.ponder.suspension_piece_bogie.text_4": "This is the §e§nVertical §e§nDual §e§nSpring §e§nSuspension",
     "bits_n_tracks.ponder.suspension_piece_bogie.text_5": "Differently than the SRDS, the VDSS is stiffer, and offers a similar motion to a §elinear§r than a §erotary§r system, with less pushback and shorter travel.",
-    "bits_n_tracks.ponder.suspension_piece_bogie.text_6": "You might want to consider this over the SRDS when building heavy tracked vehicles with suspension, as the bogie'd setup allows for the load to be split evenly across 2 cogwheels instead of individually"
+    "bits_n_tracks.ponder.suspension_piece_bogie.text_6": "You might want to consider this over the SRDS when building heavy tracked vehicles with suspension, as the bogie'd setup allows for the load to be split evenly across 2 cogwheels instead of individually",
+
+    "bits_n_tracks.ponder.suspension_tool_configuring.header": "Configuring suspension with the Suspension Tool",
+    "bits_n_tracks.ponder.suspension_tool_configuring.text_1": "Any mod that has suspension of course has to add a way to tune it based on your needs, and this is what the Suspension Tool is useful for",
+    "bits_n_tracks.ponder.suspension_tool_configuring.text_2": "The Suspension Tool has §e4 §edifferent §emodes§r and §6different §6groupings§r.",
+    "bits_n_tracks.ponder.suspension_tool_configuring.text_3": "Visual aid on the tool's gauge will tell you the magnitude shift for each setting.",
+    "bits_n_tracks.ponder.suspension_tool_configuring.text_4": "By right-clicking you increase, shift-right-click to decrease the value.",
+    "bits_n_tracks.ponder.suspension_tool_configuring.text_5": "Changing the values of a VDSS, changes the individual values of BOTH cogwheels.",
+    "bits_n_tracks.ponder.suspension_tool_configuring.text_6": "Suspension values are saved on the cogwheel, even after a suspension piece has been removed"
 }

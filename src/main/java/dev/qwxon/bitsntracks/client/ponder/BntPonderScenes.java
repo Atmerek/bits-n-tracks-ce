@@ -38,5 +38,8 @@ public final class BntPonderScenes {
         helper.forComponents(BitsNTracksItems.SUSPENSION_PIECE.getId())
             .addStoryBoard("bob_obstacle", BntSuspensionScenes::singleArm)
             .addStoryBoard("bob_bogie", BntSuspensionScenes::bogie);
+
+        helper.forComponents(BitsNTracksItems.SUSPENSION_TOOL.getId())
+            .addStoryBoard("bob_bogie", BntSuspensionScenes::configuring);
     }
 }
