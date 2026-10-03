@@ -31,6 +31,19 @@ public final class BntBeltDrape {
     private BntBeltDrape() {
     }
 
+    public static double[] surfaceKey(Level level, BlockPos origin) {
+        if (level == null || origin == null || !BntPhysicsTuning.isBeltDrapeEnabled()
+            || !(Sable.HELPER.getContaining(level, Vec3.atCenterOf(origin)) instanceof SubLevel subLevel)) {
+            return new double[0];
+        }
+        Pose3dc pose = level.isClientSide ? BntClientCompat.drawnPose(subLevel) : subLevel.logicalPose();
+        return new double[]{
+            pose.position().x(), pose.position().y(), pose.position().z(),
+            pose.orientation().x(), pose.orientation().y(), pose.orientation().z(), pose.orientation().w(),
+            level.getGameTime() / 20L
+        };
+    }
+
     public static boolean canShapeRuns() {
         return BntPhysicsTuning.isBeltDrapeEnabled() || BntPhysicsTuning.getBeltMaxSag() > 0.0;
     }
