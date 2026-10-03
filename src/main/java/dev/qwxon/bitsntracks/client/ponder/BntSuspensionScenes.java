@@ -146,7 +146,13 @@ public final class BntSuspensionScenes {
             .text("It moves in an " + ChatFormatting.YELLOW + "arc" + ChatFormatting.RESET + ", its pivot should be placed "
                 + styled(ChatFormatting.UNDERLINE.toString(), "towards the front of your vehicle"));
         scene.addKeyframe();
-        scene.idle(120);
+        scene.idle(20);
+        scene.overlay().showText(90)
+            .text(BntBobScenes.tint(ChatFormatting.GRAY, "Remember that in order to use the suspension, your cogwheel needs to have it's physics ")
+                + styled(ChatFormatting.GRAY.toString() + ChatFormatting.UNDERLINE, "activated."))
+            .placeNearTarget()
+            .pointAt(new Vec3(7.0, 2.5 + seat, 6.5));
+        scene.idle(100);
 
         scene.addInstruction(restoreBelt(eastController, eastBelt));
         scene.addInstruction(BntPonderCamera.glideHome(-ZOOM_TILT, -ZOOM_TURN, 35));

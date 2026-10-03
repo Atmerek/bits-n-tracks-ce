@@ -299,7 +299,8 @@
     "bits_n_tracks.ponder.suspension_piece_single_arm.text_4": "So let's give Bob a smoother ride to go over the bumps with.",
     "bits_n_tracks.ponder.suspension_piece_single_arm.text_5": "The first type of suspension is a §e§nSingle-arm §e§nRotary §e§nDamper §e§nSuspension",
     "bits_n_tracks.ponder.suspension_piece_single_arm.text_6": "It moves in an §earc§r, its pivot should be placed §ntowards §nthe §nfront §nof §nyour §nvehicle",
-    "bits_n_tracks.ponder.suspension_piece_single_arm.text_7": "§7As §7you §7can §7see, §7with §7the §7suspension §7the §7ride §7is §7much §7more §7pleasant §7for §7Bob",
+    "bits_n_tracks.ponder.suspension_piece_single_arm.text_7": "§7Remember §7that §7in §7order §7to §7use §7the §7suspension, §7your §7cogwheel §7needs §7to §7have §7it's §7physics §7§nactivated.",
+    "bits_n_tracks.ponder.suspension_piece_single_arm.text_8": "§7As §7you §7can §7see, §7with §7the §7suspension §7the §7ride §7is §7much §7more §7pleasant §7for §7Bob",
 
     "bits_n_tracks.ponder.suspension_piece_bogie.header": "Adding suspension on physified cogwheels - VDSS system",
     "bits_n_tracks.ponder.suspension_piece_bogie.text_1": "If the SRDS is not quite your type of movement, there are other kinds of suspension systems you can use in Bits 'n' Tracks.",
