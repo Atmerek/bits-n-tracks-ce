@@ -115,10 +115,6 @@ public interface KineticBlockEntityPhysicsAccess {
 
     void bnt$setBeltHold(long var1, double var3);
 
-    long bnt$getChainStopTick();
-
-    void bnt$setChainStopTick(long var1);
-
     int bnt$getTuning(BntTuning var1);
 
     void bnt$setTuning(BntTuning var1, int var2);

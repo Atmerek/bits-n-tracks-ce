@@ -3,7 +3,7 @@ package dev.qwxon.bitsntracks.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
-import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainStops;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,7 +24,7 @@ public abstract class GeneratingKineticBlockEntityMixin {
         require = 0
     )
     private boolean bnt$stopInsteadOfBreaking(Level level, BlockPos pos, boolean drop, Operation<Boolean> original) {
-        if (BntChainEngagement.stopChainNetwork(level, (GeneratingKineticBlockEntity)(Object)this)) {
+        if (BntChainStops.intercept(level, (GeneratingKineticBlockEntity)(Object)this)) {
             return false;
         }
         return original.call(level, pos, drop);

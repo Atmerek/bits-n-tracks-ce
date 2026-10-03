@@ -6,13 +6,13 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.KineticNetwork;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
-import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
+import dev.qwxon.bitsntracks.mixin.accessor.RotationPropagatorAccessor;
 import dev.qwxon.bitsntracks.physics.BntDebugLog;
 import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
@@ -40,7 +40,7 @@ import net.minecraft.world.phys.Vec3;
 public final class BntChainEngagement {
     private static final float DRIVE_TOLERANCE = 1.0E-3F;
     private static final int MAX_SOURCE_WALK = 256;
-    private static final int STOP_RETRY = 20;
+    private static final float ROUNDING_SPAN = 256.0F * 256.0F;
     private static final double DROP_STEP = 1.0 / 16.0;
 
     /** How long a settled belt layout is held before suspension travel is allowed to redraw it. */
@@ -404,7 +404,7 @@ public final class BntChainEngagement {
             if (!(loadedBlockEntity(level, at) instanceof KineticBlockEntity kinetic)) {
                 continue;
             }
-            for (BlockPos next : neighbours(level, kinetic)) {
+            for (BlockPos next : RotationPropagatorAccessor.bnt$potentialNeighbours(kinetic)) {
                 if (!stopped.contains(next)
                     && loadedBlockEntity(level, next) instanceof KineticBlockEntity driven
                     && at.equals(driven.source)) {
@@ -429,15 +429,6 @@ public final class BntChainEngagement {
         return level.isLoaded(pos) ? level.getBlockEntity(pos) : null;
     }
 
-    private static List<BlockPos> neighbours(Level level, KineticBlockEntity kinetic) {
-        List<BlockPos> around = new ArrayList<>();
-        for (Direction facing : Direction.values()) {
-            around.add(kinetic.getBlockPos().relative(facing));
-        }
-        BlockState state = kinetic.getBlockState();
-        return state.getBlock() instanceof IRotate block ? kinetic.addPropagationLocations(block, state, around) : around;
-    }
-
     /** Asks Create to work the chain's speeds out again from scratch. */
     public static void restore(Level level, Collection<BlockPos> nodes) {
         for (BlockPos nodePos : nodes) {
@@ -455,35 +446,20 @@ public final class BntChainEngagement {
             : null;
     }
 
-    /** Stops a chain's network instead of letting Create break a block in it. */
-    public static boolean stopChainNetwork(Level level, KineticBlockEntity kinetic) {
-        if (level == null || level.isClientSide) {
-            return false;
+    /** Medium ratios have no exact float, so a loop hands speed back a hair fast; within Create's loop tolerance that is no change. */
+    public static float settleConveyed(KineticBlockEntity from, KineticBlockEntity to, float conveyed) {
+        float held = to.getTheoreticalSpeed();
+        if (held == 0.0F || conveyed == held || Math.abs(conveyed - held) > Math.abs(held) / ROUNDING_SPAN) {
+            return conveyed;
         }
-        List<BlockPos> network = chainNetwork(kinetic);
-        if (network == null) {
-            return false;
-        }
-
-        long now = level.getGameTime();
-        boolean standing = false;
-        if (kinetic instanceof KineticBlockEntityPhysicsAccess access) {
-            standing = now - access.bnt$getChainStopTick() < STOP_RETRY;
-            access.bnt$setChainStopTick(now);
-        }
-
-        if (BntDebugLog.enabled()) {
-            BntDebugLog.LOG.info("stopped {} instead of letting Create break it, speed {} network {}",
-                kinetic.getBlockPos().toShortString(), kinetic.getTheoreticalSpeed(), network.size());
-        }
-        Set<BlockPos> stopped = detach(level, network);
-        if (!standing) {
-            restore(level, stopped);
-        }
-        return true;
+        return roundsRatio(from) || roundsRatio(to) ? held : conveyed;
     }
 
-    private static List<BlockPos> chainNetwork(KineticBlockEntity kinetic) {
+    private static boolean roundsRatio(BlockEntity be) {
+        return partOfChain(be) || CogwheelSizeHelper.isMedium(be.getBlockState().getBlock());
+    }
+
+    static List<BlockPos> chainNetwork(KineticBlockEntity kinetic) {
         if (!kinetic.hasNetwork()) {
             return partOfChain(kinetic) ? List.of(kinetic.getBlockPos()) : null;
         }

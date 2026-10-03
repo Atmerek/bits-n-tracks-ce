@@ -23,7 +23,8 @@
         "RenderedChainPathNodeMixin",
         "BntCreativeModeTabMixin",
         "BracketedKineticBlockEntityMixin",
-        "BntUseItemOnRangeMixin"
+        "BntUseItemOnRangeMixin",
+        "accessor.RotationPropagatorAccessor"
     ],
     "client": [
         "CogwheelChainPlacementEffectMixin",
