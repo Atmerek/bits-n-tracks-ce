@@ -9,6 +9,7 @@ import com.kipti.bnb.registry.core.BnbTags.BnbBlockTags;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainMotion;
@@ -363,10 +364,12 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         }
 
         double[] displacements = BntChainMotion.displacementSignature(nodes);
-        double[] signature = Arrays.copyOf(displacements, displacements.length + 2);
+        double[] surface = BntBeltDrape.surfaceKey(level, controllerPos);
+        double[] signature = Arrays.copyOf(displacements, displacements.length + 2 + surface.length);
         signature[displacements.length] = BntBeltTension.at(level, controllerPos);
         BntPonderPhysics.Stage stage = BntPonderPhysics.stage(level);
         signature[displacements.length + 1] = stage == null ? 0.0 : stage.epoch();
+        System.arraycopy(surface, 0, signature, displacements.length + 2, surface.length);
         if (Arrays.equals(signature, this.bnt$builtDisplacements)) {
             return;
         }
