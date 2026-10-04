@@ -96,7 +96,7 @@ public final class BntBeltLinks {
         if (tautLength <= 0.0 || pitch <= 0.0) {
             return UNSET;
         }
-        return Mth.clamp((int)Math.floor(tautLength / pitch + 1.0E-9), 2, MAX_LINKS);
+        return Mth.clamp((int)Math.ceil(tautLength / pitch - 1.0E-9), 2, MAX_LINKS);
     }
 
     /** Slack from the dial, squared so hang moves evenly with the lever, less the pull a taut loop keeps. */

@@ -145,7 +145,7 @@ public final class BntBeltHold {
         double fit = level.getBlockEntity(controllerPos) instanceof KineticBlockEntityPhysicsAccess seat
             ? seat.bnt$getBeltFit()
             : 0.0;
-        double allowance = fit > FLAT ? fit + give : BntBeltLinks.length(links) + BntBeltLinks.pitch() + give;
+        double allowance = fit > FLAT ? fit + give : BntBeltLinks.length(links) + give;
         double excess = links <= BntBeltLinks.UNSET || !Double.isFinite(path) || path >= Double.MAX_VALUE
             ? 0.0
             : path - allowance;
