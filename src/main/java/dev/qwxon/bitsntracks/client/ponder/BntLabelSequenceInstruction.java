@@ -34,7 +34,6 @@ public final class BntLabelSequenceInstruction extends TickingInstruction {
         for (TextWindowElement label : this.labels) {
             scene.addElement(label);
             label.setFade(1.0F);
-            label.setFade(1.0F);
             label.setVisible(false);
         }
     }
