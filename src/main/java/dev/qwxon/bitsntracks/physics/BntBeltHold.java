@@ -156,12 +156,18 @@ public final class BntBeltHold {
             if (centres[i].y > averageY || !powered[i]) {
                 continue;
             }
-            Vec3 toPrevious = centres[(i - 1 + count) % count].subtract(centres[i]);
-            Vec3 toNext = centres[(i + 1) % count].subtract(centres[i]);
-            if (toPrevious.lengthSqr() < FLAT || toNext.lengthSqr() < FLAT) {
+            int previous = (i - 1 + count) % count;
+            int next = (i + 1) % count;
+            double[] in = BntBeltPath.tangent(
+                xs[previous], ys[previous], sides[previous] * radii[previous], xs[i], ys[i], sides[i] * radii[i]);
+            double[] out = BntBeltPath.tangent(
+                xs[i], ys[i], sides[i] * radii[i], xs[next], ys[next], sides[next] * radii[next]);
+            if (in == null || out == null || in[0] < FLAT || out[0] < FLAT) {
                 continue;
             }
-            double slope = Math.min(0.0, GRIP_SLOPE - (toPrevious.normalize().y + toNext.normalize().y));
+            double towardPrevious = -rise(in, xs[previous], ys[previous], xs[i], ys[i], axis);
+            double towardNext = rise(out, xs[i], ys[i], xs[next], ys[next], axis);
+            double slope = Math.min(0.0, GRIP_SLOPE - (towardPrevious + towardNext));
             gradient[i] = slope;
             weight += slope * slope;
         }
@@ -176,6 +182,12 @@ public final class BntBeltHold {
                 access.bnt$setBeltHold(now, lift);
             }
         }
+    }
+
+    private static double rise(double[] run, double fromX, double fromY, double toX, double toY, Axis axis) {
+        double across = toX + run[3] - fromX - run[1];
+        double along = toY + run[4] - fromY - run[2];
+        return BntBeltPath.fromPlanar(across, along, 0.0, axis).y / run[0];
     }
 
     /** Path the runs gain climbing the ground under them. */
