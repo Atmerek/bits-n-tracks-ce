@@ -153,8 +153,19 @@ def installTestMods = tasks.register('installTestMods', Sync) {
     into layout.projectDirectory.dir('run/client/mods')
 }
 
+def installServerTestMods = tasks.register('installServerTestMods', Sync) {
+    group = 'build setup'
+    description = 'Installs extra mods into the dev server for manual testing.'
+    from configurations.testMods
+    into layout.projectDirectory.dir('run/server/mods')
+}
+
 tasks.matching { it.name == 'runClient' }.configureEach {
     dependsOn installTestMods
+}
+
+tasks.matching { it.name == 'runServer' }.configureEach {
+    dependsOn installServerTestMods
 }
 
 def changelogSection = { String version ->
@@ -189,6 +200,7 @@ modrinth {
         required.project 'create'
         required.project 'sable'
         required.project 'create-bits-n-bobs'
+        required.project 'create-aeronautics'
     }
 }
 

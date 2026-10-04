@@ -31,5 +31,5 @@ body:
       options:
         - label: I searched the existing issues and this has not been suggested.
           required: true
-        - label: This belongs in Bits 'n' Tracks rather than in Create, Bits 'n' Bobs or Sable.
+        - label: This belongs in Bits 'n' Tracks rather than in Create, Bits 'n' Bobs, Sable or Create Aeronautics.
           required: true

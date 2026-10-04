@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Most crashes on startup come from a version mismatch with Create, Bits 'n' Bobs or Sable, so please fill in the versions section carefully.
+        Most crashes on startup come from a version mismatch with Create, Bits 'n' Bobs, Sable or Create Aeronautics, so please fill in the versions section carefully.
 
   - type: dropdown
     id: area
@@ -59,12 +59,13 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: NeoForge, Create, Bits 'n' Bobs, Sable, and any other mod that moves or simulates blocks.
+      description: NeoForge, Create, Bits 'n' Bobs, Sable, Create Aeronautics, and any other mod that moves or simulates blocks.
       value: |
         NeoForge:
         Create:
         Bits 'n' Bobs:
         Sable:
+        Create Aeronautics:
         Other physics or contraption mods:
     validations:
       required: true
@@ -92,5 +93,5 @@ body:
           required: true
         - label: I am running the latest release of Bits 'n' Tracks CE.
           required: true
-        - label: The problem still happens with only Create, Bits 'n' Bobs, Sable and this mod installed. If it does not, name the mod that brings it back under "Other physics or contraption mods" above.
+        - label: The problem still happens with only Create, Bits 'n' Bobs, Sable, Create Aeronautics and this mod installed. If it does not, name the mod that brings it back under "Other physics or contraption mods" above.
           required: false
