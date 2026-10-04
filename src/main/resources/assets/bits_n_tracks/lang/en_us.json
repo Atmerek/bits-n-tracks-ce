@@ -120,6 +120,7 @@
     "message.bits_n_bobs.cogwheel_chain.chain_addition_aborted.invalid_cogwheel_type.cogwheel_chain_type.bits_n_tracks.tank_tread": "Tank treads must be placed on a physical flanged cogwheel",
     "message.bits_n_bobs.cogwheel_chain.chain_addition_aborted.belt_on_bnb_flanged_cogwheel": "Industrial belts and tank treads need a Bits 'n' Tracks flanged cogwheel",
     "message.bits_n_bobs.cogwheel_chain.chain_addition_aborted.chain_on_wide_partner": "The other half of this wide cogwheel already carries a track",
+    "message.bits_n_bobs.cogwheel_chain.chain_addition_aborted.chain_on_physical_cogwheel": "Chains and ropes cannot be placed on a Bits 'n' Tracks flanged cogwheel",
 
     "bits_n_tracks.configuration.title": "%s",
 

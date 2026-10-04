@@ -8,6 +8,7 @@ import com.kipti.bnb.registry.content.blocks.BnbKineticBlocks;
 import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
@@ -63,6 +64,23 @@ public final class HiddenCogwheelCompat {
     public static boolean isFlangedCogwheelBlock(BlockState state) {
         Block block = state.getBlock();
         return block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock;
+    }
+
+    public static boolean isOwnCogwheel(BlockState state, BlockEntity be) {
+        Block block = state.getBlock();
+        if (block instanceof BntFlangedCogwheelBlock) {
+            return true;
+        }
+        if (!(block instanceof HiddenCogwheelBlock)) {
+            return false;
+        }
+        String original = be instanceof KineticBlockEntityPhysicsAccess access ? access.bnt$getOriginalBlock() : null;
+        ResourceLocation id = original == null || original.isEmpty() ? null : ResourceLocation.tryParse(original);
+        return id == null || id.getNamespace().equals(BitsNTracks.MOD_ID);
+    }
+
+    public static boolean isOwnCogwheel(BlockGetter level, BlockPos pos) {
+        return level != null && isOwnCogwheel(level.getBlockState(pos), level.getBlockEntity(pos));
     }
 
     public static boolean isTinyHiddenCogwheel(BlockState state) {

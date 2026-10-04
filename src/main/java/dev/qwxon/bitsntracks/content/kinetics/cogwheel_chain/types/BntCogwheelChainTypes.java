@@ -5,16 +5,13 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType.Cha
 import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import com.kipti.bnb.registry.core.BnbResourceKeys;
 import dev.qwxon.bitsntracks.BitsNTracks;
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -24,9 +21,6 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class BntCogwheelChainTypes {
-    private static final TagKey<Block> BNB_FLANGED_COGWHEEL =
-        TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("bits_n_bobs", "flanged_cogwheel"));
-
     public static final DeferredRegister<CogwheelChainType> REGISTRY = DeferredRegister.create(BnbResourceKeys.COGWHEEL_CHAIN_TYPE, "bits_n_tracks");
     public static final DeferredHolder<CogwheelChainType, CogwheelChainType> INDUSTRIAL_BELT_CHAIN = REGISTRY.register(
         "industrial_belt",
@@ -54,14 +48,7 @@ public class BntCogwheelChainTypes {
 
     /** Cogwheels a belt or tread may be strung on. */
     public static boolean isFlangedDriveCogwheel(Block block) {
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
-        String path = id.getPath();
-        return path.equals("large_industrial_flanged_cogwheel")
-            || path.equals("medium_industrial_flanged_cogwheel")
-            || path.equals("large_hidden_flanged_cogwheel")
-            || path.equals("industrial_flanged_cogwheel")
-            || path.equals("small_hidden_flanged_cogwheel")
-            || path.equals("medium_hidden_flanged_cogwheel");
+        return block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock;
     }
 
     /** Message key refusing the chain here, or null. */
@@ -69,32 +56,17 @@ public class BntCogwheelChainTypes {
         if (partnerCarriesChain(level, pos)) {
             return "chain_on_wide_partner";
         }
-        if (type != INDUSTRIAL_BELT_CHAIN.get() && type != TANK_TREAD_CHAIN.get()) {
-            return null;
+        boolean own = HiddenCogwheelCompat.isOwnCogwheel(state, level == null ? null : level.getBlockEntity(pos));
+        if (type == INDUSTRIAL_BELT_CHAIN.get() || type == TANK_TREAD_CHAIN.get()) {
+            return own ? null : "belt_on_bnb_flanged_cogwheel";
         }
-        Block original = originalBlock(level, pos, state);
-        return BuiltInRegistries.BLOCK.getKey(original).getNamespace().equals("bits_n_bobs")
-            && original.defaultBlockState().is(BNB_FLANGED_COGWHEEL)
-            ? "belt_on_bnb_flanged_cogwheel"
-            : null;
+        return own && type.getRenderType() != ChainRenderInfo.BELT ? "chain_on_physical_cogwheel" : null;
     }
 
     /** One track per wide cogwheel, so its other half may not carry a second. */
     private static boolean partnerCarriesChain(BlockGetter level, BlockPos pos) {
         BlockPos partner = level == null ? null : BntCogwheelPairing.partnerPos(level, pos);
         return partner != null && BntChainEngagement.partOfChain(level.getBlockEntity(partner));
-    }
-
-    private static Block originalBlock(BlockGetter level, BlockPos pos, BlockState state) {
-        if (level != null && HiddenCogwheelCompat.isHiddenCogwheel(state)
-            && level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
-            String id = access.bnt$getOriginalBlock();
-            Block original = id == null || id.isEmpty() ? Blocks.AIR : BuiltInRegistries.BLOCK.get(ResourceLocation.parse(id));
-            if (original != Blocks.AIR) {
-                return original;
-            }
-        }
-        return state.getBlock();
     }
 
     public static void init(IEventBus bus) {
