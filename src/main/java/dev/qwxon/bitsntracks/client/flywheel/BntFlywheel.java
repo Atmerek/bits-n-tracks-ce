@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
+import org.joml.Vector3dc;
 
 public final class BntFlywheel {
     private static final Set<BntCogwheelVisual> VISUALS = ConcurrentHashMap.newKeySet();
@@ -42,6 +43,15 @@ public final class BntFlywheel {
 
     static double distanceSqr(BlockEntity be, AABB local) {
         return Minecraft.getInstance().gameRenderer.getMainCamera().getPosition().distanceToSqr(centre(be, local));
+    }
+
+    static double vehicleDistanceSqr(BlockEntity be) {
+        Vec3 camera = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        if (Sable.HELPER.getContainingClient(be) instanceof ClientSubLevel subLevel) {
+            Vector3dc position = subLevel.logicalPose().position();
+            return camera.distanceToSqr(position.x(), position.y(), position.z());
+        }
+        return camera.distanceToSqr(Vec3.atCenterOf(be.getBlockPos()));
     }
 
     static int ticks() {

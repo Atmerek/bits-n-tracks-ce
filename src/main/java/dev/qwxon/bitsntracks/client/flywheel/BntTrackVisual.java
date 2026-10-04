@@ -11,8 +11,10 @@ import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntClientConfig;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackSink;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +48,7 @@ final class BntTrackVisual implements BntTrackSink {
     private Vec3 origin = Vec3.ZERO;
     private volatile boolean dirty = true;
     private boolean showing;
+    private boolean resting;
     private boolean signed;
     private int signature;
     private long builtAt = Long.MIN_VALUE;
@@ -66,7 +69,13 @@ final class BntTrackVisual implements BntTrackSink {
         dirty = true;
     }
 
-    void frame(float partialTick) {
+    void relight() {
+        if (!resting) {
+            dirty = true;
+        }
+    }
+
+    void frame(float partialTick, boolean resting) {
         CogwheelChainBehaviour behaviour = be.getBehaviour(CogwheelChainBehaviour.TYPE);
         CogwheelChain chain = behaviour == null ? null : behaviour.getControlledChain();
         if (chain == null || be.getLevel() == null) {
@@ -74,8 +83,10 @@ final class BntTrackVisual implements BntTrackSink {
             return;
         }
 
+        boolean switched = resting != this.resting;
+        this.resting = resting;
         long now = Util.getNanos();
-        if (now < nextBuild) {
+        if (!switched && now < nextBuild) {
             return;
         }
 
@@ -92,13 +103,18 @@ final class BntTrackVisual implements BntTrackSink {
             hide();
             return;
         }
-        if (!dirty && showing && !BntFlywheel.visible(be, bounds)) {
+        if (!dirty && !switched && showing && !BntFlywheel.visible(be, bounds)) {
             return;
         }
 
-        float rotation = behaviour.getChainRotationFactor() * be.getSpeed() / 1200.0F;
+        float rotation = resting ? 0.0F : behaviour.getChainRotationFactor() * be.getSpeed() / 1200.0F;
         long gameTime = be.getLevel().getGameTime();
-        if (rotation == 0.0F) {
+        if (resting) {
+            if (!dirty && !switched && showing) {
+                return;
+            }
+            signed = false;
+        } else if (rotation == 0.0F) {
             int shape = shapeOf(chain);
             if (!dirty && showing && signed && shape == signature && gameTime - builtAt < REFRESH_TICKS) {
                 return;
@@ -149,7 +165,7 @@ final class BntTrackVisual implements BntTrackSink {
             Direction route = BntChainEngagement.routeSide(level, be.getBlockPos().offset(node.localPos()));
             hash = 31 * hash + (route == null ? -1 : route.ordinal());
         }
-        return hash;
+        return 31 * hash + Arrays.hashCode(BntBeltDrape.surfaceKey(level, be.getBlockPos()));
     }
 
     private void build(CogwheelChainBehaviour behaviour, float partialTick) {

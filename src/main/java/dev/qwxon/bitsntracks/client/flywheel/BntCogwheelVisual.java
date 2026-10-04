@@ -32,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlockEntity> {
     private static final int STRESS_TICKS = 20;
+    private static final double SWITCH_MARGIN = 1.0;
     private static final AABB PIECE_BOUNDS = new AABB(-1.0, -1.0, -1.0, 2.0, 2.0, 2.0);
     private static final BlockMaterialFunction CUTOUT = (type, shaded, ambientOcclusion) -> ModelUtil.getMaterial(RenderType.cutout(), shaded, ambientOcclusion);
     private static final RendererReloadCache<CogModel, Model> MODELS = new RendererReloadCache<>(BntCogwheelVisual::bake);
@@ -47,6 +48,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
     private volatile boolean relight = true;
     private boolean deleted;
     private boolean drawing;
+    private boolean resting;
     private double shiftX = Double.NaN;
     private double shiftY;
     private double shiftZ;
@@ -71,7 +73,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
     @Override
     public void updateLight(float partialTick) {
         relight = true;
-        track.invalidate();
+        track.relight();
     }
 
     @Override
@@ -116,26 +118,36 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
             return;
         }
 
-        boolean fresh = dirty || relight;
-        if (dirty) {
-            dirty = false;
-            refresh();
+        boolean far = far();
+        if (far != resting) {
+            resting = far;
+            dirty = true;
         }
-        if (relight) {
-            packedLight = LevelRenderer.getLightColor(level, pos);
-        }
-        if (cog != null) {
-            drawCog(partialTick);
-        }
-        relight = false;
-        if (hidden && !leverHidden() && BntSuspension.hasPiece(blockEntity)) {
-            if (fresh || !pieces.showing() || BntFlywheel.visible(blockEntity, PIECE_BOUNDS)) {
-                pieces.frame(partialTick, packedLight);
+        HiddenCogwheelCompat.drawResting(resting);
+        try {
+            boolean fresh = dirty || relight;
+            if (dirty) {
+                dirty = false;
+                refresh();
             }
-        } else {
-            pieces.hide();
+            if (relight) {
+                packedLight = LevelRenderer.getLightColor(level, pos);
+            }
+            if (cog != null) {
+                drawCog(partialTick);
+            }
+            relight = false;
+            if (hidden && !leverHidden() && BntSuspension.hasPiece(blockEntity)) {
+                if (fresh || !pieces.showing() || !resting && BntFlywheel.visible(blockEntity, PIECE_BOUNDS)) {
+                    pieces.frame(partialTick, packedLight);
+                }
+            } else {
+                pieces.hide();
+            }
+            track.frame(partialTick, resting);
+        } finally {
+            HiddenCogwheelCompat.drawResting(false);
         }
-        track.frame(partialTick);
         if (!drawing) {
             drawing = true;
             BntVisualized.mark(blockEntity, true);
@@ -161,7 +173,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
     private void drawCog(float partialTick) {
         RotatingInstance instance = cog;
         boolean changed = false;
-        if (hidden || Double.isNaN(shiftX)) {
+        if (hidden && !resting || Double.isNaN(shiftX)) {
             Vec3 shift = HiddenCogwheelCompat.getModelTranslation(blockEntity, partialTick);
             if (shift.x != shiftX || shift.y != shiftY || shift.z != shiftZ) {
                 shiftX = shift.x;
@@ -191,6 +203,15 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
                 applyOverstressEffect(blockEntity, new RotatingInstance[]{instance});
             }
         }
+    }
+
+    private boolean far() {
+        int distance = BntClientConfig.animationDistance();
+        if (distance <= 0) {
+            return false;
+        }
+        double edge = resting ? distance - SWITCH_MARGIN : distance + SWITCH_MARGIN;
+        return BntFlywheel.vehicleDistanceSqr(blockEntity) > edge * edge;
     }
 
     private void clearCog() {

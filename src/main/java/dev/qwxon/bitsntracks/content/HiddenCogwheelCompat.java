@@ -36,6 +36,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public final class HiddenCogwheelCompat {
     private static final ThreadLocal<Integer> bnt$chainSwapDepth = ThreadLocal.withInitial(() -> 0);
     private static final ThreadLocal<Level> bnt$placementLevel = ThreadLocal.withInitial(() -> null);
+    private static final ThreadLocal<Boolean> RESTING = ThreadLocal.withInitial(() -> false);
 
     private HiddenCogwheelCompat() {
     }
@@ -269,9 +270,18 @@ public final class HiddenCogwheelCompat {
 
     /** Drop a wheel is drawn at, with the belt holding it up. */
     public static double getHeldVisualDrop(BlockEntity be, float partialTick) {
-        return be instanceof KineticBlockEntity kinetic && isPhysicsEnabled(be)
-            ? BntPhysicsEvents.getHeldRenderExtension(kinetic, partialTick)
-            : 0.0;
+        if (!(be instanceof KineticBlockEntity kinetic) || !isPhysicsEnabled(be)) {
+            return 0.0;
+        }
+        if (RESTING.get()) {
+            BntSuspension.Arm arm = BntSuspension.arm(be);
+            return arm == null ? 0.0 : -arm.ride();
+        }
+        return BntPhysicsEvents.getHeldRenderExtension(kinetic, partialTick);
+    }
+
+    public static void drawResting(boolean resting) {
+        RESTING.set(resting);
     }
 
     public static double getVisualVerticalTranslation(BlockEntity be, float partialTick) {
