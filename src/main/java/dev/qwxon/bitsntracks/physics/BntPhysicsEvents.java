@@ -55,6 +55,7 @@ import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3dc;
+import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
@@ -83,6 +84,11 @@ public final class BntPhysicsEvents {
     private static final double GRIP_LOAD = 0.5;
     private static final Map<ServerSubLevel, Long> REPORTED = new WeakHashMap<>();
     private static final Map<ServerSubLevel, double[]> SHARES = new WeakHashMap<>();
+    private static final Map<ServerSubLevel, Parked> PARKED = new WeakHashMap<>();
+    private static final Map<KineticBlockEntity, double[]> HELD = new WeakHashMap<>();
+    private static final long PARKED_REFRESH = 20L;
+    private static final double PARKED_DRIFT = 1.0E-4;
+    private static final double PARKED_TURN = 1.0E-5;
 
     private BntPhysicsEvents() {
     }
@@ -93,7 +99,6 @@ public final class BntPhysicsEvents {
 
     public static void onPhysicsTick(SubLevelPhysicsSystem physicsSystem, double timeStep) {
         ServerLevel level = physicsSystem.getLevel();
-        Map<ServerSubLevel, List<BntPhysicsEvents.WheelContact>> contactsByBody = new Reference2ObjectOpenHashMap<>();
         Map<ServerSubLevel, List<KineticBlockEntity>> wheelsByBody = new Reference2ObjectOpenHashMap<>();
 
         Iterator<KineticBlockEntity> iterator = BntPhysicsRegistry.getEnabled(level).iterator();
@@ -110,17 +115,29 @@ public final class BntPhysicsEvents {
                     }
 
                     wheelsByBody.computeIfAbsent(subLevel, ignored -> new ArrayList<>()).add(kbe);
-                    BntPhysicsEvents.WheelContact contact = resolveContact(kbe, mixin, subLevel);
-                    if (contact != null) {
-                        contactsByBody.computeIfAbsent(subLevel, ignored -> new ArrayList<>()).add(contact);
-                    }
                 }
             }
         }
 
         for (Map.Entry<ServerSubLevel, List<KineticBlockEntity>> entry : wheelsByBody.entrySet()) {
             ServerSubLevel subLevel = entry.getKey();
-            List<BntPhysicsEvents.WheelContact> nearGround = contactsByBody.getOrDefault(subLevel, List.of());
+            int signature = signature(level, entry.getValue());
+            if (parked(level, subLevel, signature, timeStep)) {
+                for (KineticBlockEntity wheel : entry.getValue()) {
+                    reapply(wheel);
+                }
+                continue;
+            }
+            park(level, subLevel, signature, timeStep);
+
+            List<BntPhysicsEvents.WheelContact> nearGround = new ArrayList<>();
+            for (KineticBlockEntity wheel : entry.getValue()) {
+                HELD.remove(wheel);
+                BntPhysicsEvents.WheelContact contact = resolveContact(wheel, (KineticBlockEntityPhysicsAccess)wheel, subLevel);
+                if (contact != null) {
+                    nearGround.add(contact);
+                }
+            }
             BntBeltContacts.BntBeltLoads belt = BntBeltContacts.build(subLevel, entry.getValue(), level);
             KineticBlockEntityPhysicsAccess carrier = (KineticBlockEntityPhysicsAccess)entry.getValue().get(0);
 
@@ -162,6 +179,55 @@ public final class BntPhysicsEvents {
         }
 
         applyAllBatchedForces(level);
+    }
+
+    private record Parked(double x, double y, double z, double qx, double qy, double qz, double qw, int signature, double timeStep, long since) {
+    }
+
+    private static int signature(ServerLevel level, List<KineticBlockEntity> wheels) {
+        int hash = wheels.size();
+        for (KineticBlockEntity wheel : wheels) {
+            hash = 31 * hash + System.identityHashCode(wheel);
+            hash = 31 * hash + Float.hashCode(wheel.getSpeed());
+            hash = 31 * hash + level.getSignal(wheel.getBlockPos().above(), Direction.DOWN);
+        }
+        return hash;
+    }
+
+    private static boolean parked(ServerLevel level, ServerSubLevel subLevel, int signature, double timeStep) {
+        Parked last = PARKED.get(subLevel);
+        if (last == null || last.signature() != signature || last.timeStep() != timeStep
+            || level.getGameTime() - last.since() >= PARKED_REFRESH) {
+            return false;
+        }
+        Pose3d pose = subLevel.logicalPose();
+        Vector3dc position = pose.position();
+        Quaterniondc orientation = pose.orientation();
+        return Math.abs(position.x() - last.x()) < PARKED_DRIFT
+            && Math.abs(position.y() - last.y()) < PARKED_DRIFT
+            && Math.abs(position.z() - last.z()) < PARKED_DRIFT
+            && Math.abs(orientation.x() - last.qx()) < PARKED_TURN
+            && Math.abs(orientation.y() - last.qy()) < PARKED_TURN
+            && Math.abs(orientation.z() - last.qz()) < PARKED_TURN
+            && Math.abs(orientation.w() - last.qw()) < PARKED_TURN;
+    }
+
+    private static void park(ServerLevel level, ServerSubLevel subLevel, int signature, double timeStep) {
+        Pose3d pose = subLevel.logicalPose();
+        Vector3dc position = pose.position();
+        Quaterniondc orientation = pose.orientation();
+        PARKED.put(subLevel, new Parked(position.x(), position.y(), position.z(),
+            orientation.x(), orientation.y(), orientation.z(), orientation.w(), signature, timeStep, level.getGameTime()));
+    }
+
+    private static void reapply(KineticBlockEntity wheel) {
+        double[] held = HELD.get(wheel);
+        if (held == null) {
+            return;
+        }
+        KineticBlockEntityPhysicsAccess mixin = (KineticBlockEntityPhysicsAccess)wheel;
+        mixin.bnt$getForceTotal().applyLinearAndAngularImpulse(new Vector3d(held[0], held[1], held[2]), new Vector3d(held[3], held[4], held[5]));
+        mixin.bnt$markQueuedForForceApplication();
     }
 
     public static void updateClientRollingSpeed(KineticBlockEntity kbe, KineticBlockEntityPhysicsAccess mixin, SubLevel subLevel) {
@@ -938,6 +1004,9 @@ public final class BntPhysicsEvents {
                 }
 
                 if (handle != null && handle.isValid()) {
+                    Vector3d force = forceTotal.getLocalForce();
+                    Vector3d torque = forceTotal.getLocalTorque();
+                    HELD.put(kbe, new double[]{force.x, force.y, force.z, torque.x, torque.y, torque.z});
                     handle.applyForcesAndReset(forceTotal);
                 } else {
                     forceTotal.reset();

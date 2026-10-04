@@ -41,7 +41,8 @@
         "BntGameRendererPickMixin",
         "PonderSceneTransformMixin",
         "compat.IrisHandRendererMixin",
-        "accessor.CreativeModeInventoryScreenAccessor"
+        "accessor.CreativeModeInventoryScreenAccessor",
+        "accessor.LevelRendererAccessor"
     ],
     "server": [],
     "injectors": {

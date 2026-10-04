@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.index;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
 import dev.qwxon.bitsntracks.BitsNTracks;
+import dev.qwxon.bitsntracks.client.flywheel.BntCogwheelVisual;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlockEntity;
 import dev.qwxon.bitsntracks.content.BntHeadBlockEntity;
 import dev.qwxon.bitsntracks.content.BntHeadRenderer;
@@ -12,6 +13,7 @@ import dev.qwxon.bitsntracks.content.HiddenCogwheelRenderer;
 public class BitsNTracksBlockEntityTypes {
     public static final BlockEntityEntry<KineticBlockEntity> HIDDEN_COGWHEEL = BitsNTracks.REGISTRATE
         .blockEntity("hidden_cogwheel", KineticBlockEntity::new)
+        .visual(() -> BntCogwheelVisual::new, true)
         .validBlocks(
             BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL,
             BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL,
@@ -22,6 +24,7 @@ public class BitsNTracksBlockEntityTypes {
         .register();
     public static final BlockEntityEntry<BntFlangedCogwheelBlockEntity> SIMPLE_KINETIC = BitsNTracks.REGISTRATE
         .blockEntity("bnt_flanged_cogwheel", BntFlangedCogwheelBlockEntity::new)
+        .visual(() -> BntCogwheelVisual::new, true)
         .validBlocks(
             BitsNTracksBlocks.TINY_FLANGED_COGWHEEL,
             BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL,

@@ -130,6 +130,9 @@
 
     "bits_n_tracks.configuration.client": "Client",
     "bits_n_tracks.configuration.disableFlywheelVisualization": "Disable Flywheel Rendering",
+    "bits_n_tracks.configuration.flywheelRendering": "Flywheel Tracks and Cogs",
+    "bits_n_tracks.configuration.trackUpdateRate": "Track Update Rate",
+    "bits_n_tracks.configuration.animationDistance": "Animation Distance",
 
     "bits_n_tracks.configuration.debugLogging": "Debug Logging",
     "bits_n_tracks.configuration.suspension": "Suspension",

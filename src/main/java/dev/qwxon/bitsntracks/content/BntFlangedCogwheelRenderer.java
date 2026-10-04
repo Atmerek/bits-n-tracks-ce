@@ -23,7 +23,7 @@ public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFl
         return BntClientCompat.trackViewDistance();
     }
     protected void renderSafe(BntFlangedCogwheelBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        if (!(be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isHiddenByLever())) {
+        if (!(be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isHiddenByLever()) && !BntVisualized.drawn(be)) {
             BlockState renderState = be.getBlockState();
             SuperByteBuffer model = this.getRotatedModel(be, renderState);
             ms.pushPose();
