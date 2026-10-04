@@ -241,6 +241,9 @@ public class CogwheelChainGeometryBuilderMixin {
         for (int probe = 1; probe < probes; probe++) {
             double even = (double)probe / probes;
             double at = bnt$onLinkBoundary(travelled, span, even, pitch, reached);
+            if (at <= reached) {
+                continue;
+            }
             reached = at;
 
             double sampled = at * probes;
