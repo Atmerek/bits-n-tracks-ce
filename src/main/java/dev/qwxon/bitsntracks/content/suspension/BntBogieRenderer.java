@@ -15,14 +15,9 @@ import net.neoforged.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public final class BntBogieRenderer {
     public static final ResourceLocation TEXTURE = BitsNTracks.asResource("textures/block/bogie_suspension.png");
-    private static final int SOLID = 0xFFFFFFFF;
     private static final int GHOST = 0x9066FF66;
 
     private BntBogieRenderer() {
-    }
-
-    public static void renderAttached(KineticBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
-        BntSuspensionParts.bogie(be, partialTicks, BntSuspensionParts.emitter(ms.last(), buffer, false, SOLID, light, overlay));
     }
 
     public static void renderGhost(KineticBlockEntity be, int facing, double drop, PoseStack ms, MultiBufferSource buffer) {
