@@ -192,7 +192,7 @@ public final class BntFlangedCogwheelScenes {
         scene.idle(15);
         scene.world().showSection(largeDrive, Direction.UP);
         scene.idle(20);
-        caption(scene, "Because if you spin a larger gear at a speed too high...");
+        caption(scene, "Because if you spin a larger cogwheel too fast...");
 
         drive(scene, util, largeDrive, large, 64.0F, bySize);
         rpmLabel(scene, 64.0F, largeGauge);

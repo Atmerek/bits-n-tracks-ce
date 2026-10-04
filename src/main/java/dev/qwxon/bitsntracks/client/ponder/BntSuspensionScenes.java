@@ -84,7 +84,7 @@ public final class BntSuspensionScenes {
         scene.addInstruction(rig.driver());
         scene.idle(20);
 
-        BntBobScenes.caption(scene, "Suspension in this mod does not come for granted like other mods do.", 80);
+        BntBobScenes.caption(scene, "Unlike in other mods, suspension in this mod does not come for free.", 80);
         BntBobScenes.caption(scene, "In order to allow for different designs, you can " + ChatFormatting.YELLOW + "select"
             + ChatFormatting.RESET + " whether you want your tracks to have suspension.", 90);
 
@@ -98,7 +98,7 @@ public final class BntSuspensionScenes {
         int bump = BntBobRig.tickReaching(firstLap, firstTicks, CONTACT - (BntBobRig.rowFront(FIRST_ROW, 0) + 1.0));
         scene.idle(bump);
         scene.overlay().showText(120)
-            .text(BntBobScenes.tint(ChatFormatting.GRAY, "By not having suspension, the whole vehicle moves as one entire body"));
+            .text(BntBobScenes.tint(ChatFormatting.GRAY, "Without suspension, the whole vehicle moves as one rigid body"));
         scene.addKeyframe();
         scene.idle(firstTicks - bump - 20);
 
@@ -143,12 +143,12 @@ public final class BntSuspensionScenes {
         scene.addInstruction(rig.sweep(BntBobRig.sweepTicks() + 110, ARM_FACE));
         scene.idle(BntBobRig.sweepTicks() / 2);
         scene.overlay().showText(110)
-            .text("It moves in an " + ChatFormatting.YELLOW + "arc" + ChatFormatting.RESET + ", its pivot should be placed "
+            .text("It moves in an " + ChatFormatting.YELLOW + "arc" + ChatFormatting.RESET + ", and its pivot should be placed "
                 + styled(ChatFormatting.UNDERLINE.toString(), "towards the front of your vehicle"));
         scene.addKeyframe();
         scene.idle(20);
         scene.overlay().showText(90)
-            .text(BntBobScenes.tint(ChatFormatting.GRAY, "Remember that in order to use the suspension, your cogwheel needs to have it's physics ")
+            .text(BntBobScenes.tint(ChatFormatting.GRAY, "Remember that in order to use the suspension, your cogwheel needs to have its physics ")
                 + styled(ChatFormatting.GRAY.toString() + ChatFormatting.UNDERLINE, "activated."))
             .placeNearTarget()
             .pointAt(new Vec3(7.0, 2.5 + seat, 6.5));
@@ -183,7 +183,7 @@ public final class BntSuspensionScenes {
 
     public static void bogie(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
-        scene.title("suspension_piece_bogie", "Adding suspension on physified cogwheels - VDSS system");
+        scene.title("suspension_piece_bogie", "Adding suspension on physified cogwheels - VDSS System");
         scene.configureBasePlate(0, 0, 9);
         scene.scaleSceneView(0.9F);
 
@@ -227,7 +227,7 @@ public final class BntSuspensionScenes {
         scene.addInstruction(BntPonderCamera.glide(EAST_TRACK, TRACK_ZOOM, ZOOM_TILT, ZOOM_TURN, 35));
         scene.idle(45);
 
-        BntBobScenes.caption(scene, "To remove a suspension piece, you can do so by shift-right-clicking with an empty hand on the cogwheel it is placed on.", 90);
+        BntBobScenes.caption(scene, "To remove a suspension piece, shift-right-click the cogwheel it is placed on with an empty hand.", 90);
 
         for (int z = 3; z <= 6; z++) {
             BlockPos wheel = util.grid().at(6, 2, z);
@@ -276,7 +276,7 @@ public final class BntSuspensionScenes {
         scene.addInstruction(rig.sweep(BntBobRig.sweepTicks() + 130, BOGIE_FACE));
         scene.idle(BntBobRig.sweepTicks() / 2);
         scene.overlay().showText(130)
-            .text("Differently than the SRDS, the VDSS is stiffer, and offers a similar motion to a " + ChatFormatting.YELLOW + "linear"
+            .text("Unlike the SRDS, the VDSS is stiffer, and its motion is closer to a " + ChatFormatting.YELLOW + "linear"
                 + ChatFormatting.RESET + " than a " + ChatFormatting.YELLOW + "rotary" + ChatFormatting.RESET
                 + " system, with less pushback and shorter travel.");
         scene.addKeyframe();
@@ -298,8 +298,8 @@ public final class BntSuspensionScenes {
         int halfway = BntBobRig.tickReaching(lap, ticks, (start + lap) / 2.0);
         scene.idle(halfway);
         scene.overlay().showText(ticks - halfway - 20)
-            .text("You might want to consider this over the SRDS when building heavy tracked vehicles with suspension, as the bogie'd setup "
-                + "allows for the load to be split evenly across 2 cogwheels instead of individually");
+            .text("You might want to consider this over the SRDS when building heavy tracked vehicles with suspension, as the bogie "
+                + "splits the load evenly across 2 cogwheels instead of each one carrying its own");
         scene.addKeyframe();
         scene.idle(ticks - halfway - 20);
 
@@ -346,7 +346,7 @@ public final class BntSuspensionScenes {
         scene.idle(20);
 
         BntBobScenes.caption(scene, "Any mod that has suspension of course has to add a way to tune it based on your needs, "
-            + "and this is what the Suspension Tool is useful for", 110);
+            + "and this is what the Suspension Tool is for", 110);
 
         scene.addInstruction(BntPonderCamera.glide(WEST_TRACK.add(resting), TRACK_ZOOM, ZOOM_TILT, WEST_TURN, 35));
         scene.idle(45);
@@ -359,7 +359,7 @@ public final class BntSuspensionScenes {
         scene.addInstruction(dial.look(first));
         scene.idle(40);
 
-        BntBobScenes.caption(scene, "Visual aid on the tool's gauge will tell you the magnitude shift for each setting.", 90);
+        BntBobScenes.caption(scene, "The gauge on the tool shows the current level of the selected setting.", 90);
 
         for (int i = 1; i <= BntTuning.values().length; i++) {
             scene.overlay().showControls(westTop, Pointing.DOWN, 15).leftClick().whileSneaking().withItem(tool);
@@ -369,7 +369,7 @@ public final class BntSuspensionScenes {
         }
         scene.idle(10);
 
-        scene.overlay().showText(120).text("By right-clicking you increase, shift-right-click to decrease the value.");
+        scene.overlay().showText(120).text("Right-click to increase the value, and shift-right-click to decrease it.");
         scene.addKeyframe();
         scene.idle(30);
         tuneThrough(scene, dial, List.of(first), westTop, tool);
@@ -381,7 +381,7 @@ public final class BntSuspensionScenes {
         scene.addInstruction(rig.outline(new AABB(bogie.get(0)).minmax(new AABB(bogie.get(1)))));
         scene.addInstruction(dial.look(bogie.get(0)));
         scene.idle(30);
-        scene.overlay().showText(120).text("Changing the values of a VDSS, changes the individual values of BOTH cogwheels.");
+        scene.overlay().showText(120).text("Changing the values of a VDSS changes the values of BOTH cogwheels.");
         scene.addKeyframe();
         scene.idle(30);
         tuneThrough(scene, dial, bogie, eastTop, tool);

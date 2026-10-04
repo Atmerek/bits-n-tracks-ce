@@ -269,11 +269,11 @@ public final class BntBobScenes {
         Vec3 rest = bob.rest();
 
         caption(scene, "There are many things Bob likes about his tracks, and one of them is being able to do whatever he wants with them.", 100);
-        caption(scene, "In fact. There's everything " + ChatFormatting.BOLD + "you" + ChatFormatting.RESET + " want to customize your tracks with.", 80);
+        caption(scene, "In fact, there's everything " + ChatFormatting.BOLD + "you" + ChatFormatting.RESET + " could want to customize your tracks.", 80);
 
         scene.addInstruction(BntPonderCamera.glide(Vec3.atCenterOf(tiny).add(rest), ZOOM, ZOOM_TILT, ZOOM_TURN, 30));
         scene.idle(40);
-        caption(scene, "First thing you can do, is " + tint(ChatFormatting.YELLOW, "move already-placed cogwheels however you want them")
+        caption(scene, "The first thing you can do is " + tint(ChatFormatting.YELLOW, "move already-placed cogwheels however you want them")
             + ChatFormatting.RESET + ".", 80);
 
         Direction[] everyZone = {null, Direction.UP, Direction.SOUTH, Direction.DOWN, Direction.NORTH};
@@ -297,12 +297,12 @@ public final class BntBobScenes {
         }
         scene.idle(25);
 
-        caption(scene, "Secondly, you can decide " + tint(ChatFormatting.YELLOW, "what way the track wraps around it")
+        caption(scene, "Secondly, you can decide " + tint(ChatFormatting.YELLOW, "which way the track wraps around a cogwheel")
             + ChatFormatting.RESET + ".", 80);
 
         scene.addInstruction(new Zones(tiny, Direction.WEST, rest, new Direction[]{Direction.DOWN}, 1, 90));
         scene.overlay().showText(120)
-            .text("By selecting what side the belts wraps around of, the routing is switched from "
+            .text("By selecting which side the track wraps around, the routing switches from "
                 + ChatFormatting.GREEN + "automatic" + ChatFormatting.RESET + " to " + ChatFormatting.YELLOW + "manual");
         scene.addKeyframe();
         scene.idle(40);
@@ -352,7 +352,7 @@ public final class BntBobScenes {
 
         scene.addInstruction(BntPonderCamera.glide(TRACK_MIDDLE.add(rest), TRACK_ZOOM, ZOOM_TILT, ZOOM_TURN, 30));
         scene.idle(40);
-        caption(scene, "And it is adjusting the belt's tension to fit your needs, or looks.", 90);
+        caption(scene, "And that is adjusting the track's tension to suit your needs, or your taste.", 90);
 
         int highlight = 140 + 10 + 10 * TENSION_STEP_TICKS + 30 + 80 + 10 + 10 * TENSION_STEP_TICKS + 40;
         scene.addInstruction(new BeltHighlight(controller, rest, RUN_MIDDLE, highlight, 120));
@@ -401,7 +401,7 @@ public final class BntBobScenes {
         int ticks = leave(scene, util, bob);
         int peel = (int)Math.ceil(ticks * (bob.rows().firstKey() + 0.5) / DRIVE_DISTANCE);
         scene.idle(peel);
-        scene.overlay().showText(70).text("Wait what? " + ChatFormatting.YELLOW + "Suspension" + ChatFormatting.RESET + "?");
+        scene.overlay().showText(70).text("Wait, what? " + ChatFormatting.YELLOW + "Suspension" + ChatFormatting.RESET + "?");
         scene.idle(Math.max(ticks + FADE_TICKS - peel, 80));
         scene.markAsFinished();
     }
