@@ -1,7 +1,6 @@
 package dev.qwxon.bitsntracks.client;
 
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
@@ -34,7 +33,7 @@ public final class BntClientKeyMappings {
                     BlockState state = minecraft.level.getBlockState(pos);
                     if (state.hasProperty(BlockStateProperties.AXIS)) {
                         BlockEntity be = minecraft.level.getBlockEntity(pos);
-                        if (be instanceof KineticBlockEntity && be instanceof KineticBlockEntityPhysicsAccess access) {
+                        if (be instanceof KineticBlockEntity && HiddenCogwheelCompat.isOwnCogwheel(state, be)) {
                             Direction face = blockHit.getDirection();
                             Axis blockAxis = (Axis)state.getValue(BlockStateProperties.AXIS);
                             Vec3 translation = HiddenCogwheelCompat.getModelTranslation(be, BntClientCompat.getPartialTick());
