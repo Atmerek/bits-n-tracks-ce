@@ -10,6 +10,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.client.BntBeltClick;
 import dev.qwxon.bitsntracks.client.BntTintedLines;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import java.lang.reflect.Field;
@@ -53,6 +54,14 @@ public class CogwheelChainInteractionHandlerMixin {
         return mc.player.getMainHandItem().is(lever) || mc.player.getOffhandItem().is(lever);
     }
 
+    private static boolean leverSelection(Minecraft mc) {
+        if (mc.player == null) {
+            return false;
+        }
+        Item lever = (Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get();
+        return mc.player.getMainHandItem().is(lever) || mc.player.getMainHandItem().isEmpty() && mc.player.getOffhandItem().is(lever);
+    }
+
     @Inject(
         method = {"drawCustomBlockSelection"},
         at = {@At("HEAD")},
@@ -72,6 +81,11 @@ public class CogwheelChainInteractionHandlerMixin {
                     Method clearSelectionMethod = CogwheelChainInteractionHandler.class.getDeclaredMethod("clearSelection");
                     clearSelectionMethod.setAccessible(true);
                     clearSelectionMethod.invoke(null);
+                    ci.cancel();
+                    return;
+                }
+
+                if (leverSelection(mc) && !HiddenCogwheelCompat.isOwnChain(level, selectedController)) {
                     ci.cancel();
                     return;
                 }

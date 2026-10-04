@@ -83,6 +83,22 @@ public final class HiddenCogwheelCompat {
         return level != null && isOwnCogwheel(level.getBlockState(pos), level.getBlockEntity(pos));
     }
 
+    public static boolean isOwnChain(Level level, BlockPos controllerPos) {
+        if (level == null || controllerPos == null
+            || !(level.getBlockEntity(controllerPos) instanceof SmartBlockEntity smart)
+            || !(smart.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour behaviour)
+            || behaviour.getControlledChain() == null) {
+            return false;
+        }
+        for (PathedCogwheelNode node : behaviour.getControlledChain().getChainPathCogwheelNodes()) {
+            BlockPos pos = controllerPos.offset(node.localPos());
+            if (level.isLoaded(pos) && !isOwnCogwheel(level, pos)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static boolean isTinyHiddenCogwheel(BlockState state) {
         return state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get());
     }

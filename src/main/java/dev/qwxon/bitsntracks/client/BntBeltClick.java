@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.client;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.ChainCoordinateSpace;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.CogwheelChainInteractionHandler;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.interaction.BntBeltTensionPayload;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.client.Minecraft;
@@ -36,6 +37,7 @@ public final class BntBeltClick {
         BlockPos controllerPos = CogwheelChainInteractionHandler.getSelectedController();
         Vec3 baked = CogwheelChainInteractionHandler.getSelectedBakedPosition();
         return controllerPos != null && baked != null
+            && HiddenCogwheelCompat.isOwnChain(level, controllerPos)
             && !onAimedCogwheel(level, controllerPos, baked, minecraft.hitResult);
     }
 

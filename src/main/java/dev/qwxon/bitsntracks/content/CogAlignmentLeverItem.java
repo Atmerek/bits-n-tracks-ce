@@ -61,7 +61,7 @@ public class CogAlignmentLeverItem extends Item {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         BlockState state = level.getBlockState(pos);
-        if (!state.hasProperty(BlockStateProperties.AXIS)) {
+        if (!state.hasProperty(BlockStateProperties.AXIS) || !HiddenCogwheelCompat.isOwnCogwheel(level, pos)) {
             return InteractionResult.PASS;
         } else {
             BlockEntity be = level.getBlockEntity(pos);

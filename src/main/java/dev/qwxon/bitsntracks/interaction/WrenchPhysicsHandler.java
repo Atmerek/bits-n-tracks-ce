@@ -1,12 +1,14 @@
 package dev.qwxon.bitsntracks.interaction;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.block.EmptyFlangedGearBlock;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientRouteClick;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
@@ -24,6 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -55,13 +58,12 @@ public class WrenchPhysicsHandler {
         Player player = event.getEntity();
         if (player != null) {
             ItemStack stack = event.getItemStack();
-            if (stack.is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())) {
+            BlockPos pos = event.getPos();
+            boolean own = HiddenCogwheelCompat.isOwnCogwheel(level, pos);
+            if (stack.is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get()) && (own || isStrandedCogwheel(level, pos))) {
                 event.setCanceled(true);
-                BlockPos pos = event.getPos();
                 if (level.isClientSide) {
-                    if (player.isShiftKeyDown()
-                        && event.getAction() == LeftClickBlock.Action.START
-                        && isToggleableCogwheel(level.getBlockState(pos).getBlock())) {
+                    if (own && player.isShiftKeyDown() && event.getAction() == LeftClickBlock.Action.START) {
                         BntClientRouteClick.send(pos);
                     }
                 } else {
@@ -75,6 +77,9 @@ public class WrenchPhysicsHandler {
                             }
 
                             boolean newState = !access.bnt$isPhysicsEnabled();
+                            if (newState && !own) {
+                                return;
+                            }
                             BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
                             Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
                             setPhysicsAt(level, pos, newState);
@@ -101,7 +106,8 @@ public class WrenchPhysicsHandler {
 
     @SubscribeEvent
     public static void onBlockBreak(BreakEvent event) {
-        if (event.getPlayer() != null && event.getPlayer().getMainHandItem().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())) {
+        if (event.getPlayer() != null && event.getPlayer().getMainHandItem().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
+            && (HiddenCogwheelCompat.isOwnCogwheel(event.getLevel(), event.getPos()) || isStrandedCogwheel(event.getLevel(), event.getPos()))) {
             event.setCanceled(true);
         }
     }
@@ -112,7 +118,7 @@ public class WrenchPhysicsHandler {
         if (!level.isClientSide) {
             BlockPos pos = event.getPos();
             Block block = level.getBlockState(pos).getBlock();
-            if (isToggleableCogwheel(block)) {
+            if (block instanceof BntFlangedCogwheelBlock || block instanceof EmptyFlangedGearBlock) {
                 ItemStack[] handItems = new ItemStack[]{event.getEntity().getMainHandItem(), event.getEntity().getOffhandItem()};
                 boolean hasWrench = false;
 
@@ -153,7 +159,7 @@ public class WrenchPhysicsHandler {
         }
 
         BlockState state = level.getBlockState(pos);
-        if (!isToggleableCogwheel(state.getBlock()) || !state.hasProperty(BlockStateProperties.AXIS)
+        if (!HiddenCogwheelCompat.isOwnCogwheel(level, pos) || !state.hasProperty(BlockStateProperties.AXIS)
             || !(level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access)) {
             return;
         }
@@ -213,41 +219,16 @@ public class WrenchPhysicsHandler {
             if (!enabled) {
                 BntSuspension.detach(level, pos, kinetic, true);
             }
-            if (isCogwheelVariant(block)) {
-                swapCogwheelBlock(level, pos, state, be, enabled);
-            } else {
-                access.bnt$setPhysicsEnabled(enabled);
-            }
+            swapCogwheelBlock(level, pos, state, be, enabled);
         }
     }
 
     private static boolean isToggleableCogwheel(Block block) {
-        return isCogwheelVariant(block);
+        return HiddenCogwheelCompat.isFlangedCogwheelBlock(block.defaultBlockState());
     }
 
-    private static boolean isCogwheelVariant(Block block) {
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
-        String namespace = id.getNamespace();
-        if (!"bits_n_bobs".equals(namespace) && !"bits_n_tracks".equals(namespace)) {
-            return false;
-        } else {
-            String path = id.getPath();
-            return path.equals("small_flanged_cogwheel")
-                || path.equals("large_flanged_cogwheel")
-                || path.equals("flanged_cogwheel")
-                || path.equals("small_empty_flanged_cogwheel")
-                || path.equals("large_empty_flanged_cogwheel")
-                || path.equals("medium_flanged_cogwheel")
-                || path.equals("medium_industrial_flanged_cogwheel")
-                || path.equals("small_hidden_flanged_cogwheel")
-                || path.equals("medium_hidden_flanged_cogwheel")
-                || path.equals("large_hidden_flanged_cogwheel")
-                || path.equals("industrial_flanged_cogwheel")
-                || path.equals("large_industrial_flanged_cogwheel")
-                || path.equals("tiny_flanged_cogwheel")
-                || path.equals("industrial_tiny_flanged_cogwheel")
-                || path.equals("tiny_hidden_flanged_cogwheel");
-        }
+    private static boolean isStrandedCogwheel(BlockGetter level, BlockPos pos) {
+        return HiddenCogwheelCompat.isHiddenCogwheel(level.getBlockState(pos)) && !HiddenCogwheelCompat.isOwnCogwheel(level, pos);
     }
 
     private static void swapCogwheelBlock(Level level, BlockPos pos, BlockState oldState, BlockEntity oldBe, boolean physicsEnabled) {

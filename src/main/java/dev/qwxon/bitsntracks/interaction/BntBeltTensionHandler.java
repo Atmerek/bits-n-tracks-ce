@@ -1,8 +1,7 @@
 package dev.qwxon.bitsntracks.interaction;
 
-import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
-import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.client.BntBeltClick;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.ChatFormatting;
@@ -58,7 +57,7 @@ public final class BntBeltTensionHandler {
         if (level.isClientSide || !level.isLoaded(controllerPos) || !withinReach(level, player, controllerPos)) {
             return;
         }
-        if (!holdingLever(player) || !isChainController(level, controllerPos)) {
+        if (!holdingLever(player) || !HiddenCogwheelCompat.isOwnChain(level, controllerPos)) {
             return;
         }
 
@@ -69,12 +68,6 @@ public final class BntBeltTensionHandler {
     private static boolean holdingLever(Player player) {
         Item lever = (Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get();
         return player.getMainHandItem().is(lever) || player.getOffhandItem().is(lever);
-    }
-
-    private static boolean isChainController(Level level, BlockPos controllerPos) {
-        return level.getBlockEntity(controllerPos) instanceof SmartBlockEntity smart
-            && smart.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour behaviour
-            && behaviour.getControlledChain() != null;
     }
 
     private static boolean withinReach(Level level, Player player, BlockPos controllerPos) {
