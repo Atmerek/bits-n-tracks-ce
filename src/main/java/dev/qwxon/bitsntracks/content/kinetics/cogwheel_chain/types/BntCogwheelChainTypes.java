@@ -61,10 +61,7 @@ public class BntCogwheelChainTypes {
             || path.equals("large_hidden_flanged_cogwheel")
             || path.equals("industrial_flanged_cogwheel")
             || path.equals("small_hidden_flanged_cogwheel")
-            || path.equals("medium_hidden_flanged_cogwheel")
-            || id.toString().equals("dndecor:industrial_cogwheel")
-            || id.toString().equals("dndecor:medium_industrial_cogwheel")
-            || id.toString().equals("dndecor:large_industrial_cogwheel");
+            || path.equals("medium_hidden_flanged_cogwheel");
     }
 
     /** Message key refusing the chain here, or null. */

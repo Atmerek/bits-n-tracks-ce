@@ -228,7 +228,7 @@ public class WrenchPhysicsHandler {
     private static boolean isCogwheelVariant(Block block) {
         ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
         String namespace = id.getNamespace();
-        if (!"bits_n_bobs".equals(namespace) && !"bits_n_tracks".equals(namespace) && !"dndecor".equals(namespace)) {
+        if (!"bits_n_bobs".equals(namespace) && !"bits_n_tracks".equals(namespace)) {
             return false;
         } else {
             String path = id.getPath();
@@ -244,8 +244,6 @@ public class WrenchPhysicsHandler {
                 || path.equals("large_hidden_flanged_cogwheel")
                 || path.equals("industrial_flanged_cogwheel")
                 || path.equals("large_industrial_flanged_cogwheel")
-                || path.equals("industrial_cogwheel")
-                || path.equals("large_industrial_cogwheel")
                 || path.equals("tiny_flanged_cogwheel")
                 || path.equals("industrial_tiny_flanged_cogwheel")
                 || path.equals("tiny_hidden_flanged_cogwheel");

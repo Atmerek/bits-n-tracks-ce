@@ -85,20 +85,17 @@ public final class HiddenCogwheelCompat {
         Block replacement;
         if (oldState.is((Block)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get())
             || oldState.is((Block)BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.get())
-            || oldState.is((Block)BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get())
-            || BuiltInRegistries.BLOCK.getKey(oldState.getBlock()).toString().equals("dndecor:medium_industrial_cogwheel")) {
+            || oldState.is((Block)BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get())) {
             replacement = (Block)BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get();
         } else if (oldState.is((Block)BnbKineticBlocks.SMALL_FLANGED_COGWHEEL.get())
             || oldState.is((Block)BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get())
             || oldState.is((Block)BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.get())
-            || oldState.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())
-            || BuiltInRegistries.BLOCK.getKey(oldState.getBlock()).toString().equals("dndecor:industrial_cogwheel")) {
+            || oldState.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())) {
             replacement = (Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get();
         } else if (!oldState.is((Block)BnbKineticBlocks.LARGE_FLANGED_COGWHEEL.get())
             && !oldState.is((Block)BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.get())
             && !oldState.is((Block)BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.get())
-            && !oldState.is((Block)BitsNTracksBlocks.LARGE_HIDDEN_FLANGED_COGWHEEL.get())
-            && !BuiltInRegistries.BLOCK.getKey(oldState.getBlock()).toString().equals("dndecor:large_industrial_cogwheel")) {
+            && !oldState.is((Block)BitsNTracksBlocks.LARGE_HIDDEN_FLANGED_COGWHEEL.get())) {
             if (!oldState.is((Block)BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.get())
                 && !oldState.is((Block)BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.get())
                 && !oldState.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get())) {
