@@ -18,7 +18,7 @@ import net.minecraft.world.level.material.MapColor;
 public class BitsNTracksBlocks {
     public static final BlockEntry<HiddenCogwheelBlock> TINY_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("tiny_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.TINY))
-        .initialProperties(SharedProperties::stone)
+        .initialProperties(SharedProperties::wooden)
         .properties(p -> p.sound(SoundType.WOOD).mapColor(MapColor.DIRT))
         .properties(p -> p.noOcclusion())
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
@@ -47,14 +47,14 @@ public class BitsNTracksBlocks {
         .register();
     public static final BlockEntry<HiddenCogwheelBlock> SMALL_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("small_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.SMALL))
-        .initialProperties(SharedProperties::stone)
+        .initialProperties(SharedProperties::wooden)
         .properties(p -> p.sound(SoundType.WOOD).mapColor(MapColor.DIRT))
         .properties(p -> p.noOcclusion())
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
         .register();
     public static final BlockEntry<HiddenCogwheelBlock> LARGE_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("large_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.LARGE))
-        .initialProperties(SharedProperties::stone)
+        .initialProperties(SharedProperties::wooden)
         .properties(p -> p.sound(SoundType.WOOD).mapColor(MapColor.DIRT))
         .properties(p -> p.noOcclusion())
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
@@ -124,7 +124,7 @@ public class BitsNTracksBlocks {
         .register();
     public static final BlockEntry<HiddenCogwheelBlock> MEDIUM_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("medium_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.MEDIUM))
-        .initialProperties(SharedProperties::stone)
+        .initialProperties(SharedProperties::wooden)
         .properties(p -> p.sound(SoundType.WOOD).mapColor(MapColor.DIRT))
         .properties(p -> p.noOcclusion())
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})

@@ -16,6 +16,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ItemLike;
@@ -76,17 +77,9 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
 
     @SuppressWarnings("deprecation")
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
-        if (level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
-            String orig = access.bnt$getOriginalBlock();
-            if (orig != null && !orig.isEmpty()) {
-                ResourceLocation loc = ResourceLocation.tryParse(orig);
-                if (loc != null) {
-                    Block origBlock = (Block)BuiltInRegistries.BLOCK.get(loc);
-                    if (origBlock != null && origBlock != Blocks.AIR) {
-                        return new ItemStack(origBlock);
-                    }
-                }
-            }
+        Block original = originalBlock(level.getBlockEntity(pos));
+        if (original != null) {
+            return new ItemStack(original);
         }
 
         if (this.size == CogwheelSize.LARGE) {
@@ -101,15 +94,32 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
     }
 
     protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
-        List<ItemStack> drops = super.getDrops(state, params);
         BlockEntity be = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+        Block original = originalBlock(be);
+        List<ItemStack> drops = new ArrayList<>();
+        for (ItemStack drop : super.getDrops(state, params)) {
+            boolean cogwheel = drop.getItem() instanceof BlockItem item && item.getBlock() instanceof BntFlangedCogwheelBlock;
+            drops.add(original != null && cogwheel ? new ItemStack(original, drop.getCount()) : drop);
+        }
         if (be instanceof KineticBlockEntityPhysicsAccess access
             && access.bnt$getSuspensionSide() != 0
             && !BntSuspension.heldByWidePartner(be)) {
-            drops = new ArrayList<>(drops);
             drops.add(new ItemStack(BitsNTracksItems.SUSPENSION_PIECE.get()));
         }
         return drops;
+    }
+
+    private static Block originalBlock(BlockEntity be) {
+        if (!(be instanceof KineticBlockEntityPhysicsAccess access)) {
+            return null;
+        }
+        String id = access.bnt$getOriginalBlock();
+        ResourceLocation location = id == null || id.isEmpty() ? null : ResourceLocation.tryParse(id);
+        if (location == null) {
+            return null;
+        }
+        Block block = BuiltInRegistries.BLOCK.get(location);
+        return block == Blocks.AIR || block instanceof HiddenCogwheelBlock ? null : block;
     }
 
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
@@ -118,19 +128,6 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
 
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         BlockState result = super.playerWillDestroy(level, pos, state, player);
-        if (!level.isClientSide() && !player.isCreative() && level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
-            String orig = access.bnt$getOriginalBlock();
-            if (orig != null && !orig.isEmpty()) {
-                ResourceLocation loc = ResourceLocation.tryParse(orig);
-                if (loc != null) {
-                    Block origBlock = (Block)BuiltInRegistries.BLOCK.get(loc);
-                    if (origBlock != null && origBlock != Blocks.AIR) {
-                        ItemStack drop = new ItemStack(origBlock);
-                        Block.popResource(level, pos, drop);
-                    }
-                }
-            }
-        }
         if (!level.isClientSide() && level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic) {
             BntSuspension.detach(level, pos, kinetic, !player.isCreative());
         }
