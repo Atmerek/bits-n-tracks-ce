@@ -88,7 +88,9 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         BntChainGeometry.Layout restored = this.bnt$restoredLayout;
         if (restored != null) {
             this.bnt$restoredLayout = null;
-            if (BntChainEngagement.stillHolds(level, controllerPos, nodes, restored)
+            if (BntChainEngagement.tangled(level, controllerPos, nodes, restored)) {
+                restored = null;
+            } else if (BntChainEngagement.stillHolds(level, controllerPos, nodes, restored)
                 && BntChainEngagement.agreesWithSolver(level, controllerPos, nodes, restored)) {
                 this.bnt$engagedDisplacements = signature;
                 this.bnt$repairAttempted = false;

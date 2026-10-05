@@ -467,6 +467,20 @@ public final class BntChainGeometry {
         return true;
     }
 
+    public static boolean tangled(List<PathedCogwheelNode> pathNodes, Layout layout) {
+        int count = pathNodes.size();
+        Axis axis = sharedAxis(pathNodes);
+        if (layout == null || axis == null || layout.sides().length != count || layout.sequence().length < 3) {
+            return false;
+        }
+
+        double[] xs = new double[count];
+        double[] ys = new double[count];
+        double[] radii = new double[count];
+        fillLive(pathNodes, axis, xs, ys, radii);
+        return BntBeltSolver.tangled(xs, ys, radii, layout.sides(), layout.sequence());
+    }
+
     /** How far a node reaches past its neighbours' run, or NaN when it does not sit along that run. */
     private static double clearance(double[] xs, double[] ys, double[] radii, int[] sides,
                                     int from, int to, int node) {

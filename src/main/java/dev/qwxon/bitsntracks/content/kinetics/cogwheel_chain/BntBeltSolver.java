@@ -237,6 +237,15 @@ public final class BntBeltSolver {
         return at;
     }
 
+    static boolean tangled(double[] xs, double[] ys, double[] radii, int[] sides, int[] sequence) {
+        List<Integer> order = new ArrayList<>(sequence.length);
+        for (int node : sequence) {
+            order.add(node);
+        }
+        BntBeltSolver.Path path = BntBeltSolver.Path.of(xs, ys, radii, sides, order);
+        return path.crossings() > 0 || path.loopsBack();
+    }
+
     private record Path(double[] xs, double[] ys, double[] radii, int[] sides) {
         static BntBeltSolver.Path of(double[] xs, double[] ys, double[] radii, int[] sides, List<Integer> sequence) {
             int size = sequence.size();
@@ -253,6 +262,35 @@ public final class BntBeltSolver {
 
         long crossings() {
             return BntBeltSolver.crossings(this.xs, this.ys, this.radii, this.sides);
+        }
+
+        boolean loopsBack() {
+            int count = this.xs.length;
+            if (count < 3) {
+                return false;
+            }
+            double[][] runs = new double[count][];
+            int chirality = 0;
+            for (int i = 0; i < count; i++) {
+                int next = (i + 1) % count;
+                runs[i] = tangent(this.xs[i], this.ys[i], this.sides[i] * this.radii[i],
+                    this.xs[next], this.ys[next], this.sides[next] * this.radii[next]);
+                if (runs[i] == null) {
+                    return true;
+                }
+                chirality += this.sides[i];
+            }
+            int loop = chirality >= 0 ? 1 : -1;
+            double turned = 0.0;
+            for (int i = 0; i < count; i++) {
+                double[] incoming = runs[(i - 1 + count) % count];
+                double angle = sweep(this.sides[i], incoming[3], incoming[4], runs[i][1], runs[i][2]);
+                if (angle > PHANTOM_ARC) {
+                    angle -= TAU;
+                }
+                turned += this.sides[i] == loop ? angle : -angle;
+            }
+            return Math.abs(turned - TAU) > Math.PI;
         }
     }
 

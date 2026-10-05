@@ -130,6 +130,18 @@ public final class BntChainEngagement {
         }
     }
 
+    public static boolean tangled(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes,
+                                  BntChainGeometry.Layout layout) {
+        Function<BlockPos, Vec3> previous = BntChainMotion.swapDisplacementSource(
+            localPos -> alignmentDisplacement(level, controllerPos.offset(localPos)));
+
+        try {
+            return BntChainGeometry.tangled(nodes, layout);
+        } finally {
+            BntChainMotion.swapDisplacementSource(previous);
+        }
+    }
+
     public static BntChainGeometry.Layout layout(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
         return layout(level, controllerPos, nodes, null);
     }
