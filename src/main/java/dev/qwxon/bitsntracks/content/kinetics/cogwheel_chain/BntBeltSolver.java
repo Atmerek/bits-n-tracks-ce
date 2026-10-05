@@ -243,6 +243,9 @@ public final class BntBeltSolver {
         double along = ((xs[node] - xs[from]) * dx + (ys[node] - ys[from]) * dy) / (length * length);
         double clamped = Math.max(0.0, Math.min(1.0, along));
         double outward = ((xs[node] - xs[from]) * dy - (ys[node] - ys[from]) * dx) / length;
+        if (along != clamped) {
+            outward = Math.min(outward, 0.0);
+        }
         double reach = radii[from] + (radii[to] - radii[from]) * clamped;
         return reach - radii[node] - outward + Math.abs(along - clamped) * length;
     }
