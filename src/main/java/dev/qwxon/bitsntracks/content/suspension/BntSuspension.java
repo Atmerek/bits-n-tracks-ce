@@ -14,6 +14,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -270,13 +271,12 @@ public final class BntSuspension {
     }
 
     private static boolean hangs(Level level, BlockPos cell) {
-        return level.getBlockState(cell).isFaceSturdy(level, cell, Direction.DOWN);
+        BlockState state = level.getBlockState(cell);
+        return !state.isAir() && !(state.getBlock() instanceof LiquidBlock);
     }
 
     private static boolean holds(Level level, BlockPos cell, Axis axis, int facing) {
-        BlockPos rest = rest(cell, axis, facing);
-        Direction toward = Direction.get(facing > 0 ? Direction.AxisDirection.NEGATIVE : Direction.AxisDirection.POSITIVE, axis);
-        return level.getBlockState(rest).isFaceSturdy(level, rest, toward);
+        return hangs(level, rest(cell, axis, facing));
     }
 
     public static void attach(KineticBlockEntity kinetic, int side, int facing) {
