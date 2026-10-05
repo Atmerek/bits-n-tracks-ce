@@ -219,17 +219,41 @@ public final class BntBeltSolver {
         return order;
     }
 
-    private static int bestGap(double[] xs, double[] ys, double[] radii, List<Integer> sequence, int node) {
+    private static int bestGap(double[] xs, double[] ys, double[] radii, int[] sides, List<Integer> sequence, int node) {
         int at = 0;
+        long fewest = Long.MAX_VALUE;
         double cheapest = Double.MAX_VALUE;
         for (int position = 0; position < sequence.size(); position++) {
+            List<Integer> candidate = new ArrayList<>(sequence);
+            candidate.add(position + 1, node);
+            long crossed = BntBeltSolver.Path.of(xs, ys, radii, sides, candidate).crossings();
             double gap = gapToRun(xs, ys, radii, sequence.get(position), sequence.get((position + 1) % sequence.size()), node);
-            if (gap < cheapest) {
+            if (crossed < fewest || crossed == fewest && gap < cheapest) {
+                fewest = crossed;
                 cheapest = gap;
                 at = position;
             }
         }
         return at;
+    }
+
+    private record Path(double[] xs, double[] ys, double[] radii, int[] sides) {
+        static BntBeltSolver.Path of(double[] xs, double[] ys, double[] radii, int[] sides, List<Integer> sequence) {
+            int size = sequence.size();
+            BntBeltSolver.Path path = new BntBeltSolver.Path(new double[size], new double[size], new double[size], new int[size]);
+            for (int i = 0; i < size; i++) {
+                int node = sequence.get(i);
+                path.xs[i] = xs[node];
+                path.ys[i] = ys[node];
+                path.radii[i] = radii[node];
+                path.sides[i] = sides[node];
+            }
+            return path;
+        }
+
+        long crossings() {
+            return BntBeltSolver.crossings(this.xs, this.ys, this.radii, this.sides);
+        }
     }
 
     private static double gapToRun(double[] xs, double[] ys, double[] radii, int from, int to, int node) {
@@ -296,7 +320,7 @@ public final class BntBeltSolver {
         } else {
             for (int node = 0; node < count; node++) {
                 if (touched[node] && !sequence.contains(node)) {
-                    sequence.add(bestGap(xs, ys, radii, sequence, node) + 1, node);
+                    sequence.add(bestGap(xs, ys, radii, sides, sequence, node) + 1, node);
                 }
             }
         }
