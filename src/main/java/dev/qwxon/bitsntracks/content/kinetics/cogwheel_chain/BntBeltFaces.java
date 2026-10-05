@@ -45,9 +45,14 @@ public final class BntBeltFaces {
     }
 
     private static void quad(VertexEmitter emitter, Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4, float u0, float u1, float v0, float v1) {
-        emitter.emit((float)p1.x, (float)p1.y, (float)p1.z, u0, v0, 0.0F, 1.0F, 0.0F);
-        emitter.emit((float)p2.x, (float)p2.y, (float)p2.z, u0, v1, 0.0F, 1.0F, 0.0F);
-        emitter.emit((float)p3.x, (float)p3.y, (float)p3.z, u1, v1, 0.0F, 1.0F, 0.0F);
-        emitter.emit((float)p4.x, (float)p4.y, (float)p4.z, u1, v0, 0.0F, 1.0F, 0.0F);
+        Vec3 normal = p3.subtract(p1).cross(p4.subtract(p2));
+        normal = normal.lengthSqr() < 1.0E-10 ? new Vec3(0.0, 1.0, 0.0) : normal.normalize();
+        float nx = (float)normal.x;
+        float ny = (float)normal.y;
+        float nz = (float)normal.z;
+        emitter.emit((float)p1.x, (float)p1.y, (float)p1.z, u0, v0, nx, ny, nz);
+        emitter.emit((float)p2.x, (float)p2.y, (float)p2.z, u0, v1, nx, ny, nz);
+        emitter.emit((float)p3.x, (float)p3.y, (float)p3.z, u1, v1, nx, ny, nz);
+        emitter.emit((float)p4.x, (float)p4.y, (float)p4.z, u1, v0, nx, ny, nz);
     }
 }

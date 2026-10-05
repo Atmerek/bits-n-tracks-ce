@@ -95,19 +95,22 @@ final class BntSpanModels {
             data.add(z);
             data.add(u);
             data.add(v);
+            data.add(nx);
+            data.add(ny);
+            data.add(nz);
         }
     }
 
     private record SpanMesh(float[] data) implements QuadMesh {
         @Override
         public int vertexCount() {
-            return data.length / 5;
+            return data.length / 8;
         }
 
         @Override
         public void write(MutableVertexList list) {
             for (int i = 0; i < vertexCount(); i++) {
-                int at = i * 5;
+                int at = i * 8;
                 list.x(i, data[at]);
                 list.y(i, data[at + 1]);
                 list.z(i, data[at + 2]);
@@ -117,9 +120,9 @@ final class BntSpanModels {
                 list.g(i, 1.0F);
                 list.b(i, 1.0F);
                 list.a(i, 1.0F);
-                list.normalX(i, 0.0F);
-                list.normalY(i, 1.0F);
-                list.normalZ(i, 0.0F);
+                list.normalX(i, data[at + 5]);
+                list.normalY(i, data[at + 6]);
+                list.normalZ(i, data[at + 7]);
                 list.light(i, 0);
                 list.overlay(i, OverlayTexture.NO_OVERLAY);
             }

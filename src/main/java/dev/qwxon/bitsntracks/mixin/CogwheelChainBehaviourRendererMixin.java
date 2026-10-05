@@ -338,13 +338,13 @@ public abstract class CogwheelChainBehaviourRendererMixin {
                 .setUv(u, v)
                 .setOverlay(OverlayTexture.NO_OVERLAY)
                 .setLight(vertexLight)
-                .setNormal(pose, 0.0F, 1.0F, 0.0F);
+                .setNormal(pose, nx, ny, nz);
         };
 
         if (tankTread) {
             double[] tread = BntBeltLinks.onLoop(to, offset, length, BntTankTread.CELL);
             BntTankTread.Target target = new BntTankTread.Target(
-                vc, poseMatrix, pose.transformNormal(0.0F, 1.0F, 0.0F, new Vector3f()), lightAtSource, lightAtDest, relTo,
+                vc, poseMatrix, pose.normal(), lightAtSource, lightAtDest, relTo,
                 BntTreadView.eyeFrom(from), BntTreadView.links(from), null
             );
             BntTankTread.emitSegment(target, sourcePoints, destinationPoints, tread[0], tread[1], wideBelt, flipInsideOutside);

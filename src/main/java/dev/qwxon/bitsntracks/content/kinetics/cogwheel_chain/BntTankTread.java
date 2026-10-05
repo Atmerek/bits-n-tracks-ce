@@ -6,6 +6,7 @@ import java.util.List;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -84,7 +85,7 @@ public final class BntTankTread {
      * when every face has to be drawn, and links are left out where they would be under a pixel.
      */
     public record Target(
-        VertexConsumer consumer, Matrix4f pose, Vector3f normal, int lightFrom, int lightTo, Vec3 relTo, Vec3 eye,
+        VertexConsumer consumer, Matrix4f pose, Matrix3f normal, int lightFrom, int lightTo, Vec3 relTo, Vec3 eye,
         boolean links, BntTrackSink sink
     ) {
     }
@@ -193,7 +194,7 @@ public final class BntTankTread {
         int light = segment.lightAt(c);
         for (int face = 0; face < 6; face++) {
             if ((visible & (1 << face)) != 0) {
-                face(target, c, cx, cy, cz, px, py, pz, FACE_CORNERS[face], uv[face], light);
+                face(target, c, cx, cy, cz, px, py, pz, FACE_CORNERS[face], uv[face], light, scratch);
             }
         }
     }
@@ -244,7 +245,7 @@ public final class BntTankTread {
     /** One face, wound so it looks away from the middle of the box. */
     private static void face(
         Target target, Vec3 middle, double[] cx, double[] cy, double[] cz, float[] px, float[] py, float[] pz,
-        int[] corners, float[] uv, int light
+        int[] corners, float[] uv, int light, Vector3f normal
     ) {
         int a = corners[0];
         int b = corners[1];
@@ -265,7 +266,12 @@ public final class BntTankTread {
         boolean flip = nx * ox + ny * oy + nz * oz < 0.0;
 
         int turn = (int)uv[4];
-        Vector3f normal = target.normal();
+        double outward = flip ? -1.0 : 1.0;
+        target.normal().transform((float)(nx * outward), (float)(ny * outward), (float)(nz * outward), normal);
+        if (normal.lengthSquared() < 1.0E-12F) {
+            target.normal().transform(0.0F, 1.0F, 0.0F, normal);
+        }
+        normal.normalize();
         for (int i = 0; i < 4; i++) {
             int corner = flip ? corners[3 - i] : corners[i];
             int st = (i + turn) & 3;
@@ -299,6 +305,10 @@ public final class BntTankTread {
             double oy = (cy[a] + cy[d]) * 0.5;
             double oz = (cz[a] + cz[d]) * 0.5;
             boolean flip = (nx * ox + ny * oy + nz * oz < 0.0) != mirrored;
+            double wound = (flip ? -1.0 : 1.0) / Math.sqrt(nx * nx + ny * ny + nz * nz);
+            float fx = (float)(nx * wound);
+            float fy = (float)(ny * wound);
+            float fz = (float)(nz * wound);
             float[] faceUv = uv[face];
             int turn = (int)faceUv[4];
             for (int i = 0; i < 4; i++) {
@@ -306,7 +316,7 @@ public final class BntTankTread {
                 int st = (i + turn) & 3;
                 float u = st < 2 ? faceUv[0] : faceUv[2];
                 float v = st == 0 || st == 3 ? faceUv[1] : faceUv[3];
-                out.emit((float)cx[corner], (float)cy[corner], (float)(cz[corner] * 0.5 + 0.5), u, v, 0.0F, 1.0F, 0.0F);
+                out.emit((float)cx[corner], (float)cy[corner], (float)(cz[corner] * 0.5 + 0.5), u, v, fx, fy, fz);
             }
         }
     }
