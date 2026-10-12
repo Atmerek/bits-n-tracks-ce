@@ -11,6 +11,7 @@ import dev.qwxon.bitsntracks.content.BntHeadBlockItem;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.material.MapColor;
@@ -139,7 +140,7 @@ public class BitsNTracksBlocks {
     private static BlockEntry<BntHeadBlock> head(String name) {
         return ((BlockBuilder)BitsNTracks.REGISTRATE
                 .block(name, BntHeadBlock::new)
-                .initialProperties(SharedProperties::stone)
+                .initialProperties(() -> Blocks.SKELETON_SKULL)
                 .properties(p -> p.sound(SoundType.BONE_BLOCK).mapColor(MapColor.WOOL))
                 .properties(p -> p.strength(1.0F).noOcclusion().pushReaction(PushReaction.DESTROY))
                 .item(BntHeadBlockItem::new)
