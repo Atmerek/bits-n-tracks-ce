@@ -1,5 +1,56 @@
 # Changelog
 
+## 3.0.0
+
+Requires Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.
+
+### Upgrading from 2.x
+
+- Physics cogwheels no longer have suspension of their own. Without a Suspension Piece a physics cogwheel is a rigid wheel, so existing vehicles ride without suspension until pieces are mounted. A piece needs a block touching the cogwheel along its axle to hang from.
+- The suspension settings listed under Removed are gone, and any values set in them are ignored. Suspension is now tuned per cogwheel with the Suspension Tool.
+- The Cog Alignment Lever now only works on Bits 'n' Tracks cogwheels.
+
+### Added
+
+- Two-wide track wheels. A cogwheel placed beside another of the same size and material along its axle joins it into one wide wheel, and the track widens to match. Sneak while placing to keep them apart.
+- The track now wraps around its cogwheels the way a real track sits on its road wheels. A cogwheel inside the loop that the track cannot reach is enclosed by it instead of pulling it out of shape, and turns freely until the track touches it.
+- Track routing. Shift + left-clicking a cogwheel face with the Cog Alignment Lever brings the far run of track around that cogwheel and reverses its spin, and clicking the centre puts it back to automatic.
+- The run of track between cogwheels now meets the ground. It drapes over terrain, carries the vehicle over what it crosses, and grips and drives along its length.
+- Track tension. Right-click a run of track with the Cog Alignment Lever to tighten it, or Shift + right-click to slacken it.
+- Tank Tread, a plated track made in a Mechanical Crafter and strung between cogwheels like the Industrial Belt.
+- Suspension Piece, which mounts a swinging arm on a physics cogwheel, or a bogie across two small or tiny cogwheels, two-wide ones included. It is crafted with the spring from Create Aeronautics.
+- Suspension Tool, which reads and tunes a suspended cogwheel's stiffness, damping, travel and spring strength over 11 levels, for one cogwheel or a whole track at once.
+- Ctrl + left-click with the Cog Alignment Lever switches between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
+- Ponder scenes for the flanged cogwheels, tracks, the Cog Alignment Lever, the Suspension Piece and the Suspension Tool.
+- Decorative heads of the mod's creators and contributors.
+- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, and client settings for Flywheel rendering, track update rate and animation distance.
+
+### Changed
+
+- Cogwheels and tracks are drawn through Flywheel when it is active, and tracks stay visible out to the render distance instead of 64 blocks.
+- Shift + right-clicking with the Cog Alignment Lever also resets suspension tuning, and the lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
+- The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.
+
+### Removed
+
+- Design n' Decor cogwheels can no longer be used in tracks.
+- Settings: Cogwheel Suspension, Track Suspension, Base Strength, Spring Scale, Damping Scale, Cogwheel Spring, Track Spring, Cogwheel Damping, Track Damping, Cogwheel Impulse Limit, and the four Suspension Rest settings.
+
+### Fixed
+
+- The track cut through cogwheels, drove cogwheels it never reached, and could drop out of the kinetic network between sessions.
+- Turning physics on or off for a cogwheel reset its alignment and visibility, and turned an industrial cogwheel wooden.
+- Breaking a physics cogwheel by anything other than hand dropped a plain wooden cogwheel instead of the one that was placed, and breaking it with an axe or pickaxe dropped both.
+- Tracks looked wet and glossy with shader packs, and were lit as if they faced the sky.
+- A wheel pressed against a wall lost its grip as if it were in the air.
+- A vehicle on a slope could drift sideways.
+- A wheel touching several blocks could take its grip from the wrong one.
+- The Cog Alignment Lever could not reach a cogwheel drawn away from its block, such as one hanging on its suspension.
+- Bits 'n' Bobs chains and ropes could be placed on a cogwheel with physics enabled.
+- Turning off Bits 'n' Bobs' undedicated chain drive setting broke every track on Bits 'n' Tracks cogwheels.
+- Removing a cogwheel from a chain could crash the game.
+- The Cog Alignment Lever was drawn at the wrong size in item frames.
+
 ## 2.1.0
 
 ### Added
