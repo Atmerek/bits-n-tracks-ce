@@ -472,7 +472,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
 
     @Inject(
         method = {"read"},
-        at = {@At("TAIL")}
+        at = {@At("RETURN")}
     )
     private void bnt$read(CompoundTag tag, Provider registries, boolean clientPacket, CallbackInfo ci) {
         this.bnt$physicsEnabled = tag.getBoolean("BntPhysicsEnabled");
