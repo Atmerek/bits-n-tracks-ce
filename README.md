@@ -7,43 +7,86 @@
 [![License GPL-3.0](https://img.shields.io/github/license/Atmerek/bits-n-tracks-ce?style=for-the-badge)](LICENSE)
 [![Discord](https://img.shields.io/discord/1553509655064354848?style=for-the-badge)](https://discord.gg/CxTmpvp6gs)
 
-Build working tracks in Create, using the belt and chain system from Bits 'n' Bobs.
-
-Flanged cogwheels come in several sizes and can be aligned, hidden and tuned in place.
+Build working tank tracks in Create.
+Flanged cogwheels carry a belt or tread around them, and on a Sable vehicle the track grips the ground, drives it along and rides over what it crosses.
 
 This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/mod/create-bits-n-tracks) by *qwxon*, picking up development where the original left off.
 
+## Requirements
+
+* Minecraft 1.21.1 with NeoForge 21.1.228 or newer
+* [Create](https://modrinth.com/mod/create) 6.0.10 or newer
+* [Sable](https://modrinth.com/mod/sable) 2.0
+* [Create: Bits 'n' Bobs](https://modrinth.com/mod/create-bits-n-bobs) 2.3.5 or newer, with its own dependencies
+* [Create Aeronautics](https://modrinth.com/mod/create-aeronautics) 1.3.1 or newer, for assembling vehicles and for the spring in the Suspension Piece recipe
+
 ## Features
 
-* **Track-focused cogwheels** in several sizes.
-* **Industrial cogwheel variants**, with models based on the Industrial Cogwheels from Create: Gears n' Kinetics.
-* **Hidden cogwheels** for cleaner builds.
-* **Two-wide track wheels**, made by placing two cogwheels of the same size side by side along their axis, with the track stretching to match; sneak while placing to keep them apart.
-* **Taut track routing**, which wraps the track around the cogwheels the way a real one sits on its road wheels; a cogwheel too far inside the loop for the track to reach is enclosed by it instead of pulling it out of shape, and it neither drives the track nor is driven by it until it reaches it.
-* **Steerable track routing**, bringing whichever run of track you name all the way around a cogwheel; a cogwheel the track runs over instead of under turns the other way, the same as a real belt crossed over a pulley.
-* **Cog Alignment Lever** for shifting, hiding, resetting, rerouting and tuning cogwheels.
-* **Suspension-style physics** for tracked vehicles.
-* **Configurable** physics and movement settings.
+* **Flanged cogwheels** in tiny, small, medium and large, each in a plain and an industrial style, the industrial models based on the Industrial Cogwheels from Create: Gears n' Kinetics.
+* **Two kinds of track**: the Industrial Belt and the plated Tank Tread, strung between cogwheels like a Bits 'n' Bobs chain.
+* **Two-wide wheels**: place a cogwheel beside another of the same size and style along its axle and they join into one wide wheel, with the track widening to match. Sneak while placing to keep them apart.
+* **Taut track routing**: the track wraps around its cogwheels the way a real track sits on its road wheels. A cogwheel inside the loop that the track cannot reach is enclosed by it, and turns freely until the track touches it.
+* **Steerable routing**: bring the far run of track around any cogwheel, which then turns the other way, like a belt crossed over a pulley.
+* **A track that meets the ground**: the run between cogwheels drapes over terrain, grips and drives along its length, and carries the vehicle over obstacles. Its tension can be set per track.
+* **Suspension**: Suspension Pieces mount swinging arms, bogies and wide bogies on physics cogwheels, and the Suspension Tool tunes each one.
+* **Configurable** physics, track and rendering settings.
+
+## Learning the mod
+
+Every part of the mod has a Ponder scene: hold the Ponder key (W by default) over a flanged cogwheel, a track, the Cog Alignment Lever, a Suspension Piece or the Suspension Tool.
+The scenes walk through building a tracked vehicle, from placing and powering the cogwheels to tuning its suspension.
 
 ## The Cog Alignment Lever
 
-The main tool of the mod. It adjusts cogwheel placement after the block is already down, hides cogwheels you would rather not see, resets a cogwheel to its default state, sends the track around the other side of a cogwheel, and switches suspension physics on or off per cogwheel.
+The main tool of the mod. It adjusts cogwheels after they are placed, hides them, routes and tensions the track, and switches physics on or off.
+It only acts on Bits 'n' Tracks cogwheels and the tracks running on them, and breaks other blocks as normal.
 
 | | |
 |---|---|
 | Right-click a flat face, off center | Nudges that cogwheel one pixel toward where you clicked |
 | Right-click a flat face, in the center | Shows or hides that cogwheel |
-| Right-click a side | Shifts the whole chain one pixel along the axis |
-| Shift + right-click | Resets alignment, visibility and track routing for the whole chain |
-| Left-click | Toggles suspension physics for that cogwheel |
-| Shift + left-click a face, off center | Brings the far run of track around the cogwheel and reverses it, so clicking the top wraps the bottom track over it; the side is picked the same way the green highlight box picks it |
+| Right-click a side | Moves that cogwheel one pixel along its axle |
+| Right-click a run of track | Tightens it, so it holds its line and follows the ground less |
+| Shift + right-click a run of track | Slackens it, so it sags and follows the ground |
+| Shift + right-click a cogwheel | Resets alignment, visibility, track routing and suspension tuning on the whole track |
+| Left-click | Toggles physics for that cogwheel |
+| Shift + left-click a face, off center | Brings the far run of track around the cogwheel, so clicking the top wraps the bottom track over it, and reverses its spin |
 | Shift + left-click a face, in the center | Puts that cogwheel's track routing back to automatic |
+| Ctrl + left-click | Switches between moving one cogwheel and moving every cogwheel on the track that shares its physics setting |
+
+## Suspension
+
+A **Suspension Piece** gives a physics cogwheel a sprung mount.
+
+* **Arm**: right-click a physics cogwheel of any size to select it, then look beside it and right-click where the green preview fits. The arm pivots on the cogwheel's top corner, which needs a block touching it along the axle. Uses one piece.
+* **Bogie**: select a small or tiny physics cogwheel, then right-click the one next to it. The bogie hangs from a block right above either cogwheel, or one next to that spot along the axle, and blocks can sit on top of it. Uses two pieces.
+* **Wide bogie**: the same between two two-wide small or tiny cogwheels, each pair turning into two separate wheels with the bogie between them. Uses two pieces.
+
+Shift + right-click the cogwheel with an empty hand to take a piece or bogie back off.
+A mount whose supporting block is removed drops its pieces.
+
+The **Suspension Tool** reads and tunes cogwheels that carry a Suspension Piece.
+It has four settings, stiffness, damping, travel and spring strength, each on levels 1 to 11 with 4 as the default.
+
+| | |
+|---|---|
+| Look at a suspended cogwheel | Shows its level for the selected setting |
+| Right-click | Raises the selected setting by one level |
+| Shift + right-click | Lowers it by one level |
+| Left-click / Shift + left-click | Selects the previous / next setting |
+| Ctrl + left-click | Switches between tuning one cogwheel and every suspended cogwheel on the track |
 
 ## Configuration
 
-Everything the physics uses can be changed from the Config button in the mod list: suspension, geometry, drive, friction, stress and sounds, plus client rendering options. Physics settings are per world, so open a world to edit them, and drop a `bits_n_tracks-server.toml` into `defaultconfigs/` to give every new world the same values.
+Physics settings are per world: suspension, cogwheel geometry, drive, friction, the belt, stress and sounds.
+Open a world and use the Config button in the mod list to edit them, and drop a `bits_n_tracks-server.toml` into `defaultconfigs/` to give every new world the same values.
+Client settings cover Flywheel rendering, how often tracks recompute their shape, and the distance past which they stop animating.
+
+Shader packs work through Iris, with or without [Colorwheel](https://modrinth.com/mod/colorwheel) keeping Flywheel on.
 
 ## Building
+
+Gradle needs JDK 21.
 
 ```bash
 ./gradlew build           # jar lands in build/libs/
@@ -55,3 +98,4 @@ Everything the physics uses can be changed from the Config button in the mod lis
 **GPL-3.0-only.** See [LICENSE](LICENSE).
 
 Original mod and all original code by **qwxon**.
+Community Edition by **Atmerek** and **Alesrr**, with contributions from **Cubester** and art by **CloverKeep**.
