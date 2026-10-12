@@ -119,7 +119,7 @@ final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
         Block hidden = BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get();
         double wheelRadius = CogwheelSizeHelper.getTrackRadius(hidden);
         double sprocketRadius = CogwheelSizeHelper.getTrackRadius(BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get());
-        double wheelY = 2.5 + CogwheelSizeHelper.getVisualVerticalOffset(hidden);
+        double wheelY = 2.5;
         for (int x : new int[]{2, 6}) {
             List<BntBobBody.Wheel> track = new ArrayList<>();
             track.add(new BntBobBody.Wheel(null, new Vec3(x + 0.5, 3.5, 2.5), sprocketRadius));

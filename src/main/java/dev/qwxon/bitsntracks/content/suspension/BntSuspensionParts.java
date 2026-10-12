@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -65,8 +64,7 @@ public final class BntSuspensionParts {
         Vec3 across = BntSuspension.across(axis);
         BlockPos end = be.getLevel() == null ? be.getBlockPos() : BntSuspension.armEnd(be.getLevel(), be.getBlockPos(), axis, facing);
         Vec3 shift = Vec3.atLowerCornerOf(end.subtract(be.getBlockPos()));
-        double seat = CogwheelSizeHelper.getVisualVerticalOffset(be.getBlockState().getBlock());
-        Vec3 pivot = CENTRE.add(shift).add(0.0, seat + BntSuspension.PIVOT, 0.0).add(across.scale(side * BntSuspension.PIVOT));
+        Vec3 pivot = CENTRE.add(shift).add(0.0, BntSuspension.PIVOT, 0.0).add(across.scale(side * BntSuspension.PIVOT));
         boolean holder = side > 0 || be.getLevel() == null || !BntSuspension.sharesPivot(be.getLevel(), end, axis, side);
         arm(cog.add(shift), pivot, across, BntSuspension.along(axis), side, facing, holder, sink);
     }
@@ -119,7 +117,7 @@ public final class BntSuspensionParts {
 
     static void bogie(KineticBlockEntity be, Vec3 away, int facing, boolean wide, Vec3 shift, BntBogiePose bogie, Sink sink) {
         Vec3 depth = BntSuspension.along(BntSuspension.axis(be.getBlockState())).scale(wide ? facing : -facing);
-        Vec3 origin = CENTRE.add(shift).add(0.0, CogwheelSizeHelper.getVisualVerticalOffset(be.getBlockState().getBlock()), 0.0);
+        Vec3 origin = CENTRE.add(shift);
         int model = wide ? WIDE_BOGIE : BOGIE;
         for (int part = 0; part < PART_QUADS[model].length; part++) {
             if (PART_QUADS[model][part].length == 0) {

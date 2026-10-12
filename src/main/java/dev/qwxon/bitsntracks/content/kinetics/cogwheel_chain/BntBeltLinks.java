@@ -12,7 +12,6 @@ import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -267,9 +266,7 @@ public final class BntBeltLinks {
     private static Vec3 centre(Level level, BlockPos controllerPos, PathedCogwheelNode node, boolean parked) {
         BlockPos nodePos = controllerPos.offset(node.localPos());
         BlockState state = level.getBlockState(nodePos);
-        Vec3 centre = nodePos.getCenter()
-            .add(0.0, CogwheelSizeHelper.getVisualVerticalOffset(state.getBlock()), 0.0)
-            .add(BntCogwheelPairing.seamOffset(state));
+        Vec3 centre = nodePos.getCenter().add(BntCogwheelPairing.seamOffset(state));
         BlockEntity be = level.getBlockEntity(nodePos);
         if (be instanceof KineticBlockEntityPhysicsAccess access) {
             centre = centre.add(

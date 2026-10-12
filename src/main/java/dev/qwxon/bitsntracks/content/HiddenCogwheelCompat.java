@@ -14,7 +14,6 @@ import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -315,10 +314,6 @@ public final class HiddenCogwheelCompat {
         RESTING.set(resting);
     }
 
-    public static double getVisualVerticalTranslation(BlockEntity be, float partialTick) {
-        return be == null ? 0.0 : getManualVisualVerticalOffset(be) - getHeldVisualDrop(be, partialTick);
-    }
-
     public static Vec3 getModelTranslation(BlockEntity be, float partialTick) {
         if (!(be instanceof KineticBlockEntityPhysicsAccess access)) {
             return Vec3.ZERO;
@@ -326,8 +321,7 @@ public final class HiddenCogwheelCompat {
 
         Vec3 translation = new Vec3(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
         if (isHiddenCogwheel(be.getBlockState())) {
-            translation = translation.add(0.0, getManualVisualVerticalOffset(be), 0.0)
-                .add(BntSuspension.displacement(be, getHeldVisualDrop(be, partialTick)));
+            translation = translation.add(BntSuspension.displacement(be, getHeldVisualDrop(be, partialTick)));
         }
 
         return translation;
@@ -383,10 +377,6 @@ public final class HiddenCogwheelCompat {
                 kinetic.sendData();
             }
         }
-    }
-
-    public static double getManualVisualVerticalOffset(BlockEntity be) {
-        return CogwheelSizeHelper.getVisualVerticalOffset(be.getBlockState().getBlock());
     }
 
     private static BlockState copyState(BlockState oldState, Block replacement) {

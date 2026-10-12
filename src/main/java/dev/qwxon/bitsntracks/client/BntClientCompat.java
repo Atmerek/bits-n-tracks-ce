@@ -46,10 +46,6 @@ public class BntClientCompat {
         return HiddenCogwheelCompat.getVisualDrop(be, partialTick);
     }
 
-    public static double getVisualVerticalTranslation(BlockEntity be, float partialTick) {
-        return HiddenCogwheelCompat.getVisualVerticalTranslation(be, partialTick);
-    }
-
     /** Tracks are drawn by a block entity renderer, so they need the sublevel's reach rather than the default 64. */
     public static int trackViewDistance() {
         return Math.max(Minecraft.getInstance().options.getEffectiveRenderDistance() * 16, 64);
@@ -152,11 +148,6 @@ public class BntClientCompat {
         }
 
         if (level.isClientSide && HiddenCogwheelCompat.isPhysicsEnabled(nodeBe)) {
-            double manualOffset = HiddenCogwheelCompat.getManualVisualVerticalOffset(nodeBe);
-            if (manualOffset != 0.0) {
-                displacement = displacement.add(0.0, manualOffset, 0.0);
-            }
-
             float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
             displacement = displacement.add(BntSuspension.displacement(nodeBe, HiddenCogwheelCompat.getHeldVisualDrop(nodeBe, partialTick)));
         }

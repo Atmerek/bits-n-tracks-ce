@@ -60,8 +60,7 @@ public final class BntChainEngagement {
 
         Vec3 displacement = new Vec3(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
         if (HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState())) {
-            displacement = displacement.add(0.0, HiddenCogwheelCompat.getManualVisualVerticalOffset(be), 0.0)
-                .add(BntSuspension.displacement(be, groundDrop(level, be, access)));
+            displacement = displacement.add(BntSuspension.displacement(be, groundDrop(level, be, access)));
         }
         return displacement;
     }

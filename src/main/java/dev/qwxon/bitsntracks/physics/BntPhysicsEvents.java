@@ -498,7 +498,6 @@ public final class BntPhysicsEvents {
     private static Vec3 getContactSeat(KineticBlockEntity kbe, BlockState state) {
         Vec3 centre = kbe.getBlockPos()
             .getCenter()
-            .add(0.0, CogwheelSizeHelper.getVisualVerticalOffset(state.getBlock()), 0.0)
             .add(BntCogwheelPairing.seamOffset(state));
         if (kbe instanceof KineticBlockEntityPhysicsAccess access) {
             centre = centre.add(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());

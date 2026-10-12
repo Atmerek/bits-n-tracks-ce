@@ -62,7 +62,6 @@ public final class BntSuspensionScenes {
         ItemStack piece = BitsNTracksItems.SUSPENSION_PIECE.asStack();
         double rest = BntBobScenes.restingDrop();
         Vec3 resting = new Vec3(0.0, -rest, 0.0);
-        double seat = CogwheelSizeHelper.getVisualVerticalOffset(BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get());
         BlockPos assembler = util.grid().at(4, 5, 7);
         BlockPos eastController = util.grid().at(6, 3, 2);
         CompoundTag eastBelt = beltOf(world, eastController);
@@ -114,7 +113,7 @@ public final class BntSuspensionScenes {
 
         for (int z = 3; z <= 6; z++) {
             BlockPos wheel = util.grid().at(6, 2, z);
-            Vec3 face = new Vec3(7.0, 2.5 + seat, z + 0.5);
+            Vec3 face = new Vec3(7.0, 2.5, z + 0.5);
             scene.overlay().showControls(face, Pointing.LEFT, 12).rightClick().withItem(piece);
             scene.idle(8);
             scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, "suspension_" + z, new AABB(wheel), 22);
@@ -131,7 +130,7 @@ public final class BntSuspensionScenes {
         scene.overlay().showText(100)
             .text("The first type of suspension is a " + styled(marked, "Single-arm Rotary Damper Suspension"))
             .placeNearTarget()
-            .pointAt(new Vec3(6.5, 3.0 + seat, 3.0));
+            .pointAt(new Vec3(6.5, 3.0, 3.0));
         scene.addKeyframe();
         scene.idle(110);
 
@@ -151,7 +150,7 @@ public final class BntSuspensionScenes {
             .text(BntBobScenes.tint(ChatFormatting.GRAY, "Remember that in order to use the suspension, your cogwheel needs to have its physics ")
                 + styled(ChatFormatting.GRAY.toString() + ChatFormatting.UNDERLINE, "activated."))
             .placeNearTarget()
-            .pointAt(new Vec3(7.0, 2.5 + seat, 6.5));
+            .pointAt(new Vec3(7.0, 2.5, 6.5));
         scene.idle(100);
 
         scene.addInstruction(restoreBelt(eastController, eastBelt));
@@ -191,7 +190,6 @@ public final class BntSuspensionScenes {
         ItemStack piece = BitsNTracksItems.SUSPENSION_PIECE.asStack();
         double rest = BntBobScenes.restingDrop();
         Vec3 resting = new Vec3(0.0, -rest, 0.0);
-        double seat = CogwheelSizeHelper.getVisualVerticalOffset(BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get());
         BlockPos assembler = util.grid().at(4, 5, 7);
         BlockPos eastController = util.grid().at(6, 3, 2);
         CompoundTag eastBelt = beltOf(world, eastController);
@@ -231,7 +229,7 @@ public final class BntSuspensionScenes {
 
         for (int z = 3; z <= 6; z++) {
             BlockPos wheel = util.grid().at(6, 2, z);
-            scene.overlay().showControls(face(z, seat), Pointing.LEFT, 8).rightClick().whileSneaking();
+            scene.overlay().showControls(face(z), Pointing.LEFT, 8).rightClick().whileSneaking();
             scene.idle(6);
             scene.world().modifyBlockEntity(wheel, KineticBlockEntity.class, be -> mount(be, 0, 0));
             scene.addInstruction(rig.unsuspend(wheel));
@@ -250,11 +248,11 @@ public final class BntSuspensionScenes {
         for (int lead = 4; lead <= 6; lead += 2) {
             BlockPos first = util.grid().at(6, 2, lead - 1);
             BlockPos second = util.grid().at(6, 2, lead);
-            scene.overlay().showControls(face(lead - 1, seat), Pointing.LEFT, 12).rightClick().withItem(piece);
+            scene.overlay().showControls(face(lead - 1), Pointing.LEFT, 12).rightClick().withItem(piece);
             scene.idle(8);
             scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, "bogie_" + lead, new AABB(first), 24);
             scene.idle(10);
-            scene.overlay().showControls(face(lead, seat), Pointing.LEFT, 12).rightClick().withItem(piece);
+            scene.overlay().showControls(face(lead), Pointing.LEFT, 12).rightClick().withItem(piece);
             scene.idle(8);
             scene.overlay().chaseBoundingBoxOutline(PonderPalette.GREEN, "bogie_" + lead, new AABB(first).minmax(new AABB(second)), 12);
             pair(scene, rig, second, first, -1);
@@ -269,7 +267,7 @@ public final class BntSuspensionScenes {
         scene.overlay().showText(90)
             .text("This is the " + styled(marked, "Vertical Dual Spring Suspension"))
             .placeNearTarget()
-            .pointAt(new Vec3(7.2, 3.4 + seat, 4.0));
+            .pointAt(new Vec3(7.2, 3.4, 4.0));
         scene.addKeyframe();
         scene.idle(100);
 
@@ -317,12 +315,11 @@ public final class BntSuspensionScenes {
         ItemStack tool = BitsNTracksItems.SUSPENSION_TOOL.asStack();
         double rest = BntBobScenes.restingDrop();
         Vec3 resting = new Vec3(0.0, -rest, 0.0);
-        double seat = CogwheelSizeHelper.getVisualVerticalOffset(BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get());
         BlockPos assembler = util.grid().at(4, 5, 7);
         BlockPos first = util.grid().at(2, 2, 3);
         List<BlockPos> bogie = List.of(util.grid().at(6, 2, 3), util.grid().at(6, 2, 4));
-        Vec3 westTop = new Vec3(2.0, 3.0 + seat, 3.5).add(resting);
-        Vec3 eastTop = new Vec3(7.0, 3.0 + seat, 4.0).add(resting);
+        Vec3 westTop = new Vec3(2.0, 3.0, 3.5).add(resting);
+        Vec3 eastTop = new Vec3(7.0, 3.0, 4.0).add(resting);
 
         BntBobRig rig = new BntBobRig(util, BntBobScenes.SEAT, rest);
         BntToolDial dial = new BntToolDial();
@@ -440,8 +437,8 @@ public final class BntSuspensionScenes {
         scene.addInstruction(rig.suspend(partner));
     }
 
-    private static Vec3 face(int z, double seat) {
-        return new Vec3(7.0, 2.5 + seat, z + 0.5);
+    private static Vec3 face(int z) {
+        return new Vec3(7.0, 2.5, z + 0.5);
     }
 
     private static String styled(String codes, String text) {
