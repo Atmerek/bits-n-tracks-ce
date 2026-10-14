@@ -1,5 +1,6 @@
 package dev.qwxon.bitsntracks.content;
 
+import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,7 +13,7 @@ public final class BntVisualized {
     }
 
     public static boolean drawn(BlockEntity be) {
-        return be != null && DRAWN.contains(be);
+        return be != null && DRAWN.contains(be) && VisualizationManager.supportsVisualization(be.getLevel());
     }
 
     public static void mark(BlockEntity be, boolean drawn) {
