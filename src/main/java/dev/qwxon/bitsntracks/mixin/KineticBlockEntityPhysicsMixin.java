@@ -16,6 +16,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
+import dev.qwxon.bitsntracks.physics.BntExtraMass;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsRegistry;
 import dev.qwxon.bitsntracks.physics.BntTuning;
@@ -448,6 +449,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     )
     private void bnt$tick(CallbackInfo ci) {
         KineticBlockEntity self = (KineticBlockEntity)(Object)this;
+        BntExtraMass.tick(self);
         if (this.bnt$physicsEnabled) {
             if (self.getLevel() != null) {
                 BntPhysicsRegistry.add(self);
@@ -541,6 +543,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     private void bnt$onRemoved(CallbackInfo ci) {
         KineticBlockEntity self = (KineticBlockEntity)(Object)this;
         BntPhysicsRegistry.remove(self);
+        BntExtraMass.release(self);
     }
 
     @Override
