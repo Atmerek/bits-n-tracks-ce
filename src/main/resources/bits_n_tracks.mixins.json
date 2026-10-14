@@ -24,6 +24,8 @@
         "BntCreativeModeTabMixin",
         "BracketedKineticBlockEntityMixin",
         "BntUseItemOnRangeMixin",
+        "PhysicsBlockPropertyHelperMixin",
+        "MassTrackerMixin",
         "accessor.RotationPropagatorAccessor"
     ],
     "client": [
