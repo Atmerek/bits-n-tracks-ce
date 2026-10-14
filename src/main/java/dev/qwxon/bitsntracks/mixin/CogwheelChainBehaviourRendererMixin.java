@@ -296,7 +296,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         float scrolled = (float)loop[0];
         boolean invertScroll = bnt$shouldInvertScroll(type, chainRenderInfo, isCustomBeltPlacement);
         float actualOffset = invertScroll ? scrolled : -scrolled;
-        float minV = actualOffset * linkSquish;
+        float minV = isCustomBeltPlacement ? (actualOffset - (float)loop[1]) * linkSquish : actualOffset * linkSquish;
         float maxV = (float)loop[1] * linkSquish + minV;
         List<Vec3> scaledSourcePoints = sourcePoints;
         List<Vec3> scaledDestinationPoints = destinationPoints;
