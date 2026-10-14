@@ -9,7 +9,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.client.BntBeltClick;
-import dev.qwxon.bitsntracks.client.BntTintedLines;
+import dev.qwxon.bitsntracks.client.BntChainOutline;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
@@ -20,7 +20,6 @@ import java.util.function.UnaryOperator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
@@ -37,6 +36,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
     remap = false
 )
 public class CogwheelChainInteractionHandlerMixin {
+    private static final int OUTLINE_COLOUR = 0x202020;
+    private static final int RETENSION_COLOUR = 0x40FF60;
+
     /** Enables chain selection for the lever as well as the wrench and chain items. */
     @Inject(method = "isActive", at = @At("HEAD"), cancellable = true, remap = false)
     private static void activateForLever(LocalPlayer player, CallbackInfoReturnable<Boolean> cir) {
@@ -81,11 +83,13 @@ public class CogwheelChainInteractionHandlerMixin {
                     Method clearSelectionMethod = CogwheelChainInteractionHandler.class.getDeclaredMethod("clearSelection");
                     clearSelectionMethod.setAccessible(true);
                     clearSelectionMethod.invoke(null);
+                    BntChainOutline.hide();
                     ci.cancel();
                     return;
                 }
 
                 if (leverSelection(mc) && !HiddenCogwheelCompat.isOwnChain(level, selectedController)) {
+                    BntChainOutline.hide();
                     ci.cancel();
                     return;
                 }
@@ -93,10 +97,7 @@ public class CogwheelChainInteractionHandlerMixin {
                 Field selectedShapeField = CogwheelChainInteractionHandler.class.getDeclaredField("selectedShape");
                 selectedShapeField.setAccessible(true);
                 CogwheelChainShape selectedShape = (CogwheelChainShape)selectedShapeField.get(null);
-                VertexConsumer vc = buffer.getBuffer(RenderType.lines());
-                if (holdingLever(mc) && BntBeltClick.wouldRetension()) {
-                    vc = new BntTintedLines(vc, 64, 255, 96);
-                }
+                VertexConsumer vc = BntChainOutline.begin(cam);
                 ms.pushPose();
                 ms.translate(-cam.x, -cam.y, -cam.z);
                 ChainCoordinateSpace space = ChainCoordinateSpace.forRender(level, selectedController);
@@ -156,6 +157,7 @@ public class CogwheelChainInteractionHandlerMixin {
                 };
                 drawOutlineMethod.invoke(selectedShape, ms, vc, spaceTransform);
                 ms.popPose();
+                BntChainOutline.show(holdingLever(mc) && BntBeltClick.wouldRetension() ? RETENSION_COLOUR : OUTLINE_COLOUR);
                 ci.cancel();
             } catch (Exception var25) {
                 var25.printStackTrace();
