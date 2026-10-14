@@ -30,6 +30,7 @@ Requires Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.
 - Cogwheels and tracks are drawn through Flywheel when it is active, and tracks stay visible out to the render distance instead of 64 blocks.
 - Shift + right-clicking with the Cog Alignment Lever also resets suspension tuning, and the lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
 - The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.
+- Tracks and Suspension Pieces add to a vehicle's mass: 0.25 for an Industrial Belt and 0.5 for a Tank Tread whatever their length, and 0.25 for each Suspension Piece.
 
 ### Removed
 
@@ -50,6 +51,8 @@ Requires Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.
 - Turning off Bits 'n' Bobs' undedicated chain drive setting broke every track on Bits 'n' Tracks cogwheels.
 - Removing a cogwheel from a chain could crash the game.
 - The Cog Alignment Lever was drawn at the wrong size in item frames.
+- A cogwheel with physics enabled added no mass to its vehicle.
+- The outline of the track or chain being looked at did not show with shader packs.
 
 ## 2.1.0
 
