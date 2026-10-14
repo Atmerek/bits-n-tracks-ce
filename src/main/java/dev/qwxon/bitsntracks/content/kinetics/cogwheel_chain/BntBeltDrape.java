@@ -6,6 +6,7 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
+import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension;
@@ -89,12 +90,13 @@ public final class BntBeltDrape {
                 double clearance = clear ? BntPhysicsTuning.getBeltSurfaceClearance() : 0.0;
                 for (int probe = 1; probe < probes; probe++) {
                     Vec3 chord = runStart.add(along.scale((double)probe / probes));
-                    double raw = stage != null
+                    double surface = stage != null
                         ? stagedSurfaceOffset(stage, base.add(chord), sag)
                         : surfaceOffset(level, base, pose, subLevel, chord, sag);
-                    if (raw <= NO_SURFACE) {
+                    if (surface <= NO_SURFACE) {
                         continue;
                     }
+                    double raw = surface + CogwheelSizeHelper.TRACK_HALF_THICKNESS;
                     ground[probe] = raw <= 0.0 ? raw : raw + Math.min(raw, clearance);
                 }
             }

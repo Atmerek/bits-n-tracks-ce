@@ -21,6 +21,8 @@ public final class CogwheelSizeHelper {
     private static final double MEDIUM_SUSPENSION_REST = 1.0;
     private static final double LARGE_SUSPENSION_REST = 1.3;
 
+    public static final double TRACK_HALF_THICKNESS = 1.0 / 16.0;
+
     private CogwheelSizeHelper() {
     }
 
@@ -74,6 +76,10 @@ public final class CogwheelSizeHelper {
             case TINY -> BntPhysicsTuning.getTinyTrackRadius();
             case SMALL -> BntPhysicsTuning.getSmallTrackRadius();
         };
+    }
+
+    public static double getTrackRestRadius(Block block) {
+        return getTrackRadius(block) + TRACK_HALF_THICKNESS;
     }
 
     public static double getChainRadius(Block block) {

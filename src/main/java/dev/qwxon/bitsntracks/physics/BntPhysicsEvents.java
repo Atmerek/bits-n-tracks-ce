@@ -506,7 +506,7 @@ public final class BntPhysicsEvents {
     }
 
     private static double getContactRadius(Block block, boolean inTrack) {
-        return inTrack ? CogwheelSizeHelper.getTrackRadius(block) : CogwheelSizeHelper.getDrawnRestRadius(block);
+        return inTrack ? CogwheelSizeHelper.getTrackRestRadius(block) : CogwheelSizeHelper.getDrawnRestRadius(block);
     }
 
     private static boolean isInTrack(KineticBlockEntity kbe) {

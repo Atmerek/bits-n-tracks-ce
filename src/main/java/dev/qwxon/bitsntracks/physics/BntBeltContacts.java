@@ -242,7 +242,7 @@ public final class BntBeltContacts {
                 double droop = BntBeltTension.droopAt(along, sag);
 
                 BntBeltContact contact = underside
-                    ? sample(level, subLevel, pose, massData, chord, droop)
+                    ? sample(level, subLevel, pose, massData, chord.subtract(0.0, CogwheelSizeHelper.TRACK_HALF_THICKNESS, 0.0), droop)
                     : null;
                 if (contact != null) {
                     contact.support = runSupport;

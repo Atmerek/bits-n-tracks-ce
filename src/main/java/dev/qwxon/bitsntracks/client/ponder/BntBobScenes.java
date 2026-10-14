@@ -572,7 +572,7 @@ public final class BntBobScenes {
 
     static double restingDrop() {
         Block wheel = BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get();
-        return 2.5 - CogwheelSizeHelper.getTrackRadius(wheel) - FLOOR;
+        return 2.5 - CogwheelSizeHelper.getTrackRestRadius(wheel) - FLOOR;
     }
 
     private static AABB zoneBox(Level level, BlockPos pos, Direction face, Direction zone) {
