@@ -243,7 +243,7 @@ final class BntTrackVisual implements BntTrackSink {
     }
 
     private BntInstancePool<BntSpanInstance> pool(Model model) {
-        return pools.computeIfAbsent(model, key -> new BntInstancePool<>(context.instancerProvider().instancer(BntInstanceTypes.SPAN, key)));
+        return pools.computeIfAbsent(model, key -> new BntInstancePool<>(() -> context.instancerProvider().instancer(BntInstanceTypes.SPAN, key)));
     }
 
     private static final class Discard implements VertexConsumer {

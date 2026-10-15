@@ -4,16 +4,17 @@ import dev.engine_room.flywheel.api.instance.Instance;
 import dev.engine_room.flywheel.api.instance.Instancer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 final class BntInstancePool<I extends Instance> {
     private static final int SPARE = 32;
 
-    private final Instancer<I> instancer;
+    private final Supplier<Instancer<I>> instancer;
     private final List<I> instances = new ArrayList<>();
     private int used;
     private int shown;
 
-    BntInstancePool(Instancer<I> instancer) {
+    BntInstancePool(Supplier<Instancer<I>> instancer) {
         this.instancer = instancer;
     }
 
@@ -29,7 +30,7 @@ final class BntInstancePool<I extends Instance> {
                 instance.setVisible(true);
             }
         } else {
-            instance = instancer.createInstance();
+            instance = instancer.get().createInstance();
             instances.add(instance);
         }
         used++;

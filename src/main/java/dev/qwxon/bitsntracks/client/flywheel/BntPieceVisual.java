@@ -80,7 +80,7 @@ final class BntPieceVisual implements BntSuspensionParts.Sink {
         boolean mirrored = x.dot(y.cross(z)) < 0.0;
         Model mesh = MODELS.computeIfAbsent(new PartKey(model, part, mirrored), BntPieceVisual::build);
         TransformedInstance instance = pools
-            .computeIfAbsent(mesh, key -> new BntInstancePool<>(context.instancerProvider().instancer(InstanceTypes.TRANSFORMED, key)))
+            .computeIfAbsent(mesh, key -> new BntInstancePool<>(() -> context.instancerProvider().instancer(InstanceTypes.TRANSFORMED, key)))
             .next();
         Vec3 at = origin.add(offset);
         instance.pose.set(
