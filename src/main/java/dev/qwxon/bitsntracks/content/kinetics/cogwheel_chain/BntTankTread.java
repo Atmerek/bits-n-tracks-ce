@@ -64,17 +64,17 @@ public final class BntTankTread {
 
     private static final Part[] NARROW = {
         Part.of(-7, 0, -2, 7, 2, 1, TREAD_UV, false),
-        Part.of(-4, 0.5, 1, -1, 1.5, 2, LINK_UV, true),
-        Part.of(1, 0.5, 1, 4, 1.5, 2, LINK_UV, true)
+        Part.of(-4, 0.5, 0, -1, 1.5, 3, LINK_UV, true),
+        Part.of(1, 0.5, 0, 4, 1.5, 3, LINK_UV, true)
     };
 
     private static final Part[] WIDE = {
         Part.of(0, 0, -2, 14, 2, 1, TREAD_UV, false),
-        Part.of(8, 0.5, 1, 12, 1.5, 2, LINK_UV, true),
-        Part.of(2, 0.5, 1, 6, 1.5, 2, LINK_UV, true),
+        Part.of(8, 0.5, 0, 12, 1.5, 3, LINK_UV, true),
+        Part.of(2, 0.5, 0, 6, 1.5, 3, LINK_UV, true),
         Part.of(-14, 0, -2, 0, 2, 1, TREAD_UV_MIRRORED, false),
-        Part.of(-11, 0.5, 1, -8, 1.5, 2, LINK_UV, true),
-        Part.of(-6, 0.5, 1, -2, 1.5, 2, LINK_UV, true)
+        Part.of(-11, 0.5, 0, -8, 1.5, 3, LINK_UV, true),
+        Part.of(-6, 0.5, 0, -2, 1.5, 3, LINK_UV, true)
     };
 
     private BntTankTread() {
