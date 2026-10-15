@@ -328,11 +328,15 @@ public final class HiddenCogwheelCompat {
     }
 
     public static VoxelShape offsetShapeForSuspension(VoxelShape shape, BlockGetter getter, BlockPos pos) {
-        if (!(getter instanceof Level level) || !level.isClientSide) {
+        return getter instanceof Level ? offsetShapeForSuspension(shape, getter.getBlockEntity(pos)) : shape;
+    }
+
+    public static VoxelShape offsetShapeForSuspension(VoxelShape shape, BlockEntity be) {
+        if (be == null || be.getLevel() == null || !be.getLevel().isClientSide) {
             return shape;
         }
 
-        Vec3 translation = getModelTranslation(getter.getBlockEntity(pos), BntClientCompat.getPartialTick());
+        Vec3 translation = getModelTranslation(be, BntClientCompat.getPartialTick());
         return translation.equals(Vec3.ZERO) ? shape : shape.move(translation.x, translation.y, translation.z);
     }
 

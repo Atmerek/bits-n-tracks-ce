@@ -35,6 +35,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -123,7 +124,17 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
     }
 
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return Shapes.empty();
+        return context instanceof EntityCollisionContext entityContext && entityContext.getEntity() != null
+            ? entityCollisionShape(state, level, pos)
+            : Shapes.empty();
+    }
+
+    public VoxelShape entityCollisionShape(BlockState state, BlockGetter level, BlockPos pos) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isHiddenByLever()) {
+            return Shapes.empty();
+        }
+        return HiddenCogwheelCompat.offsetShapeForSuspension(BntCogwheelShapes.get(this.size, (Axis)state.getValue(AXIS)), be);
     }
 
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {

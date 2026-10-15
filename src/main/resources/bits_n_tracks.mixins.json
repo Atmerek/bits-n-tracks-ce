@@ -26,6 +26,9 @@
         "BntUseItemOnRangeMixin",
         "PhysicsBlockPropertyHelperMixin",
         "MassTrackerMixin",
+        "SubLevelEntityCollisionMixin",
+        "BntEntityCollideMixin",
+        "BntBlockEntityLoadMixin",
         "accessor.RotationPropagatorAccessor"
     ],
     "client": [

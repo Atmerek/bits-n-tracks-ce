@@ -23,6 +23,7 @@ Requires Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.
 - Ctrl + left-click with the Cog Alignment Lever switches between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
 - Ponder scenes for the flanged cogwheels, tracks, the Cog Alignment Lever, the Suspension Piece and the Suspension Tool.
 - Decorative heads of the mod's creators and contributors.
+- Cogwheels with physics enabled now block players and other entities.
 - Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, and client settings for Flywheel rendering, track update rate and animation distance.
 
 ### Changed
