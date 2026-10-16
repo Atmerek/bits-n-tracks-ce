@@ -373,6 +373,13 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
             this.renderedNodes.clear();
             this.renderedNodes.addAll(this.bnt$preReadRendered);
         }
+        if (kept != null) {
+            int[] sides = new int[this.bnt$preReadNodes.size()];
+            for (int i = 0; i < sides.length; i++) {
+                sides[i] = this.bnt$preReadNodes.get(i).side();
+            }
+            this.bnt$adoptSides(this.cogwheelNodes, sides);
+        }
         this.bnt$preReadNodes = List.of();
         this.bnt$preReadLatch = null;
         this.bnt$preReadRendered = List.of();
