@@ -15,8 +15,6 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -34,61 +32,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
     remap = false
 )
 public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviourAccess {
-    @Unique
-    private boolean bnt$isTrackModel = false;
-
     @Override
     public boolean bnt$isTrackModel() {
-        if (this.bnt$isTrackModel) {
-            return true;
-        } else {
-            CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
-            Level level = self.getLevel();
-            BlockPos controllerPos = bnt$getControllerPos(self);
-            CogwheelChain chain = bnt$getTrackedChain(self);
-            if (level != null && controllerPos != null && chain != null) {
-                for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
-                    if (bnt$isTrackCogwheel(level, controllerPos.offset(node.localPos()))) {
-                        return true;
-                    }
-                }
-
-                return false;
-            } else {
-                return false;
+        CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
+        Level level = self.getLevel();
+        BlockPos controllerPos = bnt$getControllerPos(self);
+        CogwheelChain chain = bnt$getTrackedChain(self);
+        if (level == null || controllerPos == null || chain == null) {
+            return false;
+        }
+        for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
+            if (bnt$isTrackCogwheel(level, controllerPos.offset(node.localPos()))) {
+                return true;
             }
         }
-    }
-
-    @Override
-    public void bnt$setTrackModel(boolean isTrackModel) {
-        this.bnt$isTrackModel = isTrackModel;
-    }
-
-    @Inject(
-        method = {"write"},
-        at = {@At("TAIL")}
-    )
-    private void bnt$writeTrackModel(CompoundTag compound, Provider registries, boolean clientPacket, CallbackInfo ci) {
-        compound.putBoolean("BNT_IsTrackModel", this.bnt$isTrackModel);
-    }
-
-    @Inject(
-        method = {"read"},
-        at = {@At("TAIL")}
-    )
-    private void bnt$readTrackModel(CompoundTag compound, Provider registries, boolean clientPacket, CallbackInfo ci) {
-        if (compound.contains("BNT_IsTrackModel")) {
-            this.bnt$isTrackModel = compound.getBoolean("BNT_IsTrackModel");
-        }
-    }
-
-    @Inject(
-        method = {"writeSafe"},
-        at = {@At("TAIL")}
-    )
-    private void bnt$writeSafeTrackModel(CompoundTag tag, Provider registries, CallbackInfo ci) {
-        tag.putBoolean("BNT_IsTrackModel", this.bnt$isTrackModel);
+        return false;
     }
 
     @Inject(
