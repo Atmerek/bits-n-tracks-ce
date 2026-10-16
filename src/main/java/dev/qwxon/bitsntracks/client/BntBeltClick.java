@@ -4,11 +4,9 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.ChainCoordinateSpace;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.CogwheelChainInteractionHandler;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
-import dev.qwxon.bitsntracks.interaction.BntBeltTensionPayload;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -17,7 +15,6 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 @OnlyIn(Dist.CLIENT)
 public final class BntBeltClick {
@@ -39,17 +36,6 @@ public final class BntBeltClick {
         return controllerPos != null && baked != null
             && HiddenCogwheelCompat.isOwnChain(level, controllerPos)
             && !onAimedCogwheel(level, controllerPos, baked, minecraft.hitResult);
-    }
-
-    /** Sends a tension step for the highlighted chain. */
-    public static boolean send(Player player) {
-        if (!wouldRetension()) {
-            return false;
-        }
-
-        BlockPos controllerPos = CogwheelChainInteractionHandler.getSelectedController();
-        PacketDistributor.sendToServer(new BntBeltTensionPayload(controllerPos, !player.isShiftKeyDown()));
-        return true;
     }
 
     /** Compares the chain hit and the aimed block in the chain's own space. */

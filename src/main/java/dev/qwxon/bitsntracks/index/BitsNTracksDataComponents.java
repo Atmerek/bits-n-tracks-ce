@@ -22,6 +22,9 @@ public final class BitsNTracksDataComponents {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> ALIGNMENT_WHOLE_TRACK =
         REGISTER.registerComponentType("alignment_whole_track", builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> ALIGNMENT_MODE =
+        REGISTER.registerComponentType("alignment_mode", builder -> builder.persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT));
+
     private BitsNTracksDataComponents() {
     }
 

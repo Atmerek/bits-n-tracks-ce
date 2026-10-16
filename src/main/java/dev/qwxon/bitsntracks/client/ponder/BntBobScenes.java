@@ -12,7 +12,7 @@ import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntChainShapeContext;
-import dev.qwxon.bitsntracks.client.BntClientOutliner;
+import dev.qwxon.bitsntracks.client.BntToolVisuals;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
@@ -82,8 +82,7 @@ public final class BntBobScenes {
     private static final double ZOOM = 3.5;
     private static final float ZOOM_TILT = 15.0F;
     private static final float ZOOM_TURN = -40.0F;
-    private static final int ZONE_COLOUR = 0xFF00FF00;
-    private static final float ZONE_LINE = 1.0F / 64.0F;
+    private static final double ZONE_DEPTH = 0.25;
     private static final float SHIFT = 3.0F / 16.0F;
     private static final double TRACK_ZOOM = 2.0;
     private static final int TENSION_STEP_TICKS = 8;
@@ -579,8 +578,8 @@ public final class BntBobScenes {
         BlockState state = level.getBlockState(pos);
         double radius = CogwheelSizeHelper.getToolHighlightRadius(state.getBlock());
         Vec3 hit = zone == null ? Vec3.ZERO : Vec3.atLowerCornerOf(zone.getNormal()).scale(0.75 * radius);
-        return BntClientOutliner.getHighlightAABB(pos, face, hit.x, hit.y, hit.z, state.getValue(BlockStateProperties.AXIS), radius)
-            .move(HiddenCogwheelCompat.getModelTranslation(level.getBlockEntity(pos), 1.0F));
+        Vec3 centre = Vec3.atCenterOf(pos).add(hit).add(HiddenCogwheelCompat.getModelTranslation(level.getBlockEntity(pos), 1.0F));
+        return BntToolVisuals.marker(centre, state.getValue(BlockStateProperties.AXIS), ZONE_DEPTH);
     }
 
     private static void shift(KineticBlockEntity be, float offset) {
@@ -1022,7 +1021,7 @@ public final class BntBobScenes {
             super.tick(scene);
             Direction zone = cycle[(totalTicks - remainingTicks - 1) / step % cycle.length];
             AABB box = zoneBox(scene.getWorld(), cog, face, zone).move(rest);
-            scene.getOutliner().showAABB(this, box).highlightFace(face).colored(ZONE_COLOUR).lineWidth(ZONE_LINE);
+            scene.getOutliner().showAABB(this, box).colored(BntToolVisuals.HOVER).lineWidth(BntToolVisuals.THIN);
         }
     }
 

@@ -1,11 +1,12 @@
 package dev.qwxon.bitsntracks;
 
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
-import dev.qwxon.bitsntracks.client.BntClientKeyMappings;
 import dev.qwxon.bitsntracks.client.BntShaderHand;
 import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
+import dev.qwxon.bitsntracks.client.BntToolHud;
+import dev.qwxon.bitsntracks.client.BntToolInput;
+import dev.qwxon.bitsntracks.client.BntToolOutlines;
 import dev.qwxon.bitsntracks.client.BntTunerGauge;
-import dev.qwxon.bitsntracks.client.BntTunerInput;
 import dev.qwxon.bitsntracks.client.CogAlignmentLeverItemRenderer;
 import dev.qwxon.bitsntracks.client.SuspensionToolItemRenderer;
 import dev.qwxon.bitsntracks.client.flywheel.BntFlywheel;
@@ -46,11 +47,13 @@ public class BitsNTracksClient {
         modEventBus.addListener(BitsNTracksClient::registerRenderers);
         modEventBus.addListener(BitsNTracksClient::onClientSetup);
         modEventBus.addListener(BitsNTracksClient::registerClientExtensions);
-        NeoForge.EVENT_BUS.addListener(BntClientKeyMappings::onClientTick);
-        NeoForge.EVENT_BUS.addListener(BntTunerInput::onInteraction);
+        modEventBus.addListener(BntToolHud::registerLayers);
+        NeoForge.EVENT_BUS.addListener(BntToolOutlines::onHighlight);
+        NeoForge.EVENT_BUS.addListener(BntToolInput::onInteraction);
+        NeoForge.EVENT_BUS.addListener(BntToolInput::onScroll);
         NeoForge.EVENT_BUS.addListener(BntSuspensionPlacement::onInteraction);
         NeoForge.EVENT_BUS.addListener(BntSuspensionPlacement::onClientTick);
-        NeoForge.EVENT_BUS.addListener(BntTunerInput::onClientTick);
+        NeoForge.EVENT_BUS.addListener(BntToolInput::onClientTick);
         NeoForge.EVENT_BUS.addListener(BntTunerGauge::onClientTick);
         NeoForge.EVENT_BUS.addListener(BntTunerGauge::onRenderFrame);
         NeoForge.EVENT_BUS.addListener(BntShaderHand::onRenderFrame);

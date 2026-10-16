@@ -6,11 +6,12 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record BntAlignmentModePayload(boolean wholeTrack) implements CustomPacketPayload {
+public record BntAlignmentModePayload(int mode, boolean wholeTrack) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<BntAlignmentModePayload> TYPE =
         new CustomPacketPayload.Type<>(BitsNTracks.asResource("alignment_mode"));
 
     public static final StreamCodec<FriendlyByteBuf, BntAlignmentModePayload> CODEC = StreamCodec.composite(
+        ByteBufCodecs.VAR_INT, BntAlignmentModePayload::mode,
         ByteBufCodecs.BOOL, BntAlignmentModePayload::wholeTrack,
         BntAlignmentModePayload::new);
 

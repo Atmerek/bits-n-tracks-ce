@@ -6,8 +6,8 @@ import dev.qwxon.bitsntracks.interaction.BntSuspensionPayload;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
-import net.createmod.catnip.outliner.Outliner;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
@@ -16,7 +16,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -30,8 +29,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 public final class BntSuspensionPlacement {
     private static final double KEEP_RANGE = 2.5;
     private static final double SIDE_DEAD_ZONE = 0.2;
-    private static final int OUTLINE = 0xFFFFFF;
-    private static final int CHOSEN = 0x66FF66;
     private static BlockPos selected;
     private static int side;
     private static int facing;
@@ -84,8 +81,8 @@ public final class BntSuspensionPlacement {
         if (first != null && (!BntSuspension.canCarry(level.getBlockEntity(first)) || !inRange(player, level, first))) {
             first = null;
         }
-        if (first != null) {
-            Outliner.getInstance().showAABB("bnt_suspension_first", new AABB(first)).colored(CHOSEN).lineWidth(1.0F / 16.0F);
+        if (first != null && level instanceof ClientLevel clientLevel) {
+            BntToolVisuals.selected("bnt_suspension_first", clientLevel, first);
         }
 
         if (minecraft.hitResult instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK
@@ -135,7 +132,10 @@ public final class BntSuspensionPlacement {
         lead = toward > 0 ? first : toward < 0 ? selected : null;
         bogieFacing = toward == 0 || !enough(player) ? 0 : BntSuspension.bogieFacing(level, first, toward);
         bogieDrop = toward == 0 ? 0.0F : BntSuspension.bogieDrop(level.getBlockEntity(first), be);
-        Outliner.getInstance().showAABB("bnt_suspension_target", new AABB(selected)).colored(toward != 0 ? CHOSEN : OUTLINE).lineWidth(1.0F / 32.0F);
+        if (!chosen && level instanceof ClientLevel clientLevel) {
+            BntToolVisuals.cog("bnt_suspension_target", clientLevel, selected,
+                toward != 0 ? BntToolVisuals.GOOD : BntToolVisuals.HOVER, BntToolVisuals.THIN);
+        }
     }
 
     public static void onInteraction(InputEvent.InteractionKeyMappingTriggered event) {
@@ -159,6 +159,7 @@ public final class BntSuspensionPlacement {
                     first = null;
                 } else if (!enough(player)) {
                     player.displayClientMessage(Component.translatable("chat.bits_n_tracks.suspension.bogie.pieces"), true);
+                    BntToolCues.refuse();
                 }
             }
             return;
@@ -187,6 +188,7 @@ public final class BntSuspensionPlacement {
                 ? "chat.bits_n_tracks.suspension.first.pair"
                 : "chat.bits_n_tracks.suspension.first"), true);
         }
+        BntToolCues.select(first != null);
     }
 
     private static ItemStack held(LocalPlayer player) {

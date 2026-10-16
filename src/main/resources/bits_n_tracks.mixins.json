@@ -46,6 +46,7 @@
         "BntGameRendererPickMixin",
         "PonderSceneTransformMixin",
         "compat.IrisHandRendererMixin",
+        "accessor.CogwheelChainShapeAccessor",
         "accessor.CreativeModeInventoryScreenAccessor",
         "accessor.LevelRendererAccessor"
     ],

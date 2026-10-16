@@ -10,8 +10,6 @@ import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -63,7 +61,7 @@ public final class BntSuspensionHandler {
         if (!player.getAbilities().instabuild) {
             player.getItemInHand(hand).shrink(1);
         }
-        level.playSound(null, pos, SoundEvents.CHAIN_PLACE, SoundSource.BLOCKS, 1.0F, 0.8F);
+        BntToolSounds.mount(level, pos, true);
     }
 
     private static void placeBogie(Player player, Level level, BlockPos pos, KineticBlockEntity kinetic, int toward, InteractionHand hand) {
@@ -87,7 +85,7 @@ public final class BntSuspensionHandler {
         if (!player.getAbilities().instabuild) {
             stack.shrink(BntSuspension.BOGIE);
         }
-        level.playSound(null, pos, SoundEvents.CHAIN_PLACE, SoundSource.BLOCKS, 1.0F, 0.7F);
+        BntToolSounds.mount(level, pos, true);
     }
 
     @SubscribeEvent
@@ -115,7 +113,7 @@ public final class BntSuspensionHandler {
         if (!player.getAbilities().instabuild && pieces > 0) {
             player.getInventory().placeItemBackInInventory(new ItemStack(BitsNTracksItems.SUSPENSION_PIECE.get(), pieces));
         }
-        level.playSound(null, pos, SoundEvents.CHAIN_BREAK, SoundSource.BLOCKS, 1.0F, 0.8F);
+        BntToolSounds.mount(level, pos, false);
     }
 
     private static boolean withinReach(Level level, Player player, BlockPos pos) {

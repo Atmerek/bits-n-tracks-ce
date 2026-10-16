@@ -1,167 +1,39 @@
 package dev.qwxon.bitsntracks.mixin;
 
-import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.ChainCoordinateSpace;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.CogwheelChainInteractionHandler;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.CogwheelChainShape;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
-import dev.qwxon.bitsntracks.client.BntBeltClick;
-import dev.qwxon.bitsntracks.client.BntChainOutline;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
-import dev.qwxon.bitsntracks.index.BitsNTracksItems;
-import dev.ryanhcode.sable.sublevel.ClientSubLevel;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.function.UnaryOperator;
+import dev.qwxon.bitsntracks.content.BntLeverMode;
+import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(
-    value = {CogwheelChainInteractionHandler.class},
-    remap = false
-)
+@Mixin(value = CogwheelChainInteractionHandler.class, remap = false)
 public class CogwheelChainInteractionHandlerMixin {
-    private static final int OUTLINE_COLOUR = 0x202020;
-    private static final int RETENSION_COLOUR = 0x40FF60;
-
-    /** Enables chain selection for the lever as well as the wrench and chain items. */
-    @Inject(method = "isActive", at = @At("HEAD"), cancellable = true, remap = false)
-    private static void activateForLever(LocalPlayer player, CallbackInfoReturnable<Boolean> cir) {
-        Item lever = (Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get();
-        if (player.getMainHandItem().is(lever) || player.getOffhandItem().is(lever)) {
+    @Inject(method = "isActive", at = @At("HEAD"), cancellable = true)
+    private static void bnt$activateForLever(LocalPlayer player, CallbackInfoReturnable<Boolean> cir) {
+        if (bnt$tensionLever(player)) {
             cir.setReturnValue(true);
         }
     }
 
-    private static boolean holdingLever(Minecraft mc) {
-        if (mc.player == null) {
-            return false;
+    @Inject(method = "drawCustomBlockSelection", at = @At("HEAD"), cancellable = true)
+    private static void bnt$leaveOutlineToLever(PoseStack ms, MultiBufferSource buffer, Vec3 camera, CallbackInfo ci) {
+        if (bnt$tensionLever(Minecraft.getInstance().player)) {
+            ci.cancel();
         }
-        Item lever = (Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get();
-        return mc.player.getMainHandItem().is(lever) || mc.player.getOffhandItem().is(lever);
     }
 
-    private static boolean leverSelection(Minecraft mc) {
-        if (mc.player == null) {
-            return false;
-        }
-        Item lever = (Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get();
-        return mc.player.getMainHandItem().is(lever) || mc.player.getMainHandItem().isEmpty() && mc.player.getOffhandItem().is(lever);
-    }
-
-    @Inject(
-        method = {"drawCustomBlockSelection"},
-        at = {@At("HEAD")},
-        cancellable = true
-    )
-    private static void bnt$drawDynamicBlockSelection(PoseStack ms, MultiBufferSource buffer, Vec3 cam, CallbackInfo ci) {
-        Minecraft mc = Minecraft.getInstance();
-        Level level = mc.level;
-        if (level != null) {
-            try {
-                Field selectedControllerField = CogwheelChainInteractionHandler.class.getDeclaredField("selectedController");
-                selectedControllerField.setAccessible(true);
-                BlockPos selectedController = (BlockPos)selectedControllerField.get(null);
-                Method invalidSelectionMethod = CogwheelChainInteractionHandler.class.getDeclaredMethod("invalidSelection", Level.class);
-                invalidSelectionMethod.setAccessible(true);
-                if ((Boolean)invalidSelectionMethod.invoke(null, level)) {
-                    Method clearSelectionMethod = CogwheelChainInteractionHandler.class.getDeclaredMethod("clearSelection");
-                    clearSelectionMethod.setAccessible(true);
-                    clearSelectionMethod.invoke(null);
-                    BntChainOutline.hide();
-                    ci.cancel();
-                    return;
-                }
-
-                if (leverSelection(mc) && !HiddenCogwheelCompat.isOwnChain(level, selectedController)) {
-                    BntChainOutline.hide();
-                    ci.cancel();
-                    return;
-                }
-
-                Field selectedShapeField = CogwheelChainInteractionHandler.class.getDeclaredField("selectedShape");
-                selectedShapeField.setAccessible(true);
-                CogwheelChainShape selectedShape = (CogwheelChainShape)selectedShapeField.get(null);
-                VertexConsumer vc = BntChainOutline.begin(cam);
-                ms.pushPose();
-                ms.translate(-cam.x, -cam.y, -cam.z);
-                ChainCoordinateSpace space = ChainCoordinateSpace.forRender(level, selectedController);
-                BlockEntity be = level.getBlockEntity(selectedController);
-                if (be == null) {
-                    try {
-                        Object clientLevelDataObj = Class.forName("dev.ryanhcode.sable.level.data.ClientLevelData")
-                            .getMethod("get", Level.class)
-                            .invoke(null, level);
-
-                        for (Object slObj : (Collection)clientLevelDataObj.getClass().getMethod("getSubLevels").invoke(clientLevelDataObj)) {
-                            ClientSubLevel sl = (ClientSubLevel)slObj;
-
-                            try {
-                                Method getBlockEntityMethod = slObj.getClass().getMethod("getBlockEntity", BlockPos.class);
-                                BlockEntity testBe = (BlockEntity)getBlockEntityMethod.invoke(slObj, selectedController);
-                                if (testBe != null) {
-                                    be = testBe;
-                                    break;
-                                }
-                            } catch (Exception var23) {
-                            }
-                        }
-                    } catch (Exception var24) {
-                    }
-                }
-
-                boolean isTrackModel = false;
-                if (be instanceof KineticBlockEntity kbe) {
-                    CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)kbe.getBehaviour(CogwheelChainBehaviour.TYPE);
-                    if (behaviour instanceof TrackModelBehaviourAccess access && access.bnt$isTrackModel()) {
-                        try {
-                            Method getChainTypeMethod = behaviour.getClass().getMethod("getChainType");
-                            Object chainType = getChainTypeMethod.invoke(behaviour);
-                            if (chainType != null) {
-                                Method getKeyMethod = chainType.getClass().getMethod("getKey");
-                                Object key = getKeyMethod.invoke(chainType);
-                                if (key != null && key.toString().toLowerCase().contains("belt")) {
-                                    isTrackModel = true;
-                                }
-                            }
-                        } catch (Exception var22) {
-                        }
-                    }
-                }
-
-                boolean scaleBelt = isTrackModel;
-                Method drawOutlineMethod = CogwheelChainShape.class
-                    .getDeclaredMethod("drawOutline", PoseStack.class, VertexConsumer.class, UnaryOperator.class);
-                drawOutlineMethod.setAccessible(true);
-                UnaryOperator<Vec3> spaceTransform = vec -> {
-                    if (scaleBelt) {
-                        vec = new Vec3(vec.x * 4.0, vec.y, vec.z);
-                    }
-
-                    return space.toWorld(vec);
-                };
-                drawOutlineMethod.invoke(selectedShape, ms, vc, spaceTransform);
-                ms.popPose();
-                BntChainOutline.show(holdingLever(mc) && BntBeltClick.wouldRetension() ? RETENSION_COLOUR : OUTLINE_COLOUR);
-                ci.cancel();
-            } catch (Exception var25) {
-                var25.printStackTrace();
-            }
-        }
+    @Unique
+    private static boolean bnt$tensionLever(LocalPlayer player) {
+        return player != null && player.getMainHandItem().getItem() instanceof CogAlignmentLeverItem
+            && CogAlignmentLeverItem.mode(player.getMainHandItem()) == BntLeverMode.TENSION;
     }
 }

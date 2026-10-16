@@ -2,34 +2,39 @@
 
 ## 3.0.0
 
-Requires Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.
+Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.
 
 ### Upgrading from 2.x
 
 - Physics cogwheels no longer have suspension of their own. Without a Suspension Piece a physics cogwheel is a rigid wheel, so existing vehicles ride without suspension until pieces are mounted. A piece needs a block touching the cogwheel along its axle to hang from.
 - The suspension settings listed under Removed are gone, and any values set in them are ignored. Suspension is now tuned per cogwheel with the Suspension Tool.
 - The Cog Alignment Lever now only works on Bits 'n' Tracks cogwheels.
+- The Cog Alignment Lever now works in modes, switched by holding Alt and scrolling. What replaced its old click controls is listed under Changed.
 
 ### Added
 
 - Two-wide track wheels. A cogwheel placed beside another of the same size and material along its axle joins it into one wide wheel, and the track widens to match. Sneak while placing to keep them apart.
 - The track now wraps around its cogwheels the way a real track sits on its road wheels. A cogwheel inside the loop that the track cannot reach is enclosed by it instead of pulling it out of shape, and turns freely until the track touches it.
-- Track routing. Shift + left-clicking a cogwheel face with the Cog Alignment Lever brings the far run of track around that cogwheel and reverses its spin, and clicking the centre puts it back to automatic.
+- Track routing. In the Cog Alignment Lever's Route mode, right-clicking a cogwheel face brings the far run of track around that cogwheel and reverses its spin, and right-clicking the centre puts it back to automatic.
 - The run of track between cogwheels now meets the ground. It drapes over terrain, carries the vehicle over what it crosses, and grips and drives along its length.
-- Track tension. Right-click a run of track with the Cog Alignment Lever to tighten it, or Shift + right-click to slacken it.
+- Track tension. In the Cog Alignment Lever's Tension mode, right-click a track to select it and scroll to tighten or slacken it.
 - Tank Tread, a plated track made in a Mechanical Crafter and strung between cogwheels like the Industrial Belt.
 - Suspension Piece, which mounts a swinging arm on a physics cogwheel, or a bogie across two small or tiny cogwheels, two-wide ones included. It is crafted with the spring from Create Aeronautics.
 - Suspension Tool, which reads and tunes a suspended cogwheel's stiffness, damping, travel and spring strength over 11 levels, for one cogwheel or a whole track at once.
-- Ctrl + left-click with the Cog Alignment Lever switches between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
+- Ctrl + left-click with the Cog Alignment Lever switches its Offset mode between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
+- A panel for the Cog Alignment Lever and the Suspension Tool, shown while holding either. It shows the current mode, the values of the cogwheel or track being worked on, and what to click or scroll.
+- Sounds for the Cog Alignment Lever and the Suspension Tool when switching modes, adjusting values, toggling settings and when an action is refused.
 - Ponder scenes for the flanged cogwheels, tracks, the Cog Alignment Lever, the Suspension Piece and the Suspension Tool.
 - Decorative heads of the mod's creators and contributors.
 - Cogwheels with physics enabled now block players and other entities.
-- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, and client settings for Flywheel rendering, track update rate and animation distance.
+- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, Debug Logging, and client settings for Flywheel rendering, track update rate and animation distance.
 
 ### Changed
 
 - Cogwheels and tracks are drawn through Flywheel when it is active, and tracks stay visible out to the render distance instead of 64 blocks.
-- Shift + right-clicking with the Cog Alignment Lever also resets suspension tuning, and the lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
+- The Cog Alignment Lever works in six modes: Offset, Route, Tension, Visibility, Physics and Reset. In Offset mode, right-click a cogwheel to select it, scroll to move it one pixel at a time and Shift + scroll to pick the axis, instead of clicking parts of its face. Visibility and physics are switched by right-clicking in their own modes, instead of right-clicking the centre and left-clicking.
+- Resetting with the Cog Alignment Lever is done by right-clicking a cogwheel twice in Reset mode, and also resets suspension tuning.
+- The Cog Alignment Lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
 - The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.
 - Tracks and Suspension Pieces add to a vehicle's mass: 0.25 for an Industrial Belt and 0.5 for a Tank Tread whatever their length, and 0.25 for each Suspension Piece.
 
@@ -53,7 +58,6 @@ Requires Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.
 - Removing a cogwheel from a chain could crash the game.
 - The Cog Alignment Lever was drawn at the wrong size in item frames.
 - A cogwheel with physics enabled added no mass to its vehicle.
-- The outline of the track or chain being looked at did not show with shader packs.
 
 ## 2.1.0
 

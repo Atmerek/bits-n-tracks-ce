@@ -40,19 +40,19 @@ The scenes walk through building a tracked vehicle, from placing and powering th
 
 The main tool of the mod. It adjusts cogwheels after they are placed, hides them, routes and tensions the track, and switches physics on or off.
 It only acts on Bits 'n' Tracks cogwheels and the tracks running on them, and breaks other blocks as normal.
+While you hold it, a panel beside the hotbar shows the current mode, the values of what you are working on, and what to click or scroll.
+Hold Alt (Create's tool menu key) and scroll to switch modes.
 
-| | |
+| Mode | |
 |---|---|
-| Right-click a flat face, off center | Nudges that cogwheel one pixel toward where you clicked |
-| Right-click a flat face, in the center | Shows or hides that cogwheel |
-| Right-click a side | Moves that cogwheel one pixel along its axle |
-| Right-click a run of track | Tightens it, so it holds its line and follows the ground less |
-| Shift + right-click a run of track | Slackens it, so it sags and follows the ground |
-| Shift + right-click a cogwheel | Resets alignment, visibility, track routing and suspension tuning on the whole track |
-| Left-click | Toggles physics for that cogwheel |
-| Shift + left-click a face, off center | Brings the far run of track around the cogwheel, so clicking the top wraps the bottom track over it, and reverses its spin |
-| Shift + left-click a face, in the center | Puts that cogwheel's track routing back to automatic |
-| Ctrl + left-click | Switches between moving one cogwheel and moving every cogwheel on the track that shares its physics setting |
+| Offset | Right-click a cogwheel to select it, then scroll to move it one pixel at a time. Shift + scroll picks the axis: along the axle, across, or up and down |
+| Route | Right-click a face to bring the far run of track around the cogwheel, so clicking the top wraps the bottom track over it, and reverses its spin. The centre puts its routing back to automatic |
+| Tension | Right-click a track to select it, then scroll to tighten it, so it holds its line, or slacken it, so it sags and follows the ground |
+| Visibility | Right-click a cogwheel to show or hide it |
+| Physics | Right-click a cogwheel to switch its physics on or off |
+| Reset | Right-click a cogwheel twice to reset alignment, visibility, track routing and suspension tuning on the whole track |
+
+Ctrl + left-click switches Offset between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
 
 ## Suspension
 
@@ -68,12 +68,14 @@ A mount whose supporting block is removed drops its pieces.
 The **Suspension Tool** reads and tunes cogwheels that carry a Suspension Piece.
 It has four settings, stiffness, damping, travel and spring strength, each on levels 1 to 11 with 4 as the default.
 
+It uses the same panel as the lever, with one mode per setting.
+
 | | |
 |---|---|
-| Look at a suspended cogwheel | Shows its level for the selected setting |
-| Right-click | Raises the selected setting by one level |
-| Shift + right-click | Lowers it by one level |
-| Left-click / Shift + left-click | Selects the previous / next setting |
+| Look at a suspended cogwheel | The panel and the dial show its levels |
+| Hold Alt and scroll | Switches setting |
+| Right-click a suspended cogwheel | Selects it |
+| Scroll | Raises or lowers the selected setting on the selected cogwheel by one level |
 | Ctrl + left-click | Switches between tuning one cogwheel and every suspended cogwheel on the track |
 
 ## Configuration

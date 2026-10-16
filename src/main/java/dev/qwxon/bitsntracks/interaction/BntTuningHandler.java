@@ -14,10 +14,8 @@ import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -55,7 +53,11 @@ public final class BntTuningHandler {
         }
 
         BntTuning setting = BntTuning.byIndex(payload.setting());
-        int value = BntTuning.clamp(target.bnt$getTuning(setting) + Integer.signum(payload.step()));
+        int value = BntTuning.clamp(target.bnt$getTuning(setting) + payload.step());
+        if (value == target.bnt$getTuning(setting) && !payload.wholeTrack()) {
+            BntToolSounds.refuse(player);
+            return;
+        }
         Set<BlockPos> positions = payload.wholeTrack() ? BntBeltTension.chainPositions(level, pos) : new LinkedHashSet<>(Set.of(pos));
         for (BlockPos nodePos : Set.copyOf(positions)) {
             BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, nodePos);
@@ -83,15 +85,13 @@ public final class BntTuningHandler {
             BntChainEngagement.refresh(level, pos, engagementBefore);
             BntBeltRefit.queue(level, pos);
         }
+        BntToolSounds.adjust(level, pos, (float)(value - BntTuning.MIN) / (BntTuning.MAX - BntTuning.MIN));
 
-        int wheels = BntCogwheelPairing.countWheels(level, tuned);
-        MutableComponent message = payload.wholeTrack()
-            ? Component.translatable(
-                wheels == 1 ? "chat.bits_n_tracks.tuning.level.track.single" : "chat.bits_n_tracks.tuning.level.track",
-                Component.translatable(setting.translationKey()), value, BntTuning.MAX, wheels)
-            : Component.translatable("chat.bits_n_tracks.tuning.level",
-                Component.translatable(setting.translationKey()), value, BntTuning.MAX);
-        player.displayClientMessage(message.withStyle(ChatFormatting.GOLD), true);
+        if (payload.wholeTrack()) {
+            int wheels = BntCogwheelPairing.countWheels(level, tuned);
+            BntToolMessages.send(player, Component.translatable(
+                wheels == 1 ? "bits_n_tracks.tool_panel.message.tuned.single" : "bits_n_tracks.tool_panel.message.tuned", wheels));
+        }
     }
 
 

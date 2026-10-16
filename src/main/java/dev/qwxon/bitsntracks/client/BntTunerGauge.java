@@ -49,7 +49,9 @@ public final class BntTunerGauge {
             return staged;
         }
         LocalPlayer player = Minecraft.getInstance().player;
-        return held && player != null && stack == player.getMainHandItem() ? NEEDLE.angle() : REST_ANGLE;
+        return held && player != null && (stack == player.getMainHandItem() || ItemStack.matches(stack, player.getMainHandItem()))
+            ? NEEDLE.angle()
+            : REST_ANGLE;
     }
 
     public static void stage(float angle) {
@@ -62,6 +64,9 @@ public final class BntTunerGauge {
 
     @Nullable
     public static BlockPos tunableTarget() {
+        if (BntToolState.tunerTarget() != null) {
+            return BntToolState.tunerTarget();
+        }
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null || !(minecraft.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) {
             return null;

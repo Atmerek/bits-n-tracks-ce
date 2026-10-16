@@ -6,9 +6,9 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
-import dev.qwxon.bitsntracks.client.BntClientRouteClick;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
@@ -16,7 +16,6 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.Map;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -48,6 +47,7 @@ public class WrenchPhysicsHandler {
         }
         ItemStack stack = player.getMainHandItem();
         if (stack.getItem() instanceof CogAlignmentLeverItem) {
+            CogAlignmentLeverItem.setMode(stack, BntLeverMode.byIndex(payload.mode()));
             CogAlignmentLeverItem.setWholeTrack(stack, payload.wholeTrack());
         }
     }
@@ -55,52 +55,42 @@ public class WrenchPhysicsHandler {
     @SubscribeEvent
     public static void onLeftClickBlock(LeftClickBlock event) {
         Level level = event.getLevel();
-        Player player = event.getEntity();
-        if (player != null) {
-            ItemStack stack = event.getItemStack();
-            BlockPos pos = event.getPos();
-            boolean own = HiddenCogwheelCompat.isOwnCogwheel(level, pos);
-            if (stack.is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get()) && (own || isStrandedCogwheel(level, pos))) {
-                event.setCanceled(true);
-                if (level.isClientSide) {
-                    if (own && player.isShiftKeyDown() && event.getAction() == LeftClickBlock.Action.START) {
-                        BntClientRouteClick.send(pos);
-                    }
-                } else {
-                    BlockState state = level.getBlockState(pos);
-                    Block block = state.getBlock();
-                    if (isToggleableCogwheel(block)) {
-                        BlockEntity be = level.getBlockEntity(pos);
-                        if (be instanceof KineticBlockEntity && be instanceof KineticBlockEntityPhysicsAccess access) {
-                            if (player.isShiftKeyDown()) {
-                                return;
-                            }
+        BlockPos pos = event.getPos();
+        if (event.getEntity() != null && event.getItemStack().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
+            && (HiddenCogwheelCompat.isOwnCogwheel(level, pos) || isStrandedCogwheel(level, pos))) {
+            event.setCanceled(true);
+        }
+    }
 
-                            boolean newState = !access.bnt$isPhysicsEnabled();
-                            if (newState && !own) {
-                                return;
-                            }
-                            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
-                            Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
-                            setPhysicsAt(level, pos, newState);
-                            if (partnerPos != null) {
-                                setPhysicsAt(level, partnerPos, newState);
-                            }
+    public static boolean canTogglePhysics(Level level, BlockPos pos) {
+        return HiddenCogwheelCompat.isOwnCogwheel(level, pos) || isStrandedCogwheel(level, pos);
+    }
 
-                            BntChainEngagement.refresh(level, pos, engagementBefore);
-                            BntBeltRefit.queue(level, pos);
-                            Component message = Component.translatable(
-                                "chat.bits_n_tracks.alignment.track.status",
-                                Component.translatable(newState
-                                    ? "tooltip.bits_n_tracks.physics_enabled"
-                                    : "tooltip.bits_n_tracks.physics_disabled"),
-                                trackStatus(level, pos))
-                                .withStyle(newState ? ChatFormatting.GREEN : ChatFormatting.RED);
-                            player.displayClientMessage(message, true);
-                        }
-                    }
-                }
-            }
+    public static void togglePhysics(Level level, Player player, BlockPos pos) {
+        boolean own = HiddenCogwheelCompat.isOwnCogwheel(level, pos);
+        if (!own && !isStrandedCogwheel(level, pos) || !isToggleableCogwheel(level.getBlockState(pos).getBlock())
+            || !(level.getBlockEntity(pos) instanceof KineticBlockEntity)
+            || !(level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access)) {
+            return;
+        }
+
+        boolean newState = !access.bnt$isPhysicsEnabled();
+        if (newState && !own) {
+            return;
+        }
+        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+        Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
+        setPhysicsAt(level, pos, newState);
+        if (partnerPos != null) {
+            setPhysicsAt(level, partnerPos, newState);
+        }
+
+        BntChainEngagement.refresh(level, pos, engagementBefore);
+        BntBeltRefit.queue(level, pos);
+        BntToolSounds.physics(level, pos, newState);
+        Component status = trackStatus(level, pos);
+        if (status != null) {
+            BntToolMessages.send(player, status);
         }
     }
 
@@ -164,8 +154,8 @@ public class WrenchPhysicsHandler {
             return;
         }
         if (payload.zone() == FLAT_FACE) {
-            player.displayClientMessage(
-                Component.translatable("chat.bits_n_tracks.alignment.route.flat_face").withStyle(ChatFormatting.RED), true);
+            BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.flat_face"));
+            BntToolSounds.refuse(player);
             return;
         }
 
@@ -182,20 +172,15 @@ public class WrenchPhysicsHandler {
 
         BntChainEngagement.refresh(level, pos, engagementBefore);
         BntBeltRefit.queue(level, pos);
-        player.displayClientMessage(
-            (side < 0
-                ? Component.translatable("chat.bits_n_tracks.alignment.route.automatic")
-                : Component.translatable("chat.bits_n_tracks.alignment.route.wrapped",
-                    Component.translatable("chat.bits_n_tracks.alignment.route." + zone.getOpposite().getName())))
-                .withStyle(ChatFormatting.AQUA),
-            true);
+        BntToolSounds.toggle(level, pos, side >= 0);
     }
 
-    private static Component trackStatus(Level level, BlockPos pos) {
+    public static Component trackStatus(Level level, BlockPos pos) {
         Boolean engaged = BntChainEngagement.engagementAt(level, pos);
-        return Component.translatable(engaged == null
-            ? "chat.bits_n_tracks.alignment.track.detached"
-            : engaged ? "chat.bits_n_tracks.alignment.track.driving" : "chat.bits_n_tracks.alignment.track.free");
+        if (engaged == null) {
+            return null;
+        }
+        return Component.translatable(engaged ? "bits_n_tracks.tool_panel.message.on_track" : "bits_n_tracks.tool_panel.message.off_track");
     }
 
     private static void setRouteAt(Level level, BlockPos pos, int side) {

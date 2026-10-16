@@ -7,26 +7,24 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksDataComponents;
+import dev.qwxon.bitsntracks.interaction.BntToolMessages;
+import dev.qwxon.bitsntracks.interaction.BntToolSounds;
+import dev.qwxon.bitsntracks.interaction.WrenchPhysicsHandler;
 import dev.qwxon.bitsntracks.physics.BntTuning;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -34,6 +32,9 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 
 public class CogAlignmentLeverItem extends Item {
+    public static final float STEP = 0.0625F;
+    public static final float LIMIT = 1.0F;
+
     public CogAlignmentLeverItem(Properties properties) {
         super(properties);
     }
@@ -46,189 +47,170 @@ public class CogAlignmentLeverItem extends Item {
         stack.set(BitsNTracksDataComponents.ALIGNMENT_WHOLE_TRACK.get(), wholeTrack);
     }
 
+    public static BntLeverMode mode(ItemStack stack) {
+        return BntLeverMode.byIndex(stack.getOrDefault(BitsNTracksDataComponents.ALIGNMENT_MODE.get(), 0));
+    }
+
+    public static void setMode(ItemStack stack, BntLeverMode mode) {
+        stack.set(BitsNTracksDataComponents.ALIGNMENT_MODE.get(), mode.ordinal());
+    }
+
     public static MutableComponent scopeName(boolean wholeTrack) {
         return Component.translatable(wholeTrack ? "bits_n_tracks.scope.track" : "bits_n_tracks.scope.cogwheel");
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(Component.translatable("tooltip.bits_n_tracks.alignment.mode",
+                Component.translatable(mode(stack).translationKey()).withStyle(ChatFormatting.GOLD))
+            .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("tooltip.bits_n_tracks.alignment.scope",
                 scopeName(wholeTrack(stack)).withStyle(ChatFormatting.GOLD))
             .withStyle(ChatFormatting.GRAY));
     }
 
-    public InteractionResult useOn(UseOnContext context) {
-        Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
+    public static void nudge(Level level, Player player, BlockPos pos, Axis moveAxis, int steps, boolean wholeTrack) {
         BlockState state = level.getBlockState(pos);
-        if (!state.hasProperty(BlockStateProperties.AXIS) || !HiddenCogwheelCompat.isOwnCogwheel(level, pos)) {
-            return InteractionResult.PASS;
-        } else {
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof KineticBlockEntity && be instanceof KineticBlockEntityPhysicsAccess access) {
-                Direction clickedFace = context.getClickedFace();
-                Axis blockAxis = (Axis)state.getValue(BlockStateProperties.AXIS);
-                if (level.isClientSide()) {
-                    return InteractionResult.SUCCESS;
-                } else {
-                    Player player = context.getPlayer();
-                    Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
-                    if (player != null && player.isShiftKeyDown()) {
-                        for (BlockPos nodePos : collectChainPositions(level, pos)) {
-                            BlockEntity nodeBe = level.getBlockEntity(nodePos);
-                            if (nodeBe instanceof KineticBlockEntity kinetic && nodeBe instanceof KineticBlockEntityPhysicsAccess nodeAccess) {
-                                nodeAccess.bnt$setAlignmentOffsetX(0.0F);
-                                nodeAccess.bnt$setAlignmentOffsetY(0.0F);
-                                nodeAccess.bnt$setAlignmentOffsetZ(0.0F);
-                                nodeAccess.bnt$setHiddenByLever(false);
-                                nodeAccess.bnt$setTrackRouteSide(-1);
-                                for (BntTuning setting : BntTuning.values()) {
-                                    nodeAccess.bnt$setTuning(setting, BntTuning.DEFAULT);
-                                }
-                                kinetic.setChanged();
-                                kinetic.sendData();
-                            }
-                        }
+        BlockEntity be = level.getBlockEntity(pos);
+        if (steps == 0 || !state.hasProperty(BlockStateProperties.AXIS)
+            || !(be instanceof KineticBlockEntity) || !(be instanceof KineticBlockEntityPhysicsAccess access)) {
+            return;
+        }
 
-                        BntChainEngagement.refresh(level, pos, engagementBefore);
-                        BntBeltRefit.queue(level, pos);
-                        player.displayClientMessage(shiftMessage(access, level, pos, 0), true);
-                        return InteractionResult.SUCCESS;
-                    } else {
-                        Vec3 hitVec = context.getClickLocation().subtract(HiddenCogwheelCompat.getModelTranslation(be, 1.0F));
-                        double localX = hitVec.x - pos.getX();
-                        double localY = hitVec.y - pos.getY();
-                        double localZ = hitVec.z - pos.getZ();
-                        double dx = localX - 0.5;
-                        double dy = localY - 0.5;
-                        double dz = localZ - 0.5;
-                        double radius = CogwheelSizeHelper.getToolHighlightRadius(state.getBlock());
-                        double centerThresh = 0.25 * radius * radius;
-                        float step = 0.0625F;
-                        float limit = 1.0F;
-                        boolean wholeTrack = wholeTrack(context.getItemInHand());
-                        boolean toggledVisibility = false;
-                        Axis moveAxis = null;
-                        float delta = 0.0F;
-                        if (clickedFace.getAxis() != blockAxis) {
-                            moveAxis = blockAxis;
-                            delta = getAxisDelta(blockAxis, dx, dy, dz) > 0.0 ? step : -step;
-                        } else {
-                            Axis first = blockAxis == Axis.X ? Axis.Z : Axis.X;
-                            Axis second = blockAxis == Axis.Y ? Axis.Z : Axis.Y;
-                            double firstDelta = getAxisDelta(first, dx, dy, dz);
-                            double secondDelta = getAxisDelta(second, dx, dy, dz);
-                            if (firstDelta * firstDelta + secondDelta * secondDelta < centerThresh) {
-                                access.bnt$setHiddenByLever(!access.bnt$isHiddenByLever());
-                                toggledVisibility = true;
-                            } else {
-                                moveAxis = Math.abs(firstDelta) > Math.abs(secondDelta) ? first : second;
-                                delta = getAxisDelta(moveAxis, dx, dy, dz) > 0.0 ? step : -step;
-                            }
-                        }
+        Axis blockAxis = (Axis)state.getValue(BlockStateProperties.AXIS);
+        float delta = STEP * steps;
+        if (moveAxis == blockAxis && !wholeTrack && BntSuspension.isBogie(be)) {
+            BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.bogie.axle"));
+            BntToolSounds.refuse(player);
+            return;
+        }
 
-                        if (moveAxis == blockAxis && !wholeTrack && BntSuspension.isBogie(be)) {
-                            if (player != null) {
-                                player.displayClientMessage(Component.translatable("chat.bits_n_tracks.alignment.bogie"), true);
-                            }
-                            return InteractionResult.SUCCESS;
+        Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
+        Set<BlockPos> moved = new LinkedHashSet<>();
+        boolean changed = false;
+        if (moveAxis != Axis.Y && moveAxis != blockAxis && BntSuspension.isBogie(be)) {
+            Vec3 across = BntSuspension.across(blockAxis);
+            double outward = -Integer.signum(access.bnt$getSuspensionSide()) * delta * (moveAxis == Axis.X ? across.x : across.z);
+            Set<BlockPos> spread = spreadBogies(level, wholeTrack ? collectChainPositions(level, pos) : Set.of(pos), outward, LIMIT);
+            if (spread.isEmpty()) {
+                BntToolMessages.send(player, Component.translatable(outward < 0.0
+                    ? "bits_n_tracks.tool_panel.message.bogie.closest"
+                    : "bits_n_tracks.tool_panel.message.bogie.farthest"));
+                BntToolSounds.refuse(player);
+                return;
+            }
+            changed = true;
+            if (wholeTrack) {
+                moved.addAll(spread);
+            }
+        } else if (wholeTrack) {
+            boolean physics = access.bnt$isPhysicsEnabled();
+            for (BlockPos nodePos : collectChainPositions(level, pos)) {
+                BlockEntity nodeBe = level.getBlockEntity(nodePos);
+                if (nodeBe instanceof KineticBlockEntityPhysicsAccess nodeAccess
+                    && nodeAccess.bnt$isPhysicsEnabled() == physics) {
+                    changed |= shiftAxis(nodeAccess, moveAxis, delta, LIMIT, BntSuspension.isBogie(nodeBe));
+                    moved.add(nodePos);
+                }
+            }
+            for (BlockPos nodePos : Set.copyOf(moved)) {
+                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntityPhysicsAccess nodeAccess) {
+                    for (KineticBlockEntity cog : BntSuspension.bogieCogs(level, nodePos)) {
+                        if (moved.add(cog.getBlockPos())) {
+                            ((KineticBlockEntityPhysicsAccess)cog).bnt$setAlignmentOffsetY(nodeAccess.bnt$getAlignmentOffsetY());
                         }
-
-                        Set<BlockPos> moved = new LinkedHashSet<>();
-                        if (moveAxis != null && moveAxis != Axis.Y && moveAxis != blockAxis && BntSuspension.isBogie(be)) {
-                            Vec3 across = BntSuspension.across(blockAxis);
-                            double outward = -Integer.signum(access.bnt$getSuspensionSide()) * delta * (moveAxis == Axis.X ? across.x : across.z);
-                            Set<BlockPos> spread = spreadBogies(level, wholeTrack ? collectChainPositions(level, pos) : Set.of(pos), outward, limit);
-                            if (spread.isEmpty()) {
-                                if (player != null) {
-                                    player.displayClientMessage(Component.translatable(outward < 0.0
-                                        ? "chat.bits_n_tracks.alignment.bogie.closest"
-                                        : "chat.bits_n_tracks.alignment.bogie.farthest"), true);
-                                }
-                                return InteractionResult.SUCCESS;
-                            }
-                            if (wholeTrack) {
-                                moved.addAll(spread);
-                            }
-                        } else if (moveAxis != null && wholeTrack) {
-                            boolean physics = access.bnt$isPhysicsEnabled();
-                            for (BlockPos nodePos : collectChainPositions(level, pos)) {
-                                BlockEntity nodeBe = level.getBlockEntity(nodePos);
-                                if (nodeBe instanceof KineticBlockEntityPhysicsAccess nodeAccess
-                                    && nodeAccess.bnt$isPhysicsEnabled() == physics) {
-                                    shiftAxis(nodeAccess, moveAxis, delta, limit, BntSuspension.isBogie(nodeBe));
-                                    moved.add(nodePos);
-                                }
-                            }
-                            for (BlockPos nodePos : Set.copyOf(moved)) {
-                                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntityPhysicsAccess nodeAccess) {
-                                    for (KineticBlockEntity cog : BntSuspension.bogieCogs(level, nodePos)) {
-                                        if (moved.add(cog.getBlockPos())) {
-                                            ((KineticBlockEntityPhysicsAccess)cog).bnt$setAlignmentOffsetY(nodeAccess.bnt$getAlignmentOffsetY());
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (moveAxis != null) {
-                            shiftAxis(access, moveAxis, delta, limit, BntSuspension.isBogie(be));
-                            for (KineticBlockEntity cog : BntSuspension.bogieCogs(level, pos)) {
-                                if (cog != be) {
-                                    ((KineticBlockEntityPhysicsAccess)cog).bnt$setAlignmentOffsetY(access.bnt$getAlignmentOffsetY());
-                                    cog.setChanged();
-                                    cog.sendData();
-                                }
-                            }
-                        }
-
-                        if (!moved.isEmpty()) {
-                            for (BlockPos nodePos : moved) {
-                                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic) {
-                                    kinetic.setChanged();
-                                    kinetic.sendData();
-                                }
-                            }
-                        } else {
-                            be.setChanged();
-                            ((KineticBlockEntity)be).sendData();
-                            BntCogwheelPairing.pushSettingsToPartner(level, pos);
-                        }
-
-                        BntChainEngagement.refresh(level, pos, engagementBefore);
-                        if (moveAxis != null) {
-                            BntBeltRefit.queue(level, pos);
-                        }
-
-                        if (player != null) {
-                            if (toggledVisibility) {
-                                Component status = access.bnt$isHiddenByLever()
-                                    ? Component.translatable("chat.bits_n_tracks.alignment.visibility.hidden")
-                                    : Component.translatable("chat.bits_n_tracks.alignment.visibility.shown");
-                                player.displayClientMessage(Component.translatable("chat.bits_n_tracks.alignment.visibility", new Object[]{status}), true);
-                            } else {
-                                player.displayClientMessage(
-                                    shiftMessage(access, level, pos, BntCogwheelPairing.countWheels(level, moved)), true);
-                            }
-                        }
-
-                        return InteractionResult.SUCCESS;
                     }
                 }
-            } else {
-                return InteractionResult.PASS;
             }
+        } else {
+            changed = shiftAxis(access, moveAxis, delta, LIMIT, BntSuspension.isBogie(be));
+            for (KineticBlockEntity cog : BntSuspension.bogieCogs(level, pos)) {
+                if (cog != be) {
+                    ((KineticBlockEntityPhysicsAccess)cog).bnt$setAlignmentOffsetY(access.bnt$getAlignmentOffsetY());
+                    cog.setChanged();
+                    cog.sendData();
+                }
+            }
+        }
+
+        if (!moved.isEmpty()) {
+            for (BlockPos nodePos : moved) {
+                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic) {
+                    kinetic.setChanged();
+                    kinetic.sendData();
+                }
+            }
+        } else {
+            be.setChanged();
+            ((KineticBlockEntity)be).sendData();
+            BntCogwheelPairing.pushSettingsToPartner(level, pos);
+        }
+
+        BntChainEngagement.refresh(level, pos, engagementBefore);
+        BntBeltRefit.queue(level, pos);
+        if (!changed) {
+            BntToolSounds.refuse(player);
+            return;
+        }
+        BntToolSounds.adjust(level, pos, (offset(access, moveAxis) + LIMIT) / (2.0F * LIMIT));
+        Component message = shiftMessage(level, pos, BntCogwheelPairing.countWheels(level, moved));
+        if (message != null) {
+            BntToolMessages.send(player, message);
         }
     }
 
-    private static double getAxisDelta(Axis axis, double dx, double dy, double dz) {
+    private static float offset(KineticBlockEntityPhysicsAccess access, Axis axis) {
         return switch (axis) {
-            case X -> dx;
-            case Y -> dy;
-            case Z -> dz;
-            default -> throw new MatchException(null, null);
+            case X -> access.bnt$getAlignmentOffsetX();
+            case Y -> access.bnt$getAlignmentOffsetY();
+            case Z -> access.bnt$getAlignmentOffsetZ();
         };
     }
 
-    private static void shiftAxis(KineticBlockEntityPhysicsAccess access, Axis axis, float delta, float limit, boolean bogie) {
+    public static void toggleVisibility(Level level, Player player, BlockPos pos) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof KineticBlockEntity kinetic) || !(be instanceof KineticBlockEntityPhysicsAccess access)) {
+            return;
+        }
+
+        access.bnt$setHiddenByLever(!access.bnt$isHiddenByLever());
+        kinetic.setChanged();
+        kinetic.sendData();
+        BntCogwheelPairing.pushSettingsToPartner(level, pos);
+        BntToolSounds.toggle(level, pos, !access.bnt$isHiddenByLever());
+    }
+
+    public static void reset(Level level, Player player, BlockPos pos) {
+        Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
+        for (BlockPos nodePos : collectChainPositions(level, pos)) {
+            BlockEntity nodeBe = level.getBlockEntity(nodePos);
+            if (nodeBe instanceof KineticBlockEntity kinetic && nodeBe instanceof KineticBlockEntityPhysicsAccess nodeAccess) {
+                nodeAccess.bnt$setAlignmentOffsetX(0.0F);
+                nodeAccess.bnt$setAlignmentOffsetY(0.0F);
+                nodeAccess.bnt$setAlignmentOffsetZ(0.0F);
+                nodeAccess.bnt$setHiddenByLever(false);
+                nodeAccess.bnt$setTrackRouteSide(-1);
+                for (BntTuning setting : BntTuning.values()) {
+                    nodeAccess.bnt$setTuning(setting, BntTuning.DEFAULT);
+                }
+                kinetic.setChanged();
+                kinetic.sendData();
+            }
+        }
+
+        BntChainEngagement.refresh(level, pos, engagementBefore);
+        BntBeltRefit.queue(level, pos);
+        BntToolSounds.reset(level, pos);
+        BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.reset"));
+    }
+
+    private static boolean shiftAxis(KineticBlockEntityPhysicsAccess access, Axis axis, float delta, float limit, boolean bogie) {
+        float before = offset(access, axis);
+        shiftClamped(access, axis, delta, limit, bogie);
+        return offset(access, axis) != before;
+    }
+
+    private static void shiftClamped(KineticBlockEntityPhysicsAccess access, Axis axis, float delta, float limit, boolean bogie) {
         if (bogie) {
             if (axis == Axis.Y) {
                 access.bnt$setAlignmentOffsetY(Mth.clamp(access.bnt$getAlignmentOffsetY() + delta, -limit, 0.0F));
@@ -270,33 +252,12 @@ public class CogAlignmentLeverItem extends Item {
         return spread;
     }
 
-    private static Component shiftMessage(KineticBlockEntityPhysicsAccess access, Level level, BlockPos pos, int wheels) {
-        MutableComponent message = Component.translatable(
-            "chat.bits_n_tracks.alignment.shift.3d",
-            new Object[]{
-                formatPixels(access.bnt$getAlignmentOffsetX()), formatPixels(access.bnt$getAlignmentOffsetY()), formatPixels(access.bnt$getAlignmentOffsetZ())
-            }
-        );
-
-        if (wheels > 0) {
-            message.append(" ").append(Component.translatable(
-                wheels == 1 ? "chat.bits_n_tracks.alignment.scope.single" : "chat.bits_n_tracks.alignment.scope.track", wheels));
+    private static Component shiftMessage(Level level, BlockPos pos, int wheels) {
+        if (wheels == 0) {
+            return WrenchPhysicsHandler.trackStatus(level, pos);
         }
-
-        Boolean engaged = BntChainEngagement.engagementAt(level, pos);
-        if (engaged == null) {
-            return message;
-        }
-        return message.append(" ").append(
-            Component.translatable(engaged
-                    ? "chat.bits_n_tracks.alignment.track.driving"
-                    : "chat.bits_n_tracks.alignment.track.free")
-                .withStyle(engaged ? ChatFormatting.GREEN : ChatFormatting.GRAY));
-    }
-
-    private static String formatPixels(float offset) {
-        int px = Math.round(offset / 0.0625F);
-        return (px > 0 ? "+" : "") + px + "px";
+        return Component.translatable(
+            wheels == 1 ? "bits_n_tracks.tool_panel.message.moved.single" : "bits_n_tracks.tool_panel.message.moved", wheels);
     }
 
     private static Set<BlockPos> collectChainPositions(Level level, BlockPos pos) {

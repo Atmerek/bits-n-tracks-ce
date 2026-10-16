@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.content.suspension;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.BitsNTracks;
+import dev.qwxon.bitsntracks.client.BntToolVisuals;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,7 +17,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 public final class BntSuspensionPieceRenderer {
     public static final ResourceLocation TEXTURE = BitsNTracks.asResource("textures/block/suspension_piece.png");
     private static final int SOLID = 0xFFFFFFFF;
-    private static final int GHOST = 0x9066FF66;
+    private static final int GHOST = 0x90000000 | BntToolVisuals.GOOD;
     private static final Vec3 CENTRE = new Vec3(0.5, 0.5, 0.5);
 
     private BntSuspensionPieceRenderer() {

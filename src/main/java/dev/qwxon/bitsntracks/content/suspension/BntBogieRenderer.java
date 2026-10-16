@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.content.suspension;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.BitsNTracks;
+import dev.qwxon.bitsntracks.client.BntToolVisuals;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -15,7 +16,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public final class BntBogieRenderer {
     public static final ResourceLocation TEXTURE = BitsNTracks.asResource("textures/block/bogie_suspension.png");
-    private static final int GHOST = 0x9066FF66;
+    private static final int GHOST = 0x90000000 | BntToolVisuals.GOOD;
 
     private BntBogieRenderer() {
     }
