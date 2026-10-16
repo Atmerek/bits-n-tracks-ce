@@ -2,12 +2,15 @@ package dev.qwxon.bitsntracks.access;
 
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 
 public interface KineticBlockEntityPhysicsAccess {
     boolean bnt$isPhysicsEnabled();
 
     void bnt$physicsChanged(BlockState state, boolean enabled);
+
+    void bnt$writeSettings(CompoundTag tag);
 
     double bnt$getExtension();
 

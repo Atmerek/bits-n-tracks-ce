@@ -29,6 +29,7 @@
         "SubLevelEntityCollisionMixin",
         "BntEntityCollideMixin",
         "BntBlockEntityLoadMixin",
+        "SmartBlockEntitySchematicMixin",
         "accessor.RotationPropagatorAccessor"
     ],
     "client": [

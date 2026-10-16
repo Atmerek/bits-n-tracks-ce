@@ -497,6 +497,14 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         at = {@At("TAIL")}
     )
     private void bnt$write(CompoundTag tag, Provider registries, boolean clientPacket, CallbackInfo ci) {
+        this.bnt$writeSettings(tag);
+        if (this.bnt$isPhysicsEnabled()) {
+            tag.putDouble("BntExtension", this.bnt$extension);
+        }
+    }
+
+    @Override
+    public void bnt$writeSettings(CompoundTag tag) {
         tag.putFloat("BntAlignmentOffsetX", this.bnt$alignmentOffsetX);
         tag.putFloat("BntAlignmentOffsetY", this.bnt$alignmentOffsetY);
         tag.putFloat("BntAlignmentOffsetZ", this.bnt$alignmentOffsetZ);
@@ -517,9 +525,6 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         }
         if (!tuning.isEmpty()) {
             tag.put("BntTuning", tuning);
-        }
-        if (this.bnt$isPhysicsEnabled()) {
-            tag.putDouble("BntExtension", this.bnt$extension);
         }
     }
 
