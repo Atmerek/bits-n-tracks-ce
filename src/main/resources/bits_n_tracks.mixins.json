@@ -2,7 +2,6 @@
     "required": true,
     "minVersion": "0.8",
     "package": "dev.qwxon.bitsntracks.mixin",
-    "refmap": "bits_n_tracks.refmap.json",
     "compatibilityLevel": "JAVA_21",
     "mixins": [
         "KineticBlockEntityPhysicsMixin",
