@@ -83,6 +83,15 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     private boolean bnt$holds;
 
     @Unique
+    private List<PathedCogwheelNode> bnt$preReadNodes = List.of();
+
+    @Unique
+    private BntChainGeometry.Layout bnt$preReadLatch;
+
+    @Unique
+    private List<RenderedChainPathNode> bnt$preReadRendered = List.of();
+
+    @Unique
     private BntChainGeometry.Layout bnt$latchedLayout(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
         double[] signature = BntChainEngagement.signature(level, controllerPos, nodes);
         BntChainGeometry.Layout restored = this.bnt$restoredLayout;
@@ -275,9 +284,29 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
 
     @Inject(
         method = {"read"},
+        at = {@At("HEAD")}
+    )
+    private void bnt$rememberLatchBeforeRead(CompoundTag tag, CallbackInfo ci) {
+        this.bnt$preReadNodes = this.cogwheelNodes == null ? List.of() : List.copyOf(this.cogwheelNodes);
+        this.bnt$preReadLatch = this.bnt$latched;
+        this.bnt$preReadRendered = this.renderedNodes == null ? List.of() : List.copyOf(this.renderedNodes);
+    }
+
+    @Inject(
+        method = {"read"},
         at = {@At("TAIL")}
     )
     private void bnt$forgetBuiltGeometry(CompoundTag tag, CallbackInfo ci) {
+        BntChainGeometry.Layout kept = this.bnt$preReadLatch != null && bnt$sameCogwheels(this.bnt$preReadNodes, this.cogwheelNodes)
+            ? this.bnt$preReadLatch
+            : null;
+        if (kept != null && !this.bnt$preReadRendered.isEmpty()) {
+            this.renderedNodes.clear();
+            this.renderedNodes.addAll(this.bnt$preReadRendered);
+        }
+        this.bnt$preReadNodes = List.of();
+        this.bnt$preReadLatch = null;
+        this.bnt$preReadRendered = List.of();
         this.bnt$builtDisplacements = null;
         this.bnt$latched = null;
         this.bnt$latchedAt = Long.MIN_VALUE;
@@ -285,7 +314,22 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$sidesPending = false;
         this.bnt$appliedLayout = null;
         this.bnt$engagedDisplacements = null;
-        this.bnt$restoredLayout = bnt$readLayout(tag, this.cogwheelNodes.size());
+        this.bnt$restoredLayout = kept != null ? kept : bnt$readLayout(tag, this.cogwheelNodes.size());
+    }
+
+    @Unique
+    private static boolean bnt$sameCogwheels(List<PathedCogwheelNode> before, List<PathedCogwheelNode> after) {
+        if (before.size() != after.size()) {
+            return false;
+        }
+        for (int i = 0; i < before.size(); i++) {
+            PathedCogwheelNode a = before.get(i);
+            PathedCogwheelNode b = after.get(i);
+            if (!a.localPos().equals(b.localPos()) || a.isLarge() != b.isLarge() || a.rotationAxis() != b.rotationAxis()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Bits 'n' Bobs saves its small flanged cogwheel as tiny. */
