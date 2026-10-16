@@ -419,33 +419,30 @@ public final class HiddenCogwheelCompat {
                 if (level == null) {
                     return false;
                 } else {
-                    try {
-                        CogwheelChain chain = behaviour.getControlledChain();
-                        if (chain != null) {
-                            return bnt$checkChainPhysics(level, selfBe.getBlockPos(), chain);
-                        }
+                    CogwheelChain chain = behaviour.getControlledChain();
+                    if (chain != null) {
+                        return bnt$checkChainPhysics(level, selfBe.getBlockPos(), chain);
+                    }
 
-                        Vec3i offset = behaviour.getControllerOffset();
-                        if (offset != null) {
-                            BlockPos controllerPos = selfBe.getBlockPos().offset(offset);
-                            BlockEntity controllerBe = level.getBlockEntity(controllerPos);
-                            if (controllerBe != null) {
-                                if (isPhysicsEnabled(controllerBe)) {
-                                    return true;
-                                }
+                    Vec3i offset = behaviour.getControllerOffset();
+                    if (offset != null) {
+                        BlockPos controllerPos = selfBe.getBlockPos().offset(offset);
+                        BlockEntity controllerBe = level.getBlockEntity(controllerPos);
+                        if (controllerBe != null) {
+                            if (isPhysicsEnabled(controllerBe)) {
+                                return true;
+                            }
 
-                                if (controllerBe instanceof SmartBlockEntity smartBe) {
-                                    CogwheelChainBehaviour controllerChainBehaviour = (CogwheelChainBehaviour)smartBe.getBehaviour(CogwheelChainBehaviour.TYPE);
-                                    if (controllerChainBehaviour != null) {
-                                        CogwheelChain controllerChain = controllerChainBehaviour.getControlledChain();
-                                        if (controllerChain != null) {
-                                            return bnt$checkChainPhysics(level, controllerPos, controllerChain);
-                                        }
+                            if (controllerBe instanceof SmartBlockEntity smartBe) {
+                                CogwheelChainBehaviour controllerChainBehaviour = (CogwheelChainBehaviour)smartBe.getBehaviour(CogwheelChainBehaviour.TYPE);
+                                if (controllerChainBehaviour != null) {
+                                    CogwheelChain controllerChain = controllerChainBehaviour.getControlledChain();
+                                    if (controllerChain != null) {
+                                        return bnt$checkChainPhysics(level, controllerPos, controllerChain);
                                     }
                                 }
                             }
                         }
-                    } catch (Throwable var10) {
                     }
 
                     return false;
@@ -466,14 +463,8 @@ public final class HiddenCogwheelCompat {
                 && !state.is((Block)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get())
                 && !isHiddenCogwheel(state)) {
                 Level level = behaviour.blockEntity.getLevel();
-                if (level != null && level.isClientSide()) {
-                    try {
-                        Object subLevel = Sable.HELPER.getContainingClient(behaviour.blockEntity);
-                        if (subLevel != null) {
-                            return true;
-                        }
-                    } catch (Throwable var4) {
-                    }
+                if (level != null && level.isClientSide() && Sable.HELPER.getContainingClient(behaviour.blockEntity) != null) {
+                    return true;
                 }
 
                 return hasPhysicsEnabledNode(behaviour);

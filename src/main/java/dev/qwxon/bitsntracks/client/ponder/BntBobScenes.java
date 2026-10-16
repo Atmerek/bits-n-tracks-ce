@@ -16,8 +16,8 @@ import dev.qwxon.bitsntracks.client.BntToolVisuals;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
+import dev.qwxon.bitsntracks.mixin.accessor.CogwheelChainShapeAccessor;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -657,7 +657,6 @@ public final class BntBobScenes {
         private static final int POINTER_COLOUR = 0xFFFFFF;
         private static final float LINE_WIDTH = 1.0F / 48.0F;
         private static final float POINTER_SIZE = 1.0F / 6.0F;
-        private static Method drawOutline;
 
         private final BlockPos controller;
         private final Vec3 rest;
@@ -744,15 +743,7 @@ public final class BntBobScenes {
                     return this;
                 }
             };
-            try {
-                if (drawOutline == null) {
-                    drawOutline = CogwheelChainShape.class.getDeclaredMethod("drawOutline", PoseStack.class, VertexConsumer.class, UnaryOperator.class);
-                    drawOutline.setAccessible(true);
-                }
-                drawOutline.invoke(shape, new PoseStack(), collector, UnaryOperator.<Vec3>identity());
-            } catch (ReflectiveOperationException ignored) {
-                ends.clear();
-            }
+            ((CogwheelChainShapeAccessor)shape).bnt$drawOutline(new PoseStack(), collector, UnaryOperator.identity());
             return ends;
         }
     }

@@ -2,20 +2,26 @@ package dev.qwxon.bitsntracks.client;
 
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.mixin.accessor.CreativeModeInventoryScreenAccessor;
-import java.lang.reflect.Method;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
-import net.minecraft.client.renderer.texture.SpriteContents;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class BntCreativeTabRenderer {
+    private static final ResourceLocation BANNER = BitsNTracks.asResource("textures/gui/sprites/bitsntracks_banner.png");
+    private static final ResourceLocation BANNER_STILL = BitsNTracks.asResource("bitsntracks_banner_still");
+    private static final int BANNER_FRAMES = 15;
+    private static final long FRAME_MILLIS = 300L;
+    private static long hoveredMillis;
+    private static long lastFrameMillis;
+
     public static void renderBanners(CreativeModeInventoryScreen screen, GuiGraphics graphics, int mouseX, int mouseY) {
         Font font = Minecraft.getInstance().font;
         graphics.pose().pushPose();
@@ -31,11 +37,15 @@ public class BntCreativeTabRenderer {
             int w = 162;
             int h = 18;
             boolean isHovering = mouseX >= left + x && mouseX <= left + x + w && mouseY >= top + y && mouseY <= top + y + h;
-            ResourceLocation bannerStill = ResourceLocation.fromNamespaceAndPath("bits_n_tracks", "bitsntracks_banner_still");
-            ResourceLocation bannerAnim = ResourceLocation.fromNamespaceAndPath("bits_n_tracks", "bitsntracks_banner");
-            setPlaying(bannerAnim, isHovering);
-            ResourceLocation activeBanner = isHovering ? bannerAnim : bannerStill;
-            graphics.blitSprite(activeBanner, 0, y, w, h);
+            long now = Util.getMillis();
+            if (isHovering) {
+                hoveredMillis += Math.min(now - lastFrameMillis, FRAME_MILLIS);
+                int frame = (int)(hoveredMillis / FRAME_MILLIS % BANNER_FRAMES);
+                graphics.blit(BANNER, x, y, w, h, 0.0F, frame * h, w, h, w, h * BANNER_FRAMES);
+            } else {
+                graphics.blitSprite(BANNER_STILL, x, y, w, h);
+            }
+            lastFrameMillis = now;
             Component title = Component.translatable("tab.bits_n_tracks.base");
             int textWidth = font.width(title);
             graphics.fill(2, y + 2, textWidth + 8, y + 16, -1441262572);
@@ -44,54 +54,6 @@ public class BntCreativeTabRenderer {
 
         graphics.pose().popPose();
         RenderSystem.disableDepthTest();
-    }
-
-    public static void setPlaying(ResourceLocation resourceLocation, boolean playing) {
-        try {
-            TextureAtlasSprite sprite = Minecraft.getInstance().getGuiSprites().getSprite(resourceLocation);
-            if (sprite == null) {
-                return;
-            }
-
-            SpriteContents contents = sprite.contents();
-            if (contents == null) {
-                return;
-            }
-
-            Method getTickerMethod = null;
-
-            for (Method m : contents.getClass().getMethods()) {
-                if (m.getName().equals("simulated$getTicker")) {
-                    getTickerMethod = m;
-                    break;
-                }
-            }
-
-            if (getTickerMethod == null) {
-                return;
-            }
-
-            Object ticker = getTickerMethod.invoke(contents);
-            if (ticker == null) {
-                return;
-            }
-
-            Method setPlayingMethod = null;
-
-            for (Method mx : ticker.getClass().getMethods()) {
-                if (mx.getName().equals("simulated$setPlaying")) {
-                    setPlayingMethod = mx;
-                    break;
-                }
-            }
-
-            if (setPlayingMethod == null) {
-                return;
-            }
-
-            setPlayingMethod.invoke(ticker, playing);
-        } catch (Exception var11) {
-        }
     }
 
     public static void drawAuraText(GuiGraphics graphics, Component text, int color1, int color2, int x, int y) {
