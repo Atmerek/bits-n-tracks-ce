@@ -4,14 +4,12 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBeha
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.render.CogwheelChainRenderGeometryBuilder.ChainSegment;
-import com.kipti.bnb.registry.content.blocks.BnbKineticBlocks;
 import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
-import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
@@ -21,7 +19,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -216,28 +213,18 @@ public final class HiddenCogwheelCompat {
     }
 
     public static boolean shouldForceDynamicRenderer(CogwheelChainBehaviour behaviour) {
-        if (behaviour != null && behaviour.blockEntity != null) {
-            BlockState state = behaviour.blockEntity.getBlockState();
-            if (BntCogwheelPairing.isWide(state)) {
-                return true;
-            }
-
-            if (!state.is((Block)BnbKineticBlocks.SMALL_FLANGED_COGWHEEL.get())
-                && !state.is((Block)BnbKineticBlocks.LARGE_FLANGED_COGWHEEL.get())
-                && !state.is((Block)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get())
-                && !BntFlangedCogwheelBlock.physics(state)) {
-                Level level = behaviour.blockEntity.getLevel();
-                if (level != null && level.isClientSide() && Sable.HELPER.getContainingClient(behaviour.blockEntity) != null) {
-                    return true;
-                }
-
-                return hasPhysicsEnabledNode(behaviour);
-            } else {
-                return true;
-            }
-        } else {
+        if (behaviour == null || behaviour.blockEntity == null) {
             return false;
         }
+        if (BntVisualized.ownType(behaviour.blockEntity)) {
+            return true;
+        }
+
+        Level level = behaviour.blockEntity.getLevel();
+        if (level != null && level.isClientSide() && Sable.HELPER.getContainingClient(behaviour.blockEntity) != null) {
+            return true;
+        }
+        return hasPhysicsEnabledNode(behaviour);
     }
 
     private static boolean bnt$checkChainPhysics(Level level, BlockPos controllerPos, CogwheelChain chain) {
@@ -249,11 +236,7 @@ public final class HiddenCogwheelCompat {
                     return true;
                 }
 
-                BlockState nodeState = level.getBlockState(nodePos);
-                if (BntFlangedCogwheelBlock.physics(nodeState)
-                    || nodeState.is((Block)BnbKineticBlocks.SMALL_FLANGED_COGWHEEL.get())
-                    || nodeState.is((Block)BnbKineticBlocks.LARGE_FLANGED_COGWHEEL.get())
-                    || nodeState.is((Block)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get())) {
+                if (BntFlangedCogwheelBlock.physics(level.getBlockState(nodePos))) {
                     return true;
                 }
             }

@@ -8,6 +8,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.placement.ChainInteractionFailedException;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSolver;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntLegacyChainPath;
@@ -17,15 +18,72 @@ import java.util.List;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(
     value = {CogwheelChainPathfinder.class},
     remap = false
 )
 public class CogwheelChainPathfinderMixin {
-    @Overwrite
-    public static List<PathedCogwheelNode> buildChainPath(PlacingCogwheelChain worldSpaceChain) throws ChainInteractionFailedException {
+    @Inject(
+        method = {"buildChainPath"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private static void bnt$buildOwnChainPath(PlacingCogwheelChain worldSpaceChain, CallbackInfoReturnable<List<PathedCogwheelNode>> cir)
+        throws ChainInteractionFailedException {
+        boolean own = BntChainGeometry.ownGeometry()
+            || BntChainGeometry.ownNodes(HiddenCogwheelCompat.getPlacementLevel(), worldSpaceChain.getNodes());
+        if (!own) {
+            return;
+        }
+        boolean previous = BntChainGeometry.beginOwn(true);
+        try {
+            cir.setReturnValue(bnt$buildChainPath(worldSpaceChain));
+        } finally {
+            BntChainGeometry.endOwn(previous);
+        }
+    }
+
+    @Inject(
+        method = {"getArcDistanceOnCog"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private static void bnt$ownArcDistance(PathedCogwheelNode prevNode, PathedCogwheelNode currentNode, PathedCogwheelNode nextNode,
+                                           CallbackInfoReturnable<Double> cir) {
+        if (BntChainGeometry.ownGeometry()) {
+            cir.setReturnValue(bnt$arcDistanceOnCog(prevNode, currentNode, nextNode));
+        }
+    }
+
+    @Inject(
+        method = {"getPathingTangentOnCog(Lcom/kipti/bnb/content/kinetics/cogwheel_chain/graph/ICogwheelNode;Lcom/kipti/bnb/content/kinetics/cogwheel_chain/graph/ICogwheelNode;I)Lnet/minecraft/world/phys/Vec3;"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private static void bnt$ownNodeTangent(ICogwheelNode from, ICogwheelNode to, int toSide, CallbackInfoReturnable<Vec3> cir) {
+        if (BntChainGeometry.ownGeometry()) {
+            cir.setReturnValue(bnt$pathingTangentOnCog(from, to, toSide));
+        }
+    }
+
+    @Inject(
+        method = {"getPathingTangentOnCog(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;ZLnet/minecraft/world/phys/Vec3;I)Lnet/minecraft/world/phys/Vec3;"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private static void bnt$ownTangent(Vec3 fromCenter, Vec3 fromRotationAxis, Vec3 toCenter, boolean toLarge, Vec3 toRotationAxis, int toSide,
+                                       CallbackInfoReturnable<Vec3> cir) {
+        if (BntChainGeometry.ownGeometry()) {
+            double toRadius = toLarge ? BntPhysicsTuning.getLargeTrackRadius() : BntPhysicsTuning.getSmallTrackRadius();
+            cir.setReturnValue(bnt$getPathingTangentOnCog(fromCenter, fromRotationAxis, toCenter, toRadius, toRotationAxis, toSide));
+        }
+    }
+
+    private static List<PathedCogwheelNode> bnt$buildChainPath(PlacingCogwheelChain worldSpaceChain) throws ChainInteractionFailedException {
         PlacingCogwheelChain chain = worldSpaceChain.toLocalSpaceChain();
         List<PlacingCogwheelNode> nodes = chain.getNodes();
         int count = nodes.size();
@@ -116,13 +174,13 @@ public class CogwheelChainPathfinderMixin {
     private static BntLegacyChainPath bnt$legacyExtend(PlacingCogwheelNode previousNode, PlacingCogwheelNode nextNode,
                                                        int fromSide, int toSide, BntLegacyChainPath fromPath,
                                                        PlacingCogwheelNode nextNextNode) {
-        Vec3 fromPos = previousNode.center().add(getPathingTangentOnCog(nextNode, previousNode, -fromSide));
-        Vec3 toPos = nextNode.center().add(getPathingTangentOnCog(previousNode, nextNode, toSide));
+        Vec3 fromPos = previousNode.center().add(bnt$pathingTangentOnCog(nextNode, previousNode, -fromSide));
+        Vec3 toPos = nextNode.center().add(bnt$pathingTangentOnCog(previousNode, nextNode, toSide));
         ImmutableList<PathedCogwheelNode> traversed = fromPath.traversed();
         int traversedSize = traversed.size();
         int continuationSide = CogwheelChainPathfinder.isValidPathStep(nextNode, toSide, nextNextNode, toSide) ? toSide : -toSide;
         double distance = fromPos.distanceTo(toPos)
-            + getArcDistanceOnCog(
+            + bnt$arcDistanceOnCog(
                 new PathedCogwheelNode(previousNode, fromSide),
                 new PathedCogwheelNode(nextNode, toSide),
                 new PathedCogwheelNode(nextNextNode, continuationSide)
@@ -136,8 +194,7 @@ public class CogwheelChainPathfinderMixin {
         return fromPath.extend(new PathedCogwheelNode(nextNode, toSide), distance, selfIntersections);
     }
 
-    @Overwrite
-    private static double getArcDistanceOnCog(PathedCogwheelNode prevNode, PathedCogwheelNode currentNode, PathedCogwheelNode nextNode) {
+    private static double bnt$arcDistanceOnCog(PathedCogwheelNode prevNode, PathedCogwheelNode currentNode, PathedCogwheelNode nextNode) {
         Vec3 fromTangent = CogwheelChainGeometryBuilder.getTangentPointOnCircle(prevNode, currentNode, true);
         Vec3 toTangent = CogwheelChainGeometryBuilder.getTangentPointOnCircle(nextNode, currentNode, false);
         Vec3 incomingDiff = currentNode.center().subtract(prevNode.center());
@@ -151,16 +208,9 @@ public class CogwheelChainPathfinderMixin {
         }
     }
 
-    @Overwrite
-    public static Vec3 getPathingTangentOnCog(ICogwheelNode from, ICogwheelNode to, int toSide) {
+    private static Vec3 bnt$pathingTangentOnCog(ICogwheelNode from, ICogwheelNode to, int toSide) {
         return bnt$getPathingTangentOnCog(
             from.center(), from.rotationAxisVec(), to.center(), BntChainGeometry.trackRadius(to), to.rotationAxisVec(), toSide);
-    }
-
-    @Overwrite
-    public static Vec3 getPathingTangentOnCog(Vec3 fromCenter, Vec3 fromRotationAxis, Vec3 toCenter, boolean toLarge, Vec3 toRotationAxis, int toSide) {
-        double toRadius = toLarge ? BntPhysicsTuning.getLargeTrackRadius() : BntPhysicsTuning.getSmallTrackRadius();
-        return bnt$getPathingTangentOnCog(fromCenter, fromRotationAxis, toCenter, toRadius, toRotationAxis, toSide);
     }
 
     private static Vec3 bnt$getPathingTangentOnCog(Vec3 fromCenter, Vec3 fromRotationAxis, Vec3 toCenter, double toRadius, Vec3 toRotationAxis, int toSide) {

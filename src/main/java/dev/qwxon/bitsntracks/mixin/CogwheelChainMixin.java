@@ -5,17 +5,24 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChainGeometry
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.RenderedChainPathNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.segment.CogwheelChainSegment;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import com.kipti.bnb.registry.core.BnbTags.BnbBlockTags;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainMotion;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.physics.BntDebugLog;
 import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
+import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,8 +54,62 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     private List<CogwheelChainSegment> cachedSegments;
 
     @Shadow
+    private CogwheelChainType type;
+
+    @Shadow
     private void updateInsideOutsideFlip() {
         throw new AssertionError();
+    }
+
+    @Unique
+    private boolean bnt$own;
+
+    @Override
+    public boolean bnt$isOwn() {
+        return this.bnt$own || BntCogwheelChainTypes.isOwn(this.type);
+    }
+
+    @Unique
+    private boolean bnt$claim(Level level, BlockPos controllerPos) {
+        if (!this.bnt$own && (BntCogwheelChainTypes.isOwn(this.type) || HiddenCogwheelCompat.isOwnChain(level, controllerPos))) {
+            this.bnt$own = true;
+            this.bnt$builtDisplacements = null;
+        }
+        return this.bnt$own;
+    }
+
+    @Unique
+    private List<RenderedChainPathNode> bnt$build(List<PathedCogwheelNode> nodes, boolean own, Operation<List<RenderedChainPathNode>> original) {
+        boolean previous = BntChainGeometry.beginOwn(own);
+        try {
+            return original.call(nodes);
+        } finally {
+            BntChainGeometry.endOwn(previous);
+        }
+    }
+
+    @WrapOperation(
+        method = {"<init>(Ljava/util/List;Lcom/kipti/bnb/content/kinetics/cogwheel_chain/types/CogwheelChainType;Lnet/minecraft/world/item/Item;)V"},
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/kipti/bnb/content/kinetics/cogwheel_chain/graph/CogwheelChainGeometryBuilder;buildFullChainFromPathNodes(Ljava/util/List;)Ljava/util/List;"
+        )
+    )
+    private List<RenderedChainPathNode> bnt$buildNewChain(List<PathedCogwheelNode> nodes, Operation<List<RenderedChainPathNode>> original,
+                                                          @Local(argsOnly = true) CogwheelChainType chainType) {
+        this.bnt$own = BntChainGeometry.ownGeometry() || BntCogwheelChainTypes.isOwn(chainType);
+        return this.bnt$build(nodes, this.bnt$own, original);
+    }
+
+    @WrapOperation(
+        method = {"read", "transform"},
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/kipti/bnb/content/kinetics/cogwheel_chain/graph/CogwheelChainGeometryBuilder;buildFullChainFromPathNodes(Ljava/util/List;)Ljava/util/List;"
+        )
+    )
+    private List<RenderedChainPathNode> bnt$rebuildChain(List<PathedCogwheelNode> nodes, Operation<List<RenderedChainPathNode>> original) {
+        return this.bnt$build(nodes, this.bnt$isOwn(), original);
     }
 
     @Unique
@@ -208,7 +269,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     @Override
     public boolean bnt$isNodeEngaged(Level level, BlockPos controllerPos, BlockPos nodeLocalPos) {
         List<PathedCogwheelNode> nodes = this.cogwheelNodes;
-        if (level == null || controllerPos == null || nodes == null || nodes.size() < 2) {
+        if (level == null || controllerPos == null || nodes == null || nodes.size() < 2 || !this.bnt$claim(level, controllerPos)) {
             return true;
         }
 
@@ -233,6 +294,13 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         List<PathedCogwheelNode> nodes = this.cogwheelNodes;
         if (level == null || controllerPos == null || nodes == null || nodes.size() < 2) {
             return;
+        }
+        boolean claimed = this.bnt$own;
+        if (!this.bnt$claim(level, controllerPos)) {
+            return;
+        }
+        if (!claimed) {
+            this.bnt$refreshWithLevel(level, controllerPos);
         }
 
         boolean[] applied = this.bnt$appliedEngagement(nodes.size());
@@ -287,6 +355,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         at = {@At("HEAD")}
     )
     private void bnt$rememberLatchBeforeRead(CompoundTag tag, CallbackInfo ci) {
+        this.bnt$own = tag.getBoolean("BNT_Own");
         this.bnt$preReadNodes = this.cogwheelNodes == null ? List.of() : List.copyOf(this.cogwheelNodes);
         this.bnt$preReadLatch = this.bnt$latched;
         this.bnt$preReadRendered = this.renderedNodes == null ? List.of() : List.copyOf(this.renderedNodes);
@@ -338,6 +407,9 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         at = {@At("HEAD")}
     )
     private void bnt$adoptSmallFlangedSize(Level level, BlockPos origin, CallbackInfoReturnable<Boolean> cir) {
+        if (!this.bnt$claim(level, origin)) {
+            return;
+        }
         List<PathedCogwheelNode> nodes = this.cogwheelNodes;
         List<PathedCogwheelNode> updated = null;
         for (int i = 0; i < nodes.size(); i++) {
@@ -360,7 +432,12 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         }
 
         this.cogwheelNodes = updated;
-        this.renderedNodes = CogwheelChainGeometryBuilder.buildFullChainFromPathNodes(updated);
+        boolean previous = BntChainGeometry.beginOwn(true);
+        try {
+            this.renderedNodes = CogwheelChainGeometryBuilder.buildFullChainFromPathNodes(updated);
+        } finally {
+            BntChainGeometry.endOwn(previous);
+        }
         this.cachedSegments = null;
         this.bnt$builtDisplacements = null;
         if (!level.isClientSide && level.getBlockEntity(origin) instanceof SmartBlockEntity controller) {
@@ -381,6 +458,16 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
 
         tag.putIntArray("BNT_PathOrder", layout.sequence());
         tag.putIntArray("BNT_PathSides", layout.sides());
+    }
+
+    @Inject(
+        method = {"write"},
+        at = {@At("TAIL")}
+    )
+    private void bnt$writeOwn(CompoundTag tag, CallbackInfo ci) {
+        if (this.bnt$own) {
+            tag.putBoolean("BNT_Own", true);
+        }
     }
 
     @Unique
@@ -405,7 +492,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     @Override
     public void bnt$refreshChainGeometry(Level level, BlockPos controllerPos) {
         List<PathedCogwheelNode> nodes = this.cogwheelNodes;
-        if (nodes == null || nodes.size() < 2) {
+        if (nodes == null || nodes.size() < 2 || !this.bnt$claim(level, controllerPos)) {
             return;
         }
 
@@ -423,14 +510,30 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$builtDisplacements = signature;
         BntChainGeometry.Layout layout = this.bnt$latchedLayout(level, controllerPos, nodes);
         BntChainGeometry.Layout previous = BntChainMotion.swapLayout(layout);
+        boolean wasOwn = BntChainGeometry.beginOwn(true);
 
         try {
             this.renderedNodes = CogwheelChainGeometryBuilder.buildFullChainFromPathNodes(this.cogwheelNodes);
         } finally {
+            BntChainGeometry.endOwn(wasOwn);
             BntChainMotion.swapLayout(previous);
         }
 
         this.cachedSegments = null;
+    }
+
+    @Unique
+    private void bnt$refreshWithLevel(Level level, BlockPos controllerPos) {
+        Level outerLevel = BntRadiusProvider.level();
+        BlockPos outerOrigin = BntRadiusProvider.origin();
+        BntRadiusProvider.setLevel(level);
+        BntRadiusProvider.setOrigin(controllerPos);
+        try {
+            this.bnt$refreshChainGeometry(level, controllerPos);
+        } finally {
+            BntRadiusProvider.setLevel(outerLevel);
+            BntRadiusProvider.setOrigin(outerOrigin);
+        }
     }
 
     @Unique

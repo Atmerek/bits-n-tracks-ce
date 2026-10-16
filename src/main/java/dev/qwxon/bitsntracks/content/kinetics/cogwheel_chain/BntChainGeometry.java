@@ -2,13 +2,17 @@ package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.ICogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 public final class BntChainGeometry {
@@ -20,8 +24,45 @@ public final class BntChainGeometry {
     private static final double NATURAL_FACE = -0.5;
     private static final double REVERSE_WRAP = Math.PI;
     private static final int REWRAP_PASSES = 3;
+    private static final ThreadLocal<Boolean> OWN = ThreadLocal.withInitial(() -> false);
 
     private BntChainGeometry() {
+    }
+
+    public static boolean ownGeometry() {
+        return OWN.get();
+    }
+
+    public static boolean beginOwn(boolean own) {
+        boolean previous = OWN.get();
+        OWN.set(own);
+        return previous;
+    }
+
+    public static void endOwn(boolean previous) {
+        if (previous) {
+            OWN.set(true);
+        } else {
+            OWN.remove();
+        }
+    }
+
+    public static boolean ownPositions(Level level, Iterable<BlockPos> positions) {
+        if (level == null) {
+            return false;
+        }
+        boolean any = false;
+        for (BlockPos pos : positions) {
+            if (!HiddenCogwheelCompat.isOwnCogwheel(level, pos)) {
+                return false;
+            }
+            any = true;
+        }
+        return any;
+    }
+
+    public static boolean ownNodes(Level level, List<PlacingCogwheelNode> nodes) {
+        return ownPositions(level, nodes.stream().map(PlacingCogwheelNode::pos)::iterator);
     }
 
     public static Axis sharedAxis(List<? extends ICogwheelNode> nodes) {

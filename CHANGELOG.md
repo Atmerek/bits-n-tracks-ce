@@ -34,6 +34,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 ### Changed
 
 - Cogwheels and tracks are drawn through Flywheel when it is active, and tracks stay visible out to the render distance instead of 64 blocks.
+- Bits 'n' Bobs chains on Bits 'n' Bobs cogwheels are left entirely to Bits 'n' Bobs, so they route, look and drive the same as without Bits 'n' Tracks.
 - The Cog Alignment Lever works in six modes: Offset, Route, Tension, Visibility, Physics and Reset. In Offset mode, right-click a cogwheel to select it, scroll to move it one pixel at a time and Shift + scroll to pick the axis, instead of clicking parts of its face. Visibility and physics are switched by right-clicking in their own modes, instead of right-clicking the centre and left-clicking.
 - Resetting with the Cog Alignment Lever is done by right-clicking a cogwheel twice in Reset mode, and also resets suspension tuning.
 - The Cog Alignment Lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.

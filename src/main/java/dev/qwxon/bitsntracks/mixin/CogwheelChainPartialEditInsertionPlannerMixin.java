@@ -4,10 +4,15 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.edit.CogwheelChainPartialEd
 import com.kipti.bnb.content.kinetics.cogwheel_chain.edit.CogwheelChainPartialEditInsertionPlan;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.edit.CogwheelChainPartialEditInsertionPlanner;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChainCandidate;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.segment.CogwheelChainSegment;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.sugar.Local;
+import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEdit;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,9 +36,46 @@ public abstract class CogwheelChainPartialEditInsertionPlannerMixin {
     )
     private static CogwheelChainSegment bnt$resolveRunForNode(
         CogwheelChain chain, int nodeIndex, @Local(argsOnly = true) CogwheelChainPartialEdit editContext) {
+        if (!bnt$own(chain)) {
+            return CogwheelChainPartialEditInsertionPlanner.resolveBetweenNodesSegment(chain, nodeIndex);
+        }
         return BntChainEdit.segmentForNodeIndex(chain, nodeIndex, editContext.chainPosition()) == null
             ? null
             : editContext.segment();
+    }
+
+    @WrapMethod(
+        method = "plan"
+    )
+    private static CogwheelChainPartialEditInsertionPlan bnt$planAsOwner(
+        CogwheelChain existingChain, CogwheelChainPartialEdit editContext, BlockPos proposedPos, BlockState proposedState,
+        Operation<CogwheelChainPartialEditInsertionPlan> original
+    ) {
+        boolean previous = BntChainGeometry.beginOwn(BntChainGeometry.ownGeometry() || bnt$own(existingChain));
+        try {
+            return original.call(existingChain, editContext, proposedPos, proposedState);
+        } finally {
+            BntChainGeometry.endOwn(previous);
+        }
+    }
+
+    @WrapMethod(
+        method = "planWithCandidate"
+    )
+    private static CogwheelChainPartialEditInsertionPlan bnt$planCandidateAsOwner(
+        CogwheelChain existingChain, CogwheelChainPartialEdit editContext, BlockPos proposedPos, CogwheelChainCandidate candidate,
+        Operation<CogwheelChainPartialEditInsertionPlan> original
+    ) {
+        boolean previous = BntChainGeometry.beginOwn(BntChainGeometry.ownGeometry() || bnt$own(existingChain));
+        try {
+            return original.call(existingChain, editContext, proposedPos, candidate);
+        } finally {
+            BntChainGeometry.endOwn(previous);
+        }
+    }
+
+    private static boolean bnt$own(CogwheelChain chain) {
+        return chain instanceof BntChainGeometryRefresh own && own.bnt$isOwn();
     }
 
     @Inject(

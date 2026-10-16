@@ -18,8 +18,10 @@ import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(
     value = {CogwheelChainGeometryBuilder.class},
@@ -37,8 +39,30 @@ public class CogwheelChainGeometryBuilderMixin {
         throw new AssertionError();
     }
 
-    @Overwrite
-    public static List<RenderedChainPathNode> buildFullChainFromPathNodes(List<PathedCogwheelNode> pathNodes) {
+    @Inject(
+        method = {"buildFullChainFromPathNodes"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private static void bnt$buildOwnChain(List<PathedCogwheelNode> pathNodes, CallbackInfoReturnable<List<RenderedChainPathNode>> cir) {
+        if (BntChainGeometry.ownGeometry()) {
+            cir.setReturnValue(bnt$buildFullChain(pathNodes));
+        }
+    }
+
+    @Inject(
+        method = {"getTangentPointOnCircle"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private static void bnt$ownTangent(PathedCogwheelNode previousNode, PathedCogwheelNode currentNode, boolean isIncoming,
+                                       CallbackInfoReturnable<Vec3> cir) {
+        if (BntChainGeometry.ownGeometry()) {
+            cir.setReturnValue(bnt$tangentPointOnCircle(previousNode, currentNode, isIncoming));
+        }
+    }
+
+    private static List<RenderedChainPathNode> bnt$buildFullChain(List<PathedCogwheelNode> pathNodes) {
         List<PathedCogwheelNode> nodes = BntChainGeometry.effectiveSequence(pathNodes);
         List<RenderedChainPathNode> resultNodes = new ArrayList<>();
         List<Pair<Vec3, Vec3>> offsetsAtNodes = new ArrayList<>();
@@ -120,8 +144,7 @@ public class CogwheelChainGeometryBuilderMixin {
         return resultNodes;
     }
 
-    @Overwrite
-    public static Vec3 getTangentPointOnCircle(PathedCogwheelNode previousNode, PathedCogwheelNode currentNode, boolean isIncoming) {
+    private static Vec3 bnt$tangentPointOnCircle(PathedCogwheelNode previousNode, PathedCogwheelNode currentNode, boolean isIncoming) {
         if (previousNode.rotationAxis() != currentNode.rotationAxis()) {
             Vec3 previousAxis = bnt$axisVector(previousNode);
             return previousAxis.scale(previousNode.localPos().subtract(currentNode.localPos()).get(previousNode.rotationAxis()));

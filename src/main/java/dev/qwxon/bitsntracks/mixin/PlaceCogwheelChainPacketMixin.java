@@ -3,9 +3,12 @@ package dev.qwxon.bitsntracks.mixin;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
 import com.kipti.bnb.network.packets.from_client.PlaceCogwheelChainPacket;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.simibubi.create.AllItems;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.HashSet;
 import java.util.Set;
@@ -61,6 +64,20 @@ public abstract class PlaceCogwheelChainPacketMixin {
         }
 
         bnt$linkItem.set(this.bnt$resolveLinkItem(player));
+    }
+
+    @WrapMethod(
+        method = "handle",
+        remap = false
+    )
+    private void bnt$placeAsOwn(ServerPlayer player, Operation<Void> original) {
+        boolean previous = BntChainGeometry.beginOwn(
+            BntChainGeometry.ownNodes(player.level(), this.worldSpacePartialChain().getVisitedNodes()));
+        try {
+            original.call(player);
+        } finally {
+            BntChainGeometry.endOwn(previous);
+        }
     }
 
     @Redirect(

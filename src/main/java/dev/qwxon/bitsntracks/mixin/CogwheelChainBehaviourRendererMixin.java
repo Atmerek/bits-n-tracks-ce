@@ -233,6 +233,10 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         Matrix3f accumulatedOrientation,
         CallbackInfo ci
     ) {
+        if (BntTrackSink.current() == null && !TrackModelRenderContext.isRenderingTrack()
+            && !TrackModelRenderContext.isRenderingCustomChain() && !BntCogwheelChainTypes.isOwn(type)) {
+            return;
+        }
         ChainRenderInfo chainRenderInfo = type.getRenderType();
         Vec3 relPreFrom = preFrom.subtract(from);
         Vec3 relFrom = Vec3.ZERO;

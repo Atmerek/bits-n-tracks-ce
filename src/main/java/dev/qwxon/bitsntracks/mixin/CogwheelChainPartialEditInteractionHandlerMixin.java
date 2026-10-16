@@ -5,6 +5,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.segment.CogwheelChainSegment;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.segment.CogwheelChainSegment.SegmentType;
 import com.llamalad7.mixinextras.sugar.Local;
+import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEdit;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,9 @@ public abstract class CogwheelChainPartialEditInteractionHandlerMixin {
     )
     private static List<CogwheelChainSegment> bnt$countSegmentsAsNodes(
         CogwheelChain chain, @Local(argsOnly = true) CogwheelChainSegment selectedSegment) {
-        int nodeIndex = BntChainEdit.nodeIndexForSegment(chain, selectedSegment);
+        int nodeIndex = chain instanceof BntChainGeometryRefresh own && own.bnt$isOwn()
+            ? BntChainEdit.nodeIndexForSegment(chain, selectedSegment)
+            : -1;
         if (nodeIndex < 0) {
             return chain.getSegments();
         }

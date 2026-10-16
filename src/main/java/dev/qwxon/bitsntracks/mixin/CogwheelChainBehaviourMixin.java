@@ -118,7 +118,9 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
 
         if (self.getControlledChain() instanceof BntChainGeometryRefresh chain) {
             chain.bnt$verifyKinetics(level, self.getBlockEntity().getBlockPos());
-            BntBeltLinks.latchIfUnset(level, self.getBlockEntity().getBlockPos());
+            if (chain.bnt$isOwn()) {
+                BntBeltLinks.latchIfUnset(level, self.getBlockEntity().getBlockPos());
+            }
         }
     }
 

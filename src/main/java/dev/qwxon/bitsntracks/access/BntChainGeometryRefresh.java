@@ -13,4 +13,6 @@ public interface BntChainGeometryRefresh {
     boolean bnt$isNodeEngaged(Level level, BlockPos controllerPos, BlockPos nodeLocalPos);
 
     void bnt$verifyKinetics(Level level, BlockPos controllerPos);
+
+    boolean bnt$isOwn();
 }

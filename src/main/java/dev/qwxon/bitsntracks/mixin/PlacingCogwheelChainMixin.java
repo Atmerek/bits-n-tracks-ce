@@ -6,7 +6,9 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.placement.ChainInteractionFailedException;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
+import com.llamalad7.mixinextras.sugar.Local;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
@@ -20,8 +22,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -56,10 +58,26 @@ public abstract class PlacingCogwheelChainMixin {
         throw new AssertionError();
     }
 
-    @Overwrite(
+    @Inject(
+        method = {"tryAddNode"},
+        at = {@At("HEAD")},
+        cancellable = true,
         remap = false
     )
-    public boolean tryAddNode(BlockPos pos, BlockState state, CogwheelChainType type) throws ChainInteractionFailedException {
+    private void bnt$addOwnNode(BlockPos pos, BlockState state, CogwheelChainType type, CallbackInfoReturnable<Boolean> cir)
+        throws ChainInteractionFailedException {
+        if (BntChainGeometry.ownGeometry() || BntCogwheelChainTypes.isOwn(type) || HiddenCogwheelCompat.isOwnCogwheel(state)) {
+            boolean previous = BntChainGeometry.beginOwn(true);
+            try {
+                cir.setReturnValue(this.bnt$tryAddNode(pos, state, type));
+            } finally {
+                BntChainGeometry.endOwn(previous);
+            }
+        }
+    }
+
+    @Unique
+    private boolean bnt$tryAddNode(BlockPos pos, BlockState state, CogwheelChainType type) throws ChainInteractionFailedException {
         PlacingCogwheelNode previousNode = this.getLastNode();
         CogwheelChainCandidate candidate = CogwheelChainCandidate.getForBlock(state);
         if (candidate == null) {
@@ -221,7 +239,7 @@ public abstract class PlacingCogwheelChainMixin {
         ordinal = 2,
         remap = false
     )
-    private static boolean bnt$modifyIsAdjacent(boolean original) {
-        return false;
+    private static boolean bnt$modifyIsAdjacent(boolean original, @Local(argsOnly = true) CogwheelChainType type) {
+        return original && !BntChainGeometry.ownGeometry() && !BntCogwheelChainTypes.isOwn(type);
     }
 }
