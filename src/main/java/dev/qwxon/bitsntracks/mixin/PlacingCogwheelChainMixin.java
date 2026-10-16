@@ -137,29 +137,11 @@ public abstract class PlacingCogwheelChainMixin {
                         PlacingCogwheelNode prePreviousNode = this.getSize() >= 2 ? this.getVisitedNodes().get(this.getVisitedNodes().size() - 2) : null;
                         boolean sameAxisPlane = sameAxisOffset == 0;
                         boolean sameRotationAxis = axis == previousNode.rotationAxis();
-                        double thisRadius;
-                        if (CogwheelSizeHelper.isLarge(state.getBlock())) {
-                            thisRadius = BntPhysicsTuning.getLargeTrackRadius();
-                        } else if (CogwheelSizeHelper.isMedium(state.getBlock())) {
-                            thisRadius = BntPhysicsTuning.getMediumTrackRadius();
-                        } else if (CogwheelSizeHelper.isTiny(state.getBlock())) {
-                            thisRadius = BntPhysicsTuning.getTinyTrackRadius();
-                        } else {
-                            thisRadius = BntPhysicsTuning.getSmallTrackRadius();
-                        }
+                        double thisRadius = CogwheelSizeHelper.getTrackRadius(state.getBlock());
 
                         double prevRadius = previousNode.isLarge() ? BntPhysicsTuning.getLargeTrackRadius() : BntPhysicsTuning.getSmallTrackRadius();
                         if (level != null) {
-                            BlockState prevState = level.getBlockState(previousNode.pos());
-                            if (CogwheelSizeHelper.isLarge(prevState.getBlock())) {
-                                prevRadius = BntPhysicsTuning.getLargeTrackRadius();
-                            } else if (CogwheelSizeHelper.isMedium(prevState.getBlock())) {
-                                prevRadius = BntPhysicsTuning.getMediumTrackRadius();
-                            } else if (CogwheelSizeHelper.isTiny(prevState.getBlock())) {
-                                prevRadius = BntPhysicsTuning.getTinyTrackRadius();
-                            } else {
-                                prevRadius = BntPhysicsTuning.getSmallTrackRadius();
-                            }
+                            prevRadius = CogwheelSizeHelper.getTrackRadius(level.getBlockState(previousNode.pos()).getBlock());
                         }
 
                         double radiusSum = thisRadius + prevRadius;

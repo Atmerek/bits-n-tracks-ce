@@ -40,6 +40,8 @@ public class BntRadiusProvider {
                 return BntPhysicsTuning.getLargeTrackRadius();
             } else if (CogwheelSizeHelper.isMedium(state.getBlock())) {
                 return BntPhysicsTuning.getMediumTrackRadius();
+            } else if (CogwheelSizeHelper.isIntermediate(state.getBlock())) {
+                return BntPhysicsTuning.getIntermediateTrackRadius();
             } else if (CogwheelSizeHelper.isTiny(state.getBlock())) {
                 return BntPhysicsTuning.getTinyTrackRadius();
             } else {

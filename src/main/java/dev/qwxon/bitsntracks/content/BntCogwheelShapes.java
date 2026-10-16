@@ -8,6 +8,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class BntCogwheelShapes {
     private static final VoxelShaper TINY_GEAR = gear(4.0);
+    private static final VoxelShaper INTERMEDIATE_GEAR = gear(5.0);
     private static final VoxelShaper SMALL_GEAR = gear(6.0);
     private static final VoxelShaper MEDIUM_GEAR = gear(7.0);
     private static final VoxelShaper LARGE_GEAR = gear(8.0);
@@ -18,6 +19,7 @@ public final class BntCogwheelShapes {
     public static VoxelShape get(CogwheelSize size, Axis axis) {
         return switch (size) {
             case TINY -> TINY_GEAR.get(axis);
+            case INTERMEDIATE -> INTERMEDIATE_GEAR.get(axis);
             case MEDIUM -> MEDIUM_GEAR.get(axis);
             case LARGE -> LARGE_GEAR.get(axis);
             case SMALL -> SMALL_GEAR.get(axis);

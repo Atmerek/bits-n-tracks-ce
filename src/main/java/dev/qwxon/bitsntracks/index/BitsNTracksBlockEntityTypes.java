@@ -25,6 +25,7 @@ public class BitsNTracksBlockEntityTypes {
         .validBlocks(
             BitsNTracksBlocks.TINY_FLANGED_COGWHEEL,
             BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL,
+            BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL,
             BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL,
             BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL,
             BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL,

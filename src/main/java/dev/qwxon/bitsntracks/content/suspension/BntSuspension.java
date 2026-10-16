@@ -30,6 +30,7 @@ public final class BntSuspension {
     private static final double LARGE_DRAWN_RADIUS = Math.hypot(16.0, 6.6) / 16.0;
     private static final double MEDIUM_DRAWN_RADIUS = 9.0 * Math.sqrt(2.0) / 16.0;
     private static final double SMALL_DRAWN_RADIUS = 9.0 / 16.0;
+    private static final double INTERMEDIATE_DRAWN_RADIUS = Math.hypot(6.0, 3.0) / 16.0;
     private static final double TINY_DRAWN_RADIUS = 4.0 * Math.sqrt(2.0) / 16.0;
 
     private BntSuspension() {
@@ -49,7 +50,7 @@ public final class BntSuspension {
 
     private static boolean pairable(BlockState state) {
         CogwheelSize size = CogwheelSize.of(state.getBlock());
-        return supports(state) && (size == CogwheelSize.SMALL || size == CogwheelSize.TINY);
+        return supports(state) && (size == CogwheelSize.SMALL || size == CogwheelSize.INTERMEDIATE || size == CogwheelSize.TINY);
     }
 
     public static boolean hasPiece(BlockEntity be) {
@@ -159,7 +160,7 @@ public final class BntSuspension {
         BlockPos partnerPos = pos.offset(step(axis, toward));
         BlockEntity partner = level.getBlockEntity(partnerPos);
         if (!canPair(partner) || towards(level, pos, partnerPos) != toward
-            || CogwheelSizeHelper.isTiny(be.getBlockState().getBlock()) != CogwheelSizeHelper.isTiny(partner.getBlockState().getBlock())) {
+            || CogwheelSize.of(be.getBlockState().getBlock()) != CogwheelSize.of(partner.getBlockState().getBlock())) {
             return 0;
         }
         for (BlockPos half : station(level, pos)) {
@@ -435,6 +436,7 @@ public final class BntSuspension {
 
     private static double drawnRadius(BlockState state) {
         return CogwheelSizeHelper.isTiny(state.getBlock()) ? TINY_DRAWN_RADIUS
+            : CogwheelSizeHelper.isIntermediate(state.getBlock()) ? INTERMEDIATE_DRAWN_RADIUS
             : CogwheelSizeHelper.isLarge(state.getBlock()) ? LARGE_DRAWN_RADIUS
             : CogwheelSizeHelper.isMedium(state.getBlock()) ? MEDIUM_DRAWN_RADIUS
             : SMALL_DRAWN_RADIUS;

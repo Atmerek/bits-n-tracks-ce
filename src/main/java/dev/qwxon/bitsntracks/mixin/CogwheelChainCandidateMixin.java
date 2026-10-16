@@ -31,7 +31,7 @@ public abstract class CogwheelChainCandidateMixin {
         }
         switch (size) {
             case MEDIUM -> cir.setReturnValue(new CogwheelChainCandidate(original.axis(), true, true));
-            case TINY -> cir.setReturnValue(new CogwheelChainCandidate(original.axis(), false, false));
+            case TINY, INTERMEDIATE -> cir.setReturnValue(new CogwheelChainCandidate(original.axis(), false, false));
             case SMALL -> cir.setReturnValue(new CogwheelChainCandidate(original.axis(), false, true));
             case LARGE -> {
             }

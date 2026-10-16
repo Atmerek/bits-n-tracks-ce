@@ -11,8 +11,10 @@ import dev.qwxon.bitsntracks.content.BntVisualized;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
@@ -97,6 +99,23 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
                                          boolean connectedViaAxes, boolean connectedViaCogs, CallbackInfoReturnable<Float> cir) {
         if (!Float.isFinite(cir.getReturnValueF())) {
             cir.setReturnValue(0.0F);
+        }
+    }
+
+    @Inject(
+        method = {"getChainRotationFactor"},
+        at = {@At("RETURN")},
+        cancellable = true
+    )
+    private void bnt$sizeRotationFactor(CallbackInfoReturnable<Float> cir) {
+        float factor = cir.getReturnValueF();
+        BlockEntity be = ((CogwheelChainBehaviour)(Object)this).getBlockEntity();
+        if (factor == 0.0F || be == null) {
+            return;
+        }
+        Block block = be.getBlockState().getBlock();
+        if (CogwheelSizeHelper.sizedByBlock(block)) {
+            cir.setReturnValue((float)(Math.signum(factor) * CogwheelSizeHelper.getChainRadius(block)));
         }
     }
 

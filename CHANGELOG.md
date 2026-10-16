@@ -21,7 +21,8 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - The run of track between cogwheels now meets the ground. It drapes over terrain, carries the vehicle over what it crosses, and grips and drives along its length.
 - Track tension. In the Cog Alignment Lever's Tension mode, right-click a track to select it and scroll to tighten or slacken it.
 - Tank Tread, a plated track made in a Mechanical Crafter and strung between cogwheels like the Industrial Belt.
-- Suspension Piece, which mounts a swinging arm on a physics cogwheel, or a bogie across two small or tiny cogwheels, two-wide ones included. It is crafted with the spring from Create Aeronautics.
+- Intermediate Industrial Flanged Cogwheel, a size between tiny and small.
+- Suspension Piece, which mounts a swinging arm on a physics cogwheel, or a bogie across two small, intermediate or tiny cogwheels of the same size, two-wide ones included. It is crafted with the spring from Create Aeronautics.
 - Suspension Tool, which reads and tunes a suspended cogwheel's stiffness, damping, travel and spring strength over 11 levels, for one cogwheel or a whole track at once.
 - Ctrl + left-click with the Cog Alignment Lever switches its Offset mode between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
 - A panel for the Cog Alignment Lever and the Suspension Tool, shown while holding either. It shows the current mode, the values of the cogwheel or track being worked on, and what to click or scroll.
@@ -29,7 +30,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Ponder scenes for the flanged cogwheels, tracks, the Cog Alignment Lever, the Suspension Piece and the Suspension Tool.
 - Decorative heads of the mod's creators and contributors.
 - Cogwheels with physics enabled now block players and other entities.
-- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, Debug Logging, and client settings for Flywheel rendering, track update rate and animation distance.
+- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, Debug Logging, geometry and stress settings for the intermediate size, and client settings for Flywheel rendering, track update rate and animation distance.
 
 ### Changed
 

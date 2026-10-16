@@ -47,6 +47,17 @@ public class BitsNTracksBlocks {
             .build())
         .blockstate((c, p) -> {})
         .register();
+    public static final BlockEntry<BntFlangedCogwheelBlock> INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
+            .block("intermediate_industrial_flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.INTERMEDIATE, CogwheelMaterial.INDUSTRIAL))
+            .initialProperties(SharedProperties::wooden)
+            .properties(p -> p.mapColor(MapColor.DIRT))
+            .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
+            .properties(p -> p.noOcclusion())
+            .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
+            .item()
+            .build())
+        .blockstate((c, p) -> {})
+        .register();
     public static final BlockEntry<HiddenCogwheelBlock> SMALL_HIDDEN_FLANGED_COGWHEEL = BitsNTracks.REGISTRATE
         .block("small_hidden_flanged_cogwheel", p -> new HiddenCogwheelBlock(p, CogwheelSize.SMALL))
         .initialProperties(SharedProperties::wooden)

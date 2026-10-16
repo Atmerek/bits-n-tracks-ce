@@ -22,7 +22,7 @@ This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/m
 
 ## Features
 
-* **Flanged cogwheels** in tiny, small, medium and large, each in a plain and an industrial style, the industrial models based on the Industrial Cogwheels from Create: Gears n' Kinetics.
+* **Flanged cogwheels** in tiny, small, medium and large, each in a plain and an industrial style, the industrial models based on the Industrial Cogwheels from Create: Gears n' Kinetics, plus an industrial intermediate size between tiny and small.
 * **Two kinds of track**: the Industrial Belt and the plated Tank Tread, strung between cogwheels like a Bits 'n' Bobs chain.
 * **Two-wide wheels**: place a cogwheel beside another of the same size and style along its axle and they join into one wide wheel, with the track widening to match. Sneak while placing to keep them apart.
 * **Taut track routing**: the track wraps around its cogwheels the way a real track sits on its road wheels. A cogwheel inside the loop that the track cannot reach is enclosed by it, and turns freely until the track touches it.
@@ -59,8 +59,8 @@ Ctrl + left-click switches Offset between moving one cogwheel and moving every c
 A **Suspension Piece** gives a physics cogwheel a sprung mount.
 
 * **Arm**: right-click a physics cogwheel of any size to select it, then look beside it and right-click where the green preview fits. The arm pivots on the cogwheel's top corner, which needs a block touching it along the axle. Uses one piece.
-* **Bogie**: select a small or tiny physics cogwheel, then right-click the one next to it. The bogie hangs from a block right above either cogwheel, or one next to that spot along the axle, and blocks can sit on top of it. Uses two pieces.
-* **Wide bogie**: the same between two two-wide small or tiny cogwheels, each pair turning into two separate wheels with the bogie between them. Uses two pieces.
+* **Bogie**: select a small, intermediate or tiny physics cogwheel, then right-click the one of the same size next to it. The bogie hangs from a block right above either cogwheel, or one next to that spot along the axle, and blocks can sit on top of it. Uses two pieces.
+* **Wide bogie**: the same between two two-wide small, intermediate or tiny cogwheels, each pair turning into two separate wheels with the bogie between them. Uses two pieces.
 
 Shift + right-click the cogwheel with an empty hand to take a piece or bogie back off.
 A mount whose supporting block is removed drops its pieces.

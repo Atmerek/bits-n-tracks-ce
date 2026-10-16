@@ -1,15 +1,19 @@
 package dev.qwxon.bitsntracks.physics;
 
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import net.minecraft.world.level.block.Block;
 
 public final class CogwheelSizeHelper {
     private static final double TINY_CHAIN_RADIUS = 0.25;
+    private static final double INTERMEDIATE_CHAIN_RADIUS = 0.375;
     private static final double SMALL_CHAIN_RADIUS = 0.5;
     private static final double MEDIUM_CHAIN_RADIUS = 0.75;
     private static final double LARGE_CHAIN_RADIUS = 1.0;
 
     private static final double TINY_SUSPENSION_REST = 0.45;
+    private static final double INTERMEDIATE_SUSPENSION_REST = 0.55;
     private static final double SMALL_SUSPENSION_REST = 0.65;
     private static final double MEDIUM_SUSPENSION_REST = 1.0;
     private static final double LARGE_SUSPENSION_REST = 1.3;
@@ -31,6 +35,10 @@ public final class CogwheelSizeHelper {
         return sizeOf(block) == CogwheelSize.MEDIUM;
     }
 
+    public static boolean isIntermediate(Block block) {
+        return sizeOf(block) == CogwheelSize.INTERMEDIATE;
+    }
+
     public static boolean isTiny(Block block) {
         return sizeOf(block) == CogwheelSize.TINY;
     }
@@ -39,6 +47,7 @@ public final class CogwheelSizeHelper {
         return switch (sizeOf(block)) {
             case LARGE -> BntPhysicsTuning.getLargeCollisionRadius();
             case MEDIUM -> BntPhysicsTuning.getMediumCollisionRadius();
+            case INTERMEDIATE -> BntPhysicsTuning.getIntermediateCollisionRadius();
             case TINY -> BntPhysicsTuning.getTinyCollisionRadius();
             case SMALL -> BntPhysicsTuning.getSmallCollisionRadius();
         };
@@ -48,6 +57,7 @@ public final class CogwheelSizeHelper {
         return switch (sizeOf(block)) {
             case LARGE -> BntPhysicsTuning.getLargeTrackRadius();
             case MEDIUM -> BntPhysicsTuning.getMediumTrackRadius();
+            case INTERMEDIATE -> BntPhysicsTuning.getIntermediateTrackRadius();
             case TINY -> BntPhysicsTuning.getTinyTrackRadius();
             case SMALL -> BntPhysicsTuning.getSmallTrackRadius();
         };
@@ -61,6 +71,7 @@ public final class CogwheelSizeHelper {
         return switch (sizeOf(block)) {
             case LARGE -> LARGE_CHAIN_RADIUS;
             case MEDIUM -> MEDIUM_CHAIN_RADIUS;
+            case INTERMEDIATE -> INTERMEDIATE_CHAIN_RADIUS;
             case TINY -> TINY_CHAIN_RADIUS;
             case SMALL -> SMALL_CHAIN_RADIUS;
         };
@@ -74,10 +85,19 @@ public final class CogwheelSizeHelper {
         }
     }
 
+    public static double getChainRadius(Block block, boolean isLarge, boolean hasSmallCogwheelOffset) {
+        return sizedByBlock(block) ? getChainRadius(block) : getChainRadius(isLarge, hasSmallCogwheelOffset);
+    }
+
+    public static boolean sizedByBlock(Block block) {
+        return block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock;
+    }
+
     public static double getToolHighlightRadius(Block block) {
         return switch (sizeOf(block)) {
             case LARGE -> BntPhysicsTuning.getLargeToolHighlightRadius();
             case MEDIUM -> BntPhysicsTuning.getMediumToolHighlightRadius();
+            case INTERMEDIATE -> BntPhysicsTuning.getIntermediateToolHighlightRadius();
             case TINY -> BntPhysicsTuning.getTinyToolHighlightRadius();
             case SMALL -> BntPhysicsTuning.getSmallToolHighlightRadius();
         };
@@ -87,6 +107,7 @@ public final class CogwheelSizeHelper {
         return switch (sizeOf(block)) {
             case LARGE -> LARGE_SUSPENSION_REST;
             case MEDIUM -> MEDIUM_SUSPENSION_REST;
+            case INTERMEDIATE -> INTERMEDIATE_SUSPENSION_REST;
             case TINY -> TINY_SUSPENSION_REST;
             case SMALL -> SMALL_SUSPENSION_REST;
         };
@@ -100,6 +121,7 @@ public final class CogwheelSizeHelper {
         return switch (sizeOf(block)) {
             case LARGE -> BntPhysicsTuning.getLargeVerticalOffset();
             case MEDIUM -> BntPhysicsTuning.getMediumVerticalOffset();
+            case INTERMEDIATE -> BntPhysicsTuning.getIntermediateVerticalOffset();
             case TINY -> BntPhysicsTuning.getTinyVerticalOffset();
             case SMALL -> BntPhysicsTuning.getSmallVerticalOffset();
         };
@@ -109,6 +131,7 @@ public final class CogwheelSizeHelper {
         return switch (sizeOf(block)) {
             case LARGE -> BntPhysicsTuning.getLargeVisualVerticalOffset();
             case MEDIUM -> BntPhysicsTuning.getMediumVisualVerticalOffset();
+            case INTERMEDIATE -> BntPhysicsTuning.getIntermediateVisualVerticalOffset();
             case TINY -> BntPhysicsTuning.getTinyVisualVerticalOffset();
             case SMALL -> BntPhysicsTuning.getSmallVisualVerticalOffset();
         };

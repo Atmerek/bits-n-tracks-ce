@@ -5,6 +5,7 @@ import net.minecraft.world.level.block.Block;
 
 public enum CogwheelSize {
     TINY,
+    INTERMEDIATE,
     SMALL,
     MEDIUM,
     LARGE;

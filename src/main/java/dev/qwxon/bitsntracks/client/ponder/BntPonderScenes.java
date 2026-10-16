@@ -16,6 +16,7 @@ public final class BntPonderScenes {
                 BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.getId(),
+                BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.getId())

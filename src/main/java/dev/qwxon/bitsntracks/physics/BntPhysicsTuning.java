@@ -26,22 +26,27 @@ public final class BntPhysicsTuning {
     private static final DoubleValue TRACK_MAX_IMPULSE_MULTIPLIER;
 
     private static final DoubleValue TINY_COLLISION_RADIUS;
+    private static final DoubleValue INTERMEDIATE_COLLISION_RADIUS;
     private static final DoubleValue SMALL_COLLISION_RADIUS;
     private static final DoubleValue MEDIUM_COLLISION_RADIUS;
     private static final DoubleValue LARGE_COLLISION_RADIUS;
     private static final DoubleValue TINY_TRACK_RADIUS;
+    private static final DoubleValue INTERMEDIATE_TRACK_RADIUS;
     private static final DoubleValue SMALL_TRACK_RADIUS;
     private static final DoubleValue MEDIUM_TRACK_RADIUS;
     private static final DoubleValue LARGE_TRACK_RADIUS;
     private static final DoubleValue TINY_VERTICAL_OFFSET;
+    private static final DoubleValue INTERMEDIATE_VERTICAL_OFFSET;
     private static final DoubleValue SMALL_VERTICAL_OFFSET;
     private static final DoubleValue MEDIUM_VERTICAL_OFFSET;
     private static final DoubleValue LARGE_VERTICAL_OFFSET;
     private static final DoubleValue TINY_VISUAL_VERTICAL_OFFSET;
+    private static final DoubleValue INTERMEDIATE_VISUAL_VERTICAL_OFFSET;
     private static final DoubleValue SMALL_VISUAL_VERTICAL_OFFSET;
     private static final DoubleValue MEDIUM_VISUAL_VERTICAL_OFFSET;
     private static final DoubleValue LARGE_VISUAL_VERTICAL_OFFSET;
     private static final DoubleValue TINY_TOOL_HIGHLIGHT_RADIUS;
+    private static final DoubleValue INTERMEDIATE_TOOL_HIGHLIGHT_RADIUS;
     private static final DoubleValue SMALL_TOOL_HIGHLIGHT_RADIUS;
     private static final DoubleValue MEDIUM_TOOL_HIGHLIGHT_RADIUS;
     private static final DoubleValue LARGE_TOOL_HIGHLIGHT_RADIUS;
@@ -75,6 +80,7 @@ public final class BntPhysicsTuning {
     private static final DoubleValue BELT_MAX_HOLD;
 
     private static final DoubleValue TINY_STRESS_IMPACT;
+    private static final DoubleValue INTERMEDIATE_STRESS_IMPACT;
     private static final DoubleValue SMALL_STRESS_IMPACT;
     private static final DoubleValue MEDIUM_STRESS_IMPACT;
     private static final DoubleValue LARGE_STRESS_IMPACT;
@@ -109,28 +115,33 @@ public final class BntPhysicsTuning {
         TRACK_MAX_IMPULSE_MULTIPLIER = builder.defineInRange("trackMaxImpulseMultiplier", 1.0, 0.0, 100.0);
         builder.pop();
 
-        builder.comment("Per size geometry. Sizes are tiny, small, medium and large.").push("geometry");
+        builder.comment("Per size geometry. Sizes are tiny, intermediate, small, medium and large.").push("geometry");
         TINY_COLLISION_RADIUS = builder.defineInRange("tinyCollisionRadius", 0.25, 0.01, 8.0);
+        INTERMEDIATE_COLLISION_RADIUS = builder.defineInRange("intermediateCollisionRadius", 0.375, 0.01, 8.0);
         SMALL_COLLISION_RADIUS = builder.defineInRange("smallCollisionRadius", 0.5, 0.01, 8.0);
         MEDIUM_COLLISION_RADIUS = builder.defineInRange("mediumCollisionRadius", 0.75, 0.01, 8.0);
         LARGE_COLLISION_RADIUS = builder.defineInRange("largeCollisionRadius", 0.8, 0.01, 8.0);
         TINY_TRACK_RADIUS = builder.defineInRange("tinyTrackRadius", 0.35, 0.01, 8.0);
+        INTERMEDIATE_TRACK_RADIUS = builder.defineInRange("intermediateTrackRadius", 0.425, 0.01, 8.0);
         SMALL_TRACK_RADIUS = builder.defineInRange("smallTrackRadius", 0.55, 0.01, 8.0);
         MEDIUM_TRACK_RADIUS = builder.defineInRange("mediumTrackRadius", 0.74, 0.01, 8.0);
         LARGE_TRACK_RADIUS = builder.defineInRange("largeTrackRadius", 1.1, 0.01, 8.0);
         TINY_VERTICAL_OFFSET = builder.defineInRange("tinyVerticalOffset", -0.1, -8.0, 8.0);
+        INTERMEDIATE_VERTICAL_OFFSET = builder.defineInRange("intermediateVerticalOffset", -0.09, -8.0, 8.0);
         SMALL_VERTICAL_OFFSET = builder.defineInRange("smallVerticalOffset", -0.08, -8.0, 8.0);
         MEDIUM_VERTICAL_OFFSET = builder.defineInRange("mediumVerticalOffset", 0.0, -8.0, 8.0);
         LARGE_VERTICAL_OFFSET = builder.defineInRange("largeVerticalOffset", 0.1, -8.0, 8.0);
         TINY_VISUAL_VERTICAL_OFFSET = builder
             .comment("How much higher than its collision radius a cogwheel rests above the ground, in blocks. Set so the outside of the track rests on the ground: track radius plus half a track link, plus the vertical offset, less the collision radius.")
             .defineInRange("tinyVisualVerticalOffset", 0.0625, -8.0, 8.0);
+        INTERMEDIATE_VISUAL_VERTICAL_OFFSET = builder.defineInRange("intermediateVisualVerticalOffset", 0.0225, -8.0, 8.0);
         SMALL_VISUAL_VERTICAL_OFFSET = builder.defineInRange("smallVisualVerticalOffset", 0.0325, -8.0, 8.0);
         MEDIUM_VISUAL_VERTICAL_OFFSET = builder.defineInRange("mediumVisualVerticalOffset", 0.0525, -8.0, 8.0);
         LARGE_VISUAL_VERTICAL_OFFSET = builder.defineInRange("largeVisualVerticalOffset", 0.4625, -8.0, 8.0);
         TINY_TOOL_HIGHLIGHT_RADIUS = builder
             .comment("Radius of the alignment tool's outline.")
             .defineInRange("tinyToolHighlightRadius", 0.34, 0.01, 8.0);
+        INTERMEDIATE_TOOL_HIGHLIGHT_RADIUS = builder.defineInRange("intermediateToolHighlightRadius", 0.38, 0.01, 8.0);
         SMALL_TOOL_HIGHLIGHT_RADIUS = builder.defineInRange("smallToolHighlightRadius", 0.42, 0.01, 8.0);
         MEDIUM_TOOL_HIGHLIGHT_RADIUS = builder.defineInRange("mediumToolHighlightRadius", 0.56, 0.01, 8.0);
         LARGE_TOOL_HIGHLIGHT_RADIUS = builder.defineInRange("largeToolHighlightRadius", 0.68, 0.01, 8.0);
@@ -221,6 +232,7 @@ public final class BntPhysicsTuning {
 
         builder.comment("Create stress consumed by each cogwheel size.").push("stress");
         TINY_STRESS_IMPACT = builder.defineInRange("tinyStressImpact", 2.0, 0.0, 1024.0);
+        INTERMEDIATE_STRESS_IMPACT = builder.defineInRange("intermediateStressImpact", 3.0, 0.0, 1024.0);
         SMALL_STRESS_IMPACT = builder.defineInRange("smallStressImpact", 4.0, 0.0, 1024.0);
         MEDIUM_STRESS_IMPACT = builder.defineInRange("mediumStressImpact", 6.0, 0.0, 1024.0);
         LARGE_STRESS_IMPACT = builder.defineInRange("largeStressImpact", 8.0, 0.0, 1024.0);
@@ -330,6 +342,10 @@ public final class BntPhysicsTuning {
         return TINY_COLLISION_RADIUS.get();
     }
 
+    public static double getIntermediateCollisionRadius() {
+        return INTERMEDIATE_COLLISION_RADIUS.get();
+    }
+
     public static double getSmallCollisionRadius() {
         return SMALL_COLLISION_RADIUS.get();
     }
@@ -344,6 +360,10 @@ public final class BntPhysicsTuning {
 
     public static double getTinyTrackRadius() {
         return TINY_TRACK_RADIUS.get();
+    }
+
+    public static double getIntermediateTrackRadius() {
+        return INTERMEDIATE_TRACK_RADIUS.get();
     }
 
     public static double getSmallTrackRadius() {
@@ -362,6 +382,10 @@ public final class BntPhysicsTuning {
         return TINY_VERTICAL_OFFSET.get();
     }
 
+    public static double getIntermediateVerticalOffset() {
+        return INTERMEDIATE_VERTICAL_OFFSET.get();
+    }
+
     public static double getSmallVerticalOffset() {
         return SMALL_VERTICAL_OFFSET.get();
     }
@@ -378,6 +402,10 @@ public final class BntPhysicsTuning {
         return TINY_VISUAL_VERTICAL_OFFSET.get();
     }
 
+    public static double getIntermediateVisualVerticalOffset() {
+        return INTERMEDIATE_VISUAL_VERTICAL_OFFSET.get();
+    }
+
     public static double getSmallVisualVerticalOffset() {
         return SMALL_VISUAL_VERTICAL_OFFSET.get();
     }
@@ -392,6 +420,10 @@ public final class BntPhysicsTuning {
 
     public static double getTinyToolHighlightRadius() {
         return TINY_TOOL_HIGHLIGHT_RADIUS.get();
+    }
+
+    public static double getIntermediateToolHighlightRadius() {
+        return INTERMEDIATE_TOOL_HIGHLIGHT_RADIUS.get();
     }
 
     public static double getSmallToolHighlightRadius() {
@@ -455,6 +487,8 @@ public final class BntPhysicsTuning {
             return LARGE_STRESS_IMPACT.get();
         } else if (CogwheelSizeHelper.isMedium(block)) {
             return MEDIUM_STRESS_IMPACT.get();
+        } else if (CogwheelSizeHelper.isIntermediate(block)) {
+            return INTERMEDIATE_STRESS_IMPACT.get();
         } else {
             return CogwheelSizeHelper.isTiny(block) ? TINY_STRESS_IMPACT.get() : SMALL_STRESS_IMPACT.get();
         }
