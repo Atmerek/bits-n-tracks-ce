@@ -4,7 +4,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
 import com.kipti.bnb.network.packets.from_client.PlaceCogwheelChainPacket;
 import com.simibubi.create.AllItems;
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.HashSet;
@@ -88,9 +88,7 @@ public abstract class PlaceCogwheelChainPacketMixin {
             Level level = player.level();
 
             for (BlockPos pos : positions) {
-                if (level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
-                    access.bnt$setPhysicsEnabled(true);
-                }
+                BntFlangedCogwheelBlock.setPhysics(level, pos, true);
             }
         } finally {
             positions.clear();

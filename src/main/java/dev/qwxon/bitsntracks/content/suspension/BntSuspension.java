@@ -3,7 +3,8 @@ package dev.qwxon.bitsntracks.content.suspension;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
-import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.ArrayList;
@@ -35,12 +36,7 @@ public final class BntSuspension {
     }
 
     public static boolean supports(BlockState state) {
-        return (state.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())
-                || state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get())
-                || state.is((Block)BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get())
-                || state.is((Block)BitsNTracksBlocks.LARGE_HIDDEN_FLANGED_COGWHEEL.get()))
-            && state.hasProperty(BlockStateProperties.AXIS)
-            && state.getValue(BlockStateProperties.AXIS) != Axis.Y;
+        return BntFlangedCogwheelBlock.physics(state) && state.getValue(BlockStateProperties.AXIS) != Axis.Y;
     }
 
     public static boolean supportsBogie(BlockState state) {
@@ -52,9 +48,8 @@ public final class BntSuspension {
     }
 
     private static boolean pairable(BlockState state) {
-        return supports(state)
-            && (state.is((Block)BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get())
-                || state.is((Block)BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get()));
+        CogwheelSize size = CogwheelSize.of(state.getBlock());
+        return supports(state) && (size == CogwheelSize.SMALL || size == CogwheelSize.TINY);
     }
 
     public static boolean hasPiece(BlockEntity be) {

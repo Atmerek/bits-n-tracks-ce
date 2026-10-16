@@ -6,18 +6,14 @@ import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.physics.BntTuning;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
@@ -122,7 +118,7 @@ public final class BntCogwheelPairing {
         }
 
         if (partner.bnt$isPhysicsEnabled() && !self.bnt$isPhysicsEnabled()) {
-            self.bnt$setPhysicsEnabled(true);
+            BntFlangedCogwheelBlock.setPhysics(level, pos, true);
         }
     }
 
@@ -201,30 +197,17 @@ public final class BntCogwheelPairing {
     }
 
     private static boolean canJoin(BlockGetter level, BlockPos pos, BlockState state, BlockPos neighbourPos, BlockState neighbour) {
-        return canPair(state, neighbour) && isIndustrial(level, pos, state) == isIndustrial(level, neighbourPos, neighbour);
-    }
-
-    private static boolean isIndustrial(BlockGetter level, BlockPos pos, BlockState state) {
-        if (HiddenCogwheelCompat.isHiddenCogwheel(state) && level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
-            String originalBlock = access.bnt$getOriginalBlock();
-            if (originalBlock != null && !originalBlock.isEmpty()) {
-                return originalBlock.contains("industrial");
-            }
-        }
-
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
-        return id != null && id.getPath().contains("industrial");
+        return canPair(state, neighbour);
     }
 
     private static boolean canPair(BlockState state, BlockState neighbour) {
         return supports(neighbour)
             && neighbour.getValue(RotatedPillarKineticBlock.AXIS) == state.getValue(RotatedPillarKineticBlock.AXIS)
-            && isSameSize(state.getBlock(), neighbour.getBlock());
+            && (neighbour.getBlock() == state.getBlock() || legacyPair(state, neighbour));
     }
 
-    private static boolean isSameSize(Block block, Block other) {
-        return CogwheelSizeHelper.isLarge(block) == CogwheelSizeHelper.isLarge(other)
-            && CogwheelSizeHelper.isMedium(block) == CogwheelSizeHelper.isMedium(other)
-            && CogwheelSizeHelper.isTiny(block) == CogwheelSizeHelper.isTiny(other);
+    private static boolean legacyPair(BlockState state, BlockState neighbour) {
+        return (state.getBlock() instanceof HiddenCogwheelBlock || neighbour.getBlock() instanceof HiddenCogwheelBlock)
+            && CogwheelSize.of(state.getBlock()) == CogwheelSize.of(neighbour.getBlock());
     }
 }

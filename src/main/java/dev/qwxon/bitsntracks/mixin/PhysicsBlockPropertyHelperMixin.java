@@ -2,7 +2,7 @@ package dev.qwxon.bitsntracks.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
@@ -24,6 +24,6 @@ public class PhysicsBlockPropertyHelperMixin {
         require = 2
     )
     private static boolean bnt$weighHiddenCogwheel(BlockGetter level, BlockPos pos, BlockState state, Operation<Boolean> original) {
-        return state.getBlock() instanceof HiddenCogwheelBlock || original.call(level, pos, state);
+        return BntFlangedCogwheelBlock.physics(state) || original.call(level, pos, state);
     }
 }

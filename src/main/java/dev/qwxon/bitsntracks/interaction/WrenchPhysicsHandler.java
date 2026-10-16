@@ -13,19 +13,14 @@ import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
-import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -57,32 +52,27 @@ public class WrenchPhysicsHandler {
         Level level = event.getLevel();
         BlockPos pos = event.getPos();
         if (event.getEntity() != null && event.getItemStack().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
-            && (HiddenCogwheelCompat.isOwnCogwheel(level, pos) || isStrandedCogwheel(level, pos))) {
+            && HiddenCogwheelCompat.isOwnCogwheel(level, pos)) {
             event.setCanceled(true);
         }
     }
 
     public static boolean canTogglePhysics(Level level, BlockPos pos) {
-        return HiddenCogwheelCompat.isOwnCogwheel(level, pos) || isStrandedCogwheel(level, pos);
+        return HiddenCogwheelCompat.isOwnCogwheel(level, pos);
     }
 
     public static void togglePhysics(Level level, Player player, BlockPos pos) {
-        boolean own = HiddenCogwheelCompat.isOwnCogwheel(level, pos);
-        if (!own && !isStrandedCogwheel(level, pos) || !isToggleableCogwheel(level.getBlockState(pos).getBlock())
-            || !(level.getBlockEntity(pos) instanceof KineticBlockEntity)
-            || !(level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access)) {
+        BlockState state = level.getBlockState(pos);
+        if (!(state.getBlock() instanceof BntFlangedCogwheelBlock)) {
             return;
         }
 
-        boolean newState = !access.bnt$isPhysicsEnabled();
-        if (newState && !own) {
-            return;
-        }
+        boolean newState = !state.getValue(BntFlangedCogwheelBlock.PHYSICS);
         BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
         Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
-        setPhysicsAt(level, pos, newState);
+        BntFlangedCogwheelBlock.setPhysics(level, pos, newState);
         if (partnerPos != null) {
-            setPhysicsAt(level, partnerPos, newState);
+            BntFlangedCogwheelBlock.setPhysics(level, partnerPos, newState);
         }
 
         BntChainEngagement.refresh(level, pos, engagementBefore);
@@ -97,7 +87,7 @@ public class WrenchPhysicsHandler {
     @SubscribeEvent
     public static void onBlockBreak(BreakEvent event) {
         if (event.getPlayer() != null && event.getPlayer().getMainHandItem().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
-            && (HiddenCogwheelCompat.isOwnCogwheel(event.getLevel(), event.getPos()) || isStrandedCogwheel(event.getLevel(), event.getPos()))) {
+            && HiddenCogwheelCompat.isOwnCogwheel(event.getLevel(), event.getPos())) {
             event.setCanceled(true);
         }
     }
@@ -186,72 +176,6 @@ public class WrenchPhysicsHandler {
             access.bnt$setTrackRouteSide(side);
             kinetic.setChanged();
             kinetic.sendData();
-        }
-    }
-
-    private static void setPhysicsAt(Level level, BlockPos pos, boolean enabled) {
-        BlockState state = level.getBlockState(pos);
-        Block block = state.getBlock();
-        if (!isToggleableCogwheel(block)) {
-            return;
-        }
-
-        BlockEntity be = level.getBlockEntity(pos);
-        if (be instanceof KineticBlockEntity kinetic && be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled() != enabled) {
-            if (!enabled) {
-                BntSuspension.detach(level, pos, kinetic, true);
-            }
-            swapCogwheelBlock(level, pos, state, be, enabled);
-        }
-    }
-
-    private static boolean isToggleableCogwheel(Block block) {
-        return HiddenCogwheelCompat.isFlangedCogwheelBlock(block.defaultBlockState());
-    }
-
-    private static boolean isStrandedCogwheel(BlockGetter level, BlockPos pos) {
-        return HiddenCogwheelCompat.isHiddenCogwheel(level.getBlockState(pos)) && !HiddenCogwheelCompat.isOwnCogwheel(level, pos);
-    }
-
-    private static void swapCogwheelBlock(Level level, BlockPos pos, BlockState oldState, BlockEntity oldBe, boolean physicsEnabled) {
-        BlockState newState = physicsEnabled
-            ? HiddenCogwheelCompat.toHiddenCogwheelState(oldState)
-            : HiddenCogwheelCompat.toVisibleCogwheelState(oldState, oldBe);
-        if (newState != null && newState.getBlock() != oldState.getBlock()) {
-            swapBlock(level, pos, oldBe, newState, physicsEnabled);
-        } else {
-            if (oldBe instanceof KineticBlockEntityPhysicsAccess access) {
-                access.bnt$setPhysicsEnabled(physicsEnabled);
-            }
-        }
-    }
-
-    private static void swapBlock(Level level, BlockPos pos, BlockEntity oldBe, BlockState newState, boolean physicsEnabled) {
-        CompoundTag tag = oldBe.saveWithoutMetadata(level.registryAccess());
-        tag.putBoolean("BntPhysicsEnabled", physicsEnabled);
-        if (physicsEnabled && !tag.contains("BntOriginalBlock")) {
-            BlockState oldState = level.getBlockState(pos);
-            ResourceLocation oldBlockId = BuiltInRegistries.BLOCK.getKey(oldState.getBlock());
-            tag.putString("BntOriginalBlock", oldBlockId.toString());
-        }
-
-        HiddenCogwheelCompat.replaceBlockForPhysicsSwap(level, pos, newState);
-        BlockEntity newBe = level.getBlockEntity(pos);
-        if (newBe != null) {
-            newBe.loadWithComponents(tag, level.registryAccess());
-            if (newBe instanceof KineticBlockEntityPhysicsAccess newAccess) {
-                newAccess.bnt$setPhysicsEnabled(physicsEnabled);
-                if (physicsEnabled && tag.contains("BntOriginalBlock")) {
-                    newAccess.bnt$setOriginalBlock(tag.getString("BntOriginalBlock"));
-                }
-            }
-
-            newBe.setChanged();
-            if (newBe instanceof KineticBlockEntity kinetic) {
-                kinetic.sendData();
-            }
-
-            BntChainEngagement.rebuild(level, pos);
         }
     }
 }

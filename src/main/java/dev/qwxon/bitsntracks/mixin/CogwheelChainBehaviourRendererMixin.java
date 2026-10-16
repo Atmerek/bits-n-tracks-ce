@@ -21,7 +21,6 @@ import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.render.RenderTypes;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntTreadView;
@@ -79,7 +78,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         )
     )
     private static ResourceLocation bnt$redirectRenderTextureSlow(CogwheelChainType instance) {
-        return TrackModelRenderContext.isRenderingTrack() && !instance.getRenderTexture().getPath().contains("industrial")
+        return TrackModelRenderContext.isRenderingTrack() && instance != BntCogwheelChainTypes.INDUSTRIAL_BELT_CHAIN.get()
             ? BntChainTextures.BELT
             : instance.getRenderTexture();
     }
@@ -92,7 +91,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         )
     )
     private static ResourceLocation bnt$redirectRenderTextureFast(CogwheelChainType instance) {
-        return TrackModelRenderContext.isRenderingTrack() && !instance.getRenderTexture().getPath().contains("industrial")
+        return TrackModelRenderContext.isRenderingTrack() && instance != BntCogwheelChainTypes.INDUSTRIAL_BELT_CHAIN.get()
             ? BntChainTextures.BELT
             : instance.getRenderTexture();
     }
@@ -253,7 +252,8 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         destinationPoints = bnt$closestOrder(destinationPoints, sourcePoints);
         float length = (float)from.distanceTo(to);
         ms.pushPose();
-        boolean isCustomBeltItem = type.getRenderTexture().getNamespace().equals("bits_n_tracks");
+        boolean isCustomBeltItem = BntCogwheelChainTypes.isOwn(type);
+        boolean industrialBelt = type == BntCogwheelChainTypes.INDUSTRIAL_BELT_CHAIN.get();
         boolean isCustomBeltPlacement = false;
         if (chainRenderInfo == ChainRenderInfo.BELT) {
             if (!isCustomBeltItem && !TrackModelRenderContext.isRenderingCustomChain()) {
@@ -277,15 +277,18 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         boolean tankTread = type == BntCogwheelChainTypes.TANK_TREAD_CHAIN.get();
         boolean wideBelt = isCustomBeltPlacement && TrackModelRenderContext.isRenderingWideChain();
         ResourceLocation renderTexture = type.getRenderTexture();
+        boolean ownTexture = isCustomBeltItem;
         if (tankTread) {
             renderTexture = wideBelt ? BntChainTextures.TANK_TREAD_WIDE : BntChainTextures.TANK_TREAD;
         } else if (isCustomBeltPlacement) {
-            if (renderTexture.getPath().contains("industrial")) {
+            ownTexture = true;
+            if (industrialBelt) {
                 renderTexture = wideBelt ? BntChainTextures.INDUSTRIAL_BELT_WIDE : BntChainTextures.INDUSTRIAL_BELT;
             } else {
                 renderTexture = wideBelt ? BntChainTextures.TRACK_BELT_WIDE : BntChainTextures.TRACK_BELT;
             }
-        } else if (TrackModelRenderContext.isRenderingTrack() && !renderTexture.getPath().contains("industrial")) {
+        } else if (TrackModelRenderContext.isRenderingTrack() && !industrialBelt) {
+            ownTexture = true;
             renderTexture = BntChainTextures.TRACK_BELT;
         }
 
@@ -305,7 +308,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             scaledSourcePoints = bnt$scaleChainWidth(sourcePoints, widthScale);
             scaledDestinationPoints = bnt$scaleChainWidth(destinationPoints, widthScale);
         }
-        boolean bntBelt = chainRenderInfo == ChainRenderInfo.BELT && renderTexture.getNamespace().equals("bits_n_tracks");
+        boolean bntBelt = chainRenderInfo == ChainRenderInfo.BELT && ownTexture;
 
         BntTrackSink sink = BntTrackSink.current();
         if (sink != null) {
@@ -509,7 +512,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
                     BlockPos p = new BlockPos(centerX + dx, centerY + dy, centerZ + dz);
                     BlockState state = level.getBlockState(p);
                     Block block = state.getBlock();
-                    if (block instanceof BntFlangedCogwheelBlock || HiddenCogwheelCompat.isHiddenCogwheel(state) || block instanceof EmptyFlangedGearBlock) {
+                    if (block instanceof BntFlangedCogwheelBlock || block instanceof EmptyFlangedGearBlock) {
                         double distSq = pos.distanceToSqr(Vec3.atCenterOf(p));
                         if (distSq < bestDistSq) {
                             bestDistSq = distSq;
@@ -525,19 +528,6 @@ public abstract class CogwheelChainBehaviourRendererMixin {
 
     @Unique
     private static boolean bnt$isCustomOrIndustrialCogwheel(Level level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        Block block = state.getBlock();
-        if (block instanceof BntFlangedCogwheelBlock) {
-            return true;
-        } else {
-            if (HiddenCogwheelCompat.isHiddenCogwheel(state) && level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
-                String originalBlock = access.bnt$getOriginalBlock();
-                if (originalBlock != null) {
-                    return HiddenCogwheelCompat.isBitsNTracksId(originalBlock);
-                }
-            }
-
-            return false;
-        }
+        return HiddenCogwheelCompat.isOwnCogwheel(level.getBlockState(pos));
     }
 }

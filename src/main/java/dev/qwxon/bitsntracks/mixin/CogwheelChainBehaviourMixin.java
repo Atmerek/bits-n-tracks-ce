@@ -6,17 +6,13 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
-import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntVisualized;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
-import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
@@ -178,18 +174,6 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
 
     @Unique
     private static boolean bnt$isTrackCogwheel(Level level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        if (state.getBlock() instanceof BntFlangedCogwheelBlock) {
-            return true;
-        } else if (!HiddenCogwheelCompat.isHiddenCogwheel(state)) {
-            return false;
-        } else if (level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
-            String originalBlock = access.bnt$getOriginalBlock();
-            return originalBlock != null && !originalBlock.isEmpty()
-                ? HiddenCogwheelCompat.isBitsNTracksId(originalBlock)
-                : state.is((Block)BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get());
-        } else {
-            return false;
-        }
+        return HiddenCogwheelCompat.isOwnCogwheel(level.getBlockState(pos));
     }
 }

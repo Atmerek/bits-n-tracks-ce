@@ -3,7 +3,7 @@ package dev.qwxon.bitsntracks.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.physics.BntCogwheelCollision;
 import dev.ryanhcode.sable.sublevel.entity_collision.SubLevelEntityCollision;
 import net.minecraft.core.BlockPos;
@@ -27,9 +27,9 @@ public class SubLevelEntityCollisionMixin {
         ),
         require = 2
     )
-    private static VoxelShape bnt$collideWithHiddenCogwheel(BlockState state, BlockGetter level, BlockPos pos, Operation<VoxelShape> original) {
-        return state.getBlock() instanceof HiddenCogwheelBlock hidden
-            ? hidden.entityCollisionShape(state, level, pos)
+    private static VoxelShape bnt$collideWithPhysicsCogwheel(BlockState state, BlockGetter level, BlockPos pos, Operation<VoxelShape> original) {
+        return BntFlangedCogwheelBlock.physics(state)
+            ? ((BntFlangedCogwheelBlock)state.getBlock()).entityCollisionShape(state, level, pos)
             : original.call(state, level, pos);
     }
 

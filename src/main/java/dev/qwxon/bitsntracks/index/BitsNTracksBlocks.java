@@ -8,6 +8,7 @@ import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntHeadBlock;
 import dev.qwxon.bitsntracks.content.BntHeadBlockItem;
+import dev.qwxon.bitsntracks.content.CogwheelMaterial;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import net.minecraft.tags.TagKey;
@@ -26,7 +27,7 @@ public class BitsNTracksBlocks {
         .blockstate((c, p) -> {})
         .register();
     public static final BlockEntry<BntFlangedCogwheelBlock> TINY_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
-            .block("tiny_flanged_cogwheel", BntFlangedCogwheelBlock::tiny)
+            .block("tiny_flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.TINY, CogwheelMaterial.WOODEN))
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.noOcclusion())
@@ -36,7 +37,7 @@ public class BitsNTracksBlocks {
         .blockstate((c, p) -> {})
         .register();
     public static final BlockEntry<BntFlangedCogwheelBlock> INDUSTRIAL_TINY_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
-            .block("industrial_tiny_flanged_cogwheel", BntFlangedCogwheelBlock::tiny)
+            .block("industrial_tiny_flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.TINY, CogwheelMaterial.INDUSTRIAL))
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
@@ -61,7 +62,7 @@ public class BitsNTracksBlocks {
         .tag(new TagKey[]{BnbBlockTags.COGWHEEL_CHAIN_NO_SMALL_OFFSET.tag})
         .register();
     public static final BlockEntry<BntFlangedCogwheelBlock> SMALL_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
-            .block("flanged_cogwheel", BntFlangedCogwheelBlock::small)
+            .block("flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.SMALL, CogwheelMaterial.WOODEN))
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.noOcclusion())
@@ -71,7 +72,7 @@ public class BitsNTracksBlocks {
         .blockstate((c, p) -> {})
         .register();
     public static final BlockEntry<BntFlangedCogwheelBlock> LARGE_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
-            .block("large_flanged_cogwheel", BntFlangedCogwheelBlock::large)
+            .block("large_flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.LARGE, CogwheelMaterial.WOODEN))
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.noOcclusion())
@@ -81,7 +82,7 @@ public class BitsNTracksBlocks {
         .blockstate((c, p) -> {})
         .register();
     public static final BlockEntry<BntFlangedCogwheelBlock> INDUSTRIAL_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
-            .block("industrial_flanged_cogwheel", BntFlangedCogwheelBlock::small)
+            .block("industrial_flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.SMALL, CogwheelMaterial.INDUSTRIAL))
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
@@ -92,7 +93,7 @@ public class BitsNTracksBlocks {
         .blockstate((c, p) -> {})
         .register();
     public static final BlockEntry<BntFlangedCogwheelBlock> LARGE_INDUSTRIAL_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
-            .block("large_industrial_flanged_cogwheel", BntFlangedCogwheelBlock::large)
+            .block("large_industrial_flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.LARGE, CogwheelMaterial.INDUSTRIAL))
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
@@ -103,7 +104,7 @@ public class BitsNTracksBlocks {
         .blockstate((c, p) -> {})
         .register();
     public static final BlockEntry<BntFlangedCogwheelBlock> MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
-            .block("medium_industrial_flanged_cogwheel", BntFlangedCogwheelBlock::medium)
+            .block("medium_industrial_flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.MEDIUM, CogwheelMaterial.INDUSTRIAL))
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.sound(SoundType.NETHERITE_BLOCK))
@@ -114,7 +115,7 @@ public class BitsNTracksBlocks {
         .blockstate((c, p) -> {})
         .register();
     public static final BlockEntry<BntFlangedCogwheelBlock> MEDIUM_FLANGED_COGWHEEL = ((BlockBuilder)BitsNTracks.REGISTRATE
-            .block("medium_flanged_cogwheel", BntFlangedCogwheelBlock::medium)
+            .block("medium_flanged_cogwheel", p -> new BntFlangedCogwheelBlock(p, CogwheelSize.MEDIUM, CogwheelMaterial.WOODEN))
             .initialProperties(SharedProperties::wooden)
             .properties(p -> p.mapColor(MapColor.DIRT))
             .properties(p -> p.noOcclusion())

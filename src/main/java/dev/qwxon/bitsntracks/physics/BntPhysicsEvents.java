@@ -1,9 +1,12 @@
 package dev.qwxon.bitsntracks.physics;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
+import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
@@ -35,11 +38,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ClipContext;
@@ -435,7 +435,7 @@ public final class BntPhysicsEvents {
         contact.normalMass = 1.0 / inverseNormalMass;
         contact.hasTraction = axis != Axis.Y;
         contact.isDriven = isConnected && BntChainEngagement.isEngaged(behaviour);
-        contact.isTrackModel = isConnected || block.getDescriptionId().contains("track");
+        contact.isTrackModel = isConnected || block instanceof BntFlangedCogwheelBlock;
         contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
         contact.loaded = true;
         contact.verticalSpeed = verticalSpeed;
@@ -1018,18 +1018,12 @@ public final class BntPhysicsEvents {
         Level level = kbe.getLevel();
         if (level instanceof ServerLevel && BntPhysicsTuning.isLandingSoundsEnabled()) {
             BlockPos soundPos = kbe.getBlockPos();
-            boolean isIndustrial = isIndustrialCog(kbe, state);
             SoundEvent hitSound;
             float volume;
             float pitch;
-            if (isIndustrial) {
-                Block industrialIronBlock = (Block)BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("create", "industrial_iron_block"));
-                if (industrialIronBlock != Blocks.AIR) {
-                    hitSound = industrialIronBlock.getSoundType(industrialIronBlock.defaultBlockState(), level, soundPos, null).getBreakSound();
-                } else {
-                    hitSound = SoundEvents.NETHERITE_BLOCK_BREAK;
-                }
-
+            if (HiddenCogwheelCompat.isIndustrial(state)) {
+                Block industrialIronBlock = AllBlocks.INDUSTRIAL_IRON_BLOCK.get();
+                hitSound = industrialIronBlock.getSoundType(industrialIronBlock.defaultBlockState(), level, soundPos, null).getBreakSound();
                 volume = 0.9F;
                 pitch = 0.95F;
             } else {
@@ -1039,17 +1033,6 @@ public final class BntPhysicsEvents {
             }
 
             level.playSound(null, soundPos, hitSound, SoundSource.BLOCKS, volume, pitch);
-        }
-    }
-
-    private static boolean isIndustrialCog(KineticBlockEntity kbe, BlockState state) {
-        if (state.getBlock().getDescriptionId().contains("industrial")) {
-            return true;
-        } else if (!(kbe instanceof KineticBlockEntityPhysicsAccess access)) {
-            return false;
-        } else {
-            String originalBlock = access.bnt$getOriginalBlock();
-            return originalBlock != null && originalBlock.contains("industrial");
         }
     }
 

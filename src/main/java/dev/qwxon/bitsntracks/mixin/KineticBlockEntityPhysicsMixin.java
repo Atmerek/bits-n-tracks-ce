@@ -9,6 +9,7 @@ import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntLegacyCogwheels;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
@@ -26,7 +27,6 @@ import dev.ryanhcode.sable.api.physics.force.ForceTotal;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Block;
@@ -42,9 +42,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin({KineticBlockEntity.class})
 public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEntityPhysicsAccess, TransformableBlockEntity {
     @Unique
-    private boolean bnt$physicsEnabled = false;
+    private boolean bnt$legacyPhysics = false;
     @Unique
-    private String bnt$originalBlock = null;
+    private String bnt$legacyOriginal = null;
     @Unique
     private float bnt$physicalSpeed = 0.0F;
     @Unique
@@ -253,40 +253,23 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     }
 
     @Override
-    public String bnt$getOriginalBlock() {
-        return this.bnt$originalBlock;
-    }
-
-    @Override
-    public void bnt$setOriginalBlock(String originalBlock) {
-        this.bnt$originalBlock = originalBlock;
-    }
-
-    @Override
     public boolean bnt$isPhysicsEnabled() {
-        return this.bnt$physicsEnabled;
+        BlockState state = ((KineticBlockEntity)(Object)this).getBlockState();
+        return BntFlangedCogwheelBlock.physics(state) || state.getBlock() instanceof HiddenCogwheelBlock;
     }
 
     @Override
-    public void bnt$setPhysicsEnabled(boolean enabled) {
+    public void bnt$physicsChanged(BlockState state, boolean enabled) {
         KineticBlockEntity self = (KineticBlockEntity)(Object)this;
-        this.bnt$physicsEnabled = enabled;
         if (enabled) {
-            if (this.bnt$originalBlock == null && !HiddenCogwheelCompat.isHiddenCogwheel(self.getBlockState())) {
-                this.bnt$originalBlock = BuiltInRegistries.BLOCK.getKey(self.getBlockState().getBlock()).toString();
-            }
-
             BntPhysicsRegistry.add(self);
         } else {
             BntPhysicsRegistry.remove(self);
-            double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock(), this);
+            double rest = CogwheelSizeHelper.getSuspensionRest(state.getBlock(), this);
             this.bnt$extension = rest;
             this.bnt$lastExtension = rest;
             this.bnt$liftedUp = false;
         }
-
-        self.setChanged();
-        self.sendData();
     }
 
     @Override
@@ -450,24 +433,31 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     private void bnt$tick(CallbackInfo ci) {
         KineticBlockEntity self = (KineticBlockEntity)(Object)this;
         BntExtraMass.tick(self);
-        if (this.bnt$physicsEnabled) {
+        if ((this.bnt$legacyPhysics || this.bnt$legacyOriginal != null || self.getBlockState().getBlock() instanceof HiddenCogwheelBlock)
+            && self.getLevel() != null && !self.getLevel().isClientSide) {
+            boolean replaced = BntLegacyCogwheels.convert(self, this.bnt$legacyOriginal, this.bnt$legacyPhysics);
+            this.bnt$legacyPhysics = false;
+            this.bnt$legacyOriginal = null;
+            if (replaced) {
+                return;
+            }
+        }
+        if (this.bnt$isPhysicsEnabled()) {
             if (self.getLevel() != null) {
                 BntPhysicsRegistry.add(self);
             }
 
-            if (!this.bnt$tryMigrateToHiddenState(self)) {
-                this.bnt$lastExtension = this.bnt$extension;
-                if (self.getLevel() != null && self.getLevel().isClientSide) {
-                    BntPhysicsEvents.updateClientVisual(self, this);
-                } else if (self.getLevel() != null
-                    && this.bnt$suspensionSide != 0
-                    && (self.getLevel().getGameTime() + self.getBlockPos().hashCode()) % 20L == 0L
-                    && !BntSuspension.stillHolds(self.getLevel(), self.getBlockPos(), self)) {
-                    Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(self.getLevel(), self.getBlockPos());
-                    BntSuspension.detach(self.getLevel(), self.getBlockPos(), self, true);
-                    BntChainEngagement.refresh(self.getLevel(), self.getBlockPos(), engagementBefore);
-                    BntBeltRefit.queue(self.getLevel(), self.getBlockPos());
-                }
+            this.bnt$lastExtension = this.bnt$extension;
+            if (self.getLevel() != null && self.getLevel().isClientSide) {
+                BntPhysicsEvents.updateClientVisual(self, this);
+            } else if (self.getLevel() != null
+                && this.bnt$suspensionSide != 0
+                && (self.getLevel().getGameTime() + self.getBlockPos().hashCode()) % 20L == 0L
+                && !BntSuspension.stillHolds(self.getLevel(), self.getBlockPos(), self)) {
+                Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(self.getLevel(), self.getBlockPos());
+                BntSuspension.detach(self.getLevel(), self.getBlockPos(), self, true);
+                BntChainEngagement.refresh(self.getLevel(), self.getBlockPos(), engagementBefore);
+                BntBeltRefit.queue(self.getLevel(), self.getBlockPos());
             }
         }
     }
@@ -477,8 +467,10 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         at = {@At("RETURN")}
     )
     private void bnt$read(CompoundTag tag, Provider registries, boolean clientPacket, CallbackInfo ci) {
-        this.bnt$physicsEnabled = tag.getBoolean("BntPhysicsEnabled");
-        this.bnt$originalBlock = tag.contains("BntOriginalBlock") ? tag.getString("BntOriginalBlock") : null;
+        if (!clientPacket) {
+            this.bnt$legacyPhysics = tag.getBoolean("BntPhysicsEnabled");
+            this.bnt$legacyOriginal = tag.contains("BntOriginalBlock") ? tag.getString("BntOriginalBlock") : null;
+        }
         this.bnt$alignmentOffsetX = tag.getFloat("BntAlignmentOffsetX");
         this.bnt$alignmentOffsetY = tag.getFloat("BntAlignmentOffsetY");
         this.bnt$alignmentOffsetZ = tag.getFloat("BntAlignmentOffsetZ");
@@ -492,7 +484,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         for (BntTuning setting : BntTuning.values()) {
             this.bnt$tuning[setting.ordinal()] = tuning.contains(setting.key()) ? BntTuning.clamp(tuning.getInt(setting.key())) : BntTuning.DEFAULT;
         }
-        if (this.bnt$physicsEnabled) {
+        if (this.bnt$isPhysicsEnabled()) {
             KineticBlockEntity self = (KineticBlockEntity)(Object)this;
             double rest = CogwheelSizeHelper.getSuspensionRest(self.getBlockState().getBlock(), this);
             this.bnt$extension = tag.contains("BntExtension", 6) ? tag.getDouble("BntExtension") : rest;
@@ -505,11 +497,6 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         at = {@At("TAIL")}
     )
     private void bnt$write(CompoundTag tag, Provider registries, boolean clientPacket, CallbackInfo ci) {
-        tag.putBoolean("BntPhysicsEnabled", this.bnt$physicsEnabled);
-        if (this.bnt$originalBlock != null) {
-            tag.putString("BntOriginalBlock", this.bnt$originalBlock);
-        }
-
         tag.putFloat("BntAlignmentOffsetX", this.bnt$alignmentOffsetX);
         tag.putFloat("BntAlignmentOffsetY", this.bnt$alignmentOffsetY);
         tag.putFloat("BntAlignmentOffsetZ", this.bnt$alignmentOffsetZ);
@@ -531,7 +518,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         if (!tuning.isEmpty()) {
             tag.put("BntTuning", tuning);
         }
-        if (this.bnt$physicsEnabled) {
+        if (this.bnt$isPhysicsEnabled()) {
             tag.putDouble("BntExtension", this.bnt$extension);
         }
     }
@@ -551,30 +538,6 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         HiddenCogwheelCompat.transformControlledChain((KineticBlockEntity)(Object)this, transform);
     }
 
-    @Unique
-    private boolean bnt$tryMigrateToHiddenState(KineticBlockEntity self) {
-        if (self.getLevel() == null || self.getLevel().isClientSide || !this.bnt$physicsEnabled) {
-            return false;
-        } else if (HiddenCogwheelCompat.isHiddenFlangedCogwheel(self.getBlockState())) {
-            return false;
-        } else {
-            CompoundTag tag = self.saveWithoutMetadata(self.getLevel().registryAccess());
-            if (!HiddenCogwheelCompat.isHiddenCogwheel(self.getBlockState())) {
-                tag.putString("BntOriginalBlock", BuiltInRegistries.BLOCK.getKey(self.getBlockState().getBlock()).toString());
-            }
-
-            BlockState hiddenState = HiddenCogwheelCompat.toHiddenCogwheelState(self.getBlockState());
-            if (hiddenState == null) {
-                return false;
-            } else {
-                HiddenCogwheelCompat.replaceBlockForPhysicsSwap(self.getLevel(), self.getBlockPos(), hiddenState);
-                HiddenCogwheelCompat.restoreBlockEntity(self.getLevel(), self.getBlockPos(), tag, true);
-                BntChainEngagement.rebuild(self.getLevel(), self.getBlockPos());
-                return true;
-            }
-        }
-    }
-
     @Inject(
         method = {"tickAudio"},
         at = {@At("HEAD")},
@@ -585,8 +548,9 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         KineticBlockEntity self = (KineticBlockEntity)(Object)this;
         Block block = self.getBlockState().getBlock();
         boolean isBntCog = block instanceof HiddenCogwheelBlock || block instanceof BntFlangedCogwheelBlock;
-        if (this.bnt$physicsEnabled || isBntCog) {
-            float physicalSpeedRpm = this.bnt$physicsEnabled ? Math.abs(this.bnt$physicalSpeed * 190.9859F) : 0.0F;
+        boolean physics = this.bnt$isPhysicsEnabled();
+        if (physics || isBntCog) {
+            float physicalSpeedRpm = physics ? Math.abs(this.bnt$physicalSpeed * 190.9859F) : 0.0F;
             float speedToUse = Math.max(Math.abs(this.getSpeed()), Math.abs(this.getTheoreticalSpeed()));
             speedToUse = Math.max(speedToUse, physicalSpeedRpm);
             if (speedToUse == 0.0F) {

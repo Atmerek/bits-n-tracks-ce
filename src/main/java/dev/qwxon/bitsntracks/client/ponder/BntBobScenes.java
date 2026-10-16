@@ -570,7 +570,7 @@ public final class BntBobScenes {
     }
 
     static double restingDrop() {
-        Block wheel = BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get();
+        Block wheel = BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get();
         return 2.5 - CogwheelSizeHelper.getTrackRestRadius(wheel) - FLOOR;
     }
 

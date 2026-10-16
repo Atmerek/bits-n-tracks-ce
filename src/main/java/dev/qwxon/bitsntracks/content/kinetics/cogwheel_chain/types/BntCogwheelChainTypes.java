@@ -46,7 +46,10 @@ public class BntCogwheelChainTypes {
             .build()
     );
 
-    /** Cogwheels a belt or tread may be strung on. */
+    public static boolean isOwn(CogwheelChainType type) {
+        return type == INDUSTRIAL_BELT_CHAIN.get() || type == TANK_TREAD_CHAIN.get();
+    }
+
     public static boolean isFlangedDriveCogwheel(Block block) {
         return block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock;
     }
@@ -56,8 +59,8 @@ public class BntCogwheelChainTypes {
         if (partnerCarriesChain(level, pos)) {
             return "chain_on_wide_partner";
         }
-        boolean own = HiddenCogwheelCompat.isOwnCogwheel(state, level == null ? null : level.getBlockEntity(pos));
-        if (type == INDUSTRIAL_BELT_CHAIN.get() || type == TANK_TREAD_CHAIN.get()) {
+        boolean own = HiddenCogwheelCompat.isOwnCogwheel(state);
+        if (isOwn(type)) {
             return own ? null : "belt_on_bnb_flanged_cogwheel";
         }
         return own && type.getRenderType() != ChainRenderInfo.BELT ? "chain_on_physical_cogwheel" : null;

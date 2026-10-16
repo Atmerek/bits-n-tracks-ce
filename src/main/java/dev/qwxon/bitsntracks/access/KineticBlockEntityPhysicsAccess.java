@@ -2,11 +2,12 @@ package dev.qwxon.bitsntracks.access;
 
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
+import net.minecraft.world.level.block.state.BlockState;
 
 public interface KineticBlockEntityPhysicsAccess {
     boolean bnt$isPhysicsEnabled();
 
-    void bnt$setPhysicsEnabled(boolean var1);
+    void bnt$physicsChanged(BlockState state, boolean enabled);
 
     double bnt$getExtension();
 
@@ -58,10 +59,6 @@ public interface KineticBlockEntityPhysicsAccess {
     void bnt$markQueuedForForceApplication();
 
     boolean bnt$consumeQueuedForForceApplication();
-
-    String bnt$getOriginalBlock();
-
-    void bnt$setOriginalBlock(String var1);
 
     void bnt$setPhysicalSpeed(float var1);
 

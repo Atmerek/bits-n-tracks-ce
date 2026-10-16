@@ -9,6 +9,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Physics cogwheels no longer have suspension of their own. Without a Suspension Piece a physics cogwheel is a rigid wheel, so existing vehicles ride without suspension until pieces are mounted. A piece needs a block touching the cogwheel along its axle to hang from.
 - The suspension settings listed under Removed are gone, and any values set in them are ignored. Suspension is now tuned per cogwheel with the Suspension Tool.
 - The Cog Alignment Lever now only works on Bits 'n' Tracks cogwheels.
+- Cogwheels with physics enabled are converted when a 2.x world loads. A Bits 'n' Bobs or Design n' Decor cogwheel with physics enabled becomes the Bits 'n' Tracks cogwheel of the same size.
 - The Cog Alignment Lever now works in modes, switched by holding Alt and scrolling. What replaced its old click controls is listed under Changed.
 
 ### Added
@@ -47,6 +48,8 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 
 - The track cut through cogwheels, drove cogwheels it never reached, and could drop out of the kinetic network between sessions.
 - Turning physics on or off for a cogwheel reset its alignment and visibility, and turned an industrial cogwheel wooden.
+- Create schematics turned industrial cogwheels with physics enabled wooden.
+- Industrial cogwheels with physics enabled sounded like wooden ones.
 - Breaking a physics cogwheel by anything other than hand dropped a plain wooden cogwheel instead of the one that was placed, and breaking it with an axe or pickaxe dropped both.
 - Tracks looked wet and glossy with shader packs, and were lit as if they faced the sky.
 - A wheel pressed against a wall lost its grip as if it were in the air.

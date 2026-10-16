@@ -15,16 +15,15 @@ import dev.engine_room.flywheel.lib.model.baked.SinglePosVirtualBlockGetter;
 import dev.engine_room.flywheel.lib.util.RendererReloadCache;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientConfig;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelRenderer;
 import dev.qwxon.bitsntracks.content.BntVisualized;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelRenderer;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
-import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -39,7 +38,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
 
     private final BntTrackVisual track;
     private final BntPieceVisual pieces;
-    private final boolean hidden;
+    private boolean hidden;
     @Nullable
     private RotatingInstance cog;
     @Nullable
@@ -60,7 +59,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
         super(context, blockEntity, partialTick);
         this.track = new BntTrackVisual(context, blockEntity, getVisualPosition());
         this.pieces = new BntPieceVisual(context, blockEntity, getVisualPosition());
-        this.hidden = HiddenCogwheelCompat.isHiddenCogwheel(blockEntity.getBlockState());
+        this.hidden = BntFlangedCogwheelBlock.physics(blockEntity.getBlockState());
         BntFlywheel.add(this);
     }
 
@@ -121,6 +120,11 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
         boolean far = far();
         if (far != resting) {
             resting = far;
+            dirty = true;
+        }
+        boolean physics = BntFlangedCogwheelBlock.physics(blockEntity.getBlockState());
+        if (physics != hidden) {
+            hidden = physics;
             dirty = true;
         }
         HiddenCogwheelCompat.drawResting(resting);
@@ -231,13 +235,11 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
         if (leverHidden()) {
             return null;
         }
-        return hidden ? HiddenCogwheelRenderer.modelState(blockEntity) : blockEntity.getBlockState();
+        return BntFlangedCogwheelRenderer.modelState(blockEntity);
     }
 
     private boolean cutout(BlockState state) {
-        return hidden
-            ? HiddenCogwheelRenderer.isIndustrial(state)
-            : HiddenCogwheelRenderer.isIndustrial(state) && !state.is((Block)BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.get());
+        return BntFlangedCogwheelRenderer.cutout(state);
     }
 
     private static Model bake(CogModel key) {

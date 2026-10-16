@@ -25,7 +25,6 @@ import net.createmod.ponder.foundation.instruction.TickingInstruction;
 import net.createmod.ponder.foundation.ui.PonderUI;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -116,8 +115,7 @@ final class BntBobRig implements BntPonderPhysics.Stage, BntBobBody.Ground {
         stepSelection = util.select().position(6, 1, 2).add(util.select().position(2, 1, 3));
         body = new BntBobBody(new Vec3(4.5, 3.0, 5.0));
 
-        Block hidden = BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get();
-        double wheelRadius = CogwheelSizeHelper.getTrackRestRadius(hidden);
+        double wheelRadius = CogwheelSizeHelper.getTrackRestRadius(BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get());
         double sprocketRadius = CogwheelSizeHelper.getTrackRestRadius(BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get());
         double wheelY = 2.5;
         for (int x : new int[]{2, 6}) {

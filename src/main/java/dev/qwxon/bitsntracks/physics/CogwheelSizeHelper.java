@@ -1,16 +1,9 @@
 package dev.qwxon.bitsntracks.physics;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import dev.qwxon.bitsntracks.content.CogwheelSize;
 import net.minecraft.world.level.block.Block;
 
 public final class CogwheelSizeHelper {
-    private static final Set<String> COGWHEEL_NAMESPACES = Set.of("create", "bits_n_bobs", "bits_n_tracks");
-    private static final Map<Block, CogwheelSizeHelper.Size> SIZE_CACHE = new ConcurrentHashMap<>();
-
     private static final double TINY_CHAIN_RADIUS = 0.25;
     private static final double SMALL_CHAIN_RADIUS = 0.5;
     private static final double MEDIUM_CHAIN_RADIUS = 0.75;
@@ -26,38 +19,20 @@ public final class CogwheelSizeHelper {
     private CogwheelSizeHelper() {
     }
 
-    private static CogwheelSizeHelper.Size sizeOf(Block block) {
-        return SIZE_CACHE.computeIfAbsent(block, CogwheelSizeHelper::classify);
-    }
-
-    private static CogwheelSizeHelper.Size classify(Block block) {
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
-        if (id == null || !COGWHEEL_NAMESPACES.contains(id.getNamespace())) {
-            return CogwheelSizeHelper.Size.SMALL;
-        } else {
-            String path = id.getPath();
-            if (path.startsWith("large_")) {
-                return CogwheelSizeHelper.Size.LARGE;
-            } else if (path.startsWith("medium_")) {
-                return CogwheelSizeHelper.Size.MEDIUM;
-            } else {
-                return path.startsWith("tiny_") || path.contains("_tiny_")
-                    ? CogwheelSizeHelper.Size.TINY
-                    : CogwheelSizeHelper.Size.SMALL;
-            }
-        }
+    private static CogwheelSize sizeOf(Block block) {
+        return CogwheelSize.of(block);
     }
 
     public static boolean isLarge(Block block) {
-        return sizeOf(block) == CogwheelSizeHelper.Size.LARGE;
+        return sizeOf(block) == CogwheelSize.LARGE;
     }
 
     public static boolean isMedium(Block block) {
-        return sizeOf(block) == CogwheelSizeHelper.Size.MEDIUM;
+        return sizeOf(block) == CogwheelSize.MEDIUM;
     }
 
     public static boolean isTiny(Block block) {
-        return sizeOf(block) == CogwheelSizeHelper.Size.TINY;
+        return sizeOf(block) == CogwheelSize.TINY;
     }
 
     public static double getRadius(Block block) {
@@ -143,10 +118,4 @@ public final class CogwheelSizeHelper {
         return getRadius(block) + getVisualVerticalOffset(block) - getVerticalOffset(block);
     }
 
-    private enum Size {
-        TINY,
-        SMALL,
-        MEDIUM,
-        LARGE
-    }
 }

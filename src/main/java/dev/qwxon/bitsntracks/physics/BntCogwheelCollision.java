@@ -2,7 +2,7 @@ package dev.qwxon.bitsntracks.physics;
 
 import com.google.common.collect.Iterators;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -43,12 +43,13 @@ public final class BntCogwheelCollision {
         List<BlockPos> extra = null;
         for (Iterator<KineticBlockEntity> iterator = hidden(level).iterator(); iterator.hasNext(); ) {
             KineticBlockEntity be = iterator.next();
-            if (be.isRemoved() || !(be.getBlockState().getBlock() instanceof HiddenCogwheelBlock)) {
+            if (be.isRemoved() || !(be.getBlockState().getBlock() instanceof BntFlangedCogwheelBlock)) {
                 iterator.remove();
                 continue;
             }
             BlockPos pos = be.getBlockPos();
-            if (pos.getX() < minX - REACH || pos.getX() > maxX + REACH
+            if (!BntFlangedCogwheelBlock.physics(be.getBlockState())
+                || pos.getX() < minX - REACH || pos.getX() > maxX + REACH
                 || pos.getY() < minY - REACH || pos.getY() > maxY + REACH
                 || pos.getZ() < minZ - REACH || pos.getZ() > maxZ + REACH
                 || pos.getX() >= minX && pos.getX() <= maxX && pos.getY() >= minY && pos.getY() <= maxY && pos.getZ() >= minZ && pos.getZ() <= maxZ) {
@@ -70,17 +71,18 @@ public final class BntCogwheelCollision {
         List<VoxelShape> combined = null;
         for (Iterator<KineticBlockEntity> iterator = hidden(level).iterator(); iterator.hasNext(); ) {
             KineticBlockEntity be = iterator.next();
-            if (be.isRemoved() || !(be.getBlockState().getBlock() instanceof HiddenCogwheelBlock hidden)) {
+            if (be.isRemoved() || !(be.getBlockState().getBlock() instanceof BntFlangedCogwheelBlock cogwheel)) {
                 iterator.remove();
                 continue;
             }
             BlockPos pos = be.getBlockPos();
-            if (pos.getX() + 1 + REACH < box.minX || pos.getX() - REACH > box.maxX
+            if (!BntFlangedCogwheelBlock.physics(be.getBlockState())
+                || pos.getX() + 1 + REACH < box.minX || pos.getX() - REACH > box.maxX
                 || pos.getY() + 1 + REACH < box.minY || pos.getY() - REACH > box.maxY
                 || pos.getZ() + 1 + REACH < box.minZ || pos.getZ() - REACH > box.maxZ) {
                 continue;
             }
-            VoxelShape shape = hidden.entityCollisionShape(be.getBlockState(), level, pos);
+            VoxelShape shape = cogwheel.entityCollisionShape(be.getBlockState(), level, pos);
             if (shape.isEmpty()) {
                 continue;
             }

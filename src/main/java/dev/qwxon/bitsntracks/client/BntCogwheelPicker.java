@@ -113,7 +113,7 @@ public final class BntCogwheelPicker {
                             continue;
                         }
                         LevelChunkSection section = chunk.getSection(index);
-                        if (section.hasOnlyAir() || !section.maybeHas(HiddenCogwheelCompat::isFlangedCogwheelBlock)) {
+                        if (section.hasOnlyAir() || !section.maybeHas(HiddenCogwheelCompat::isOwnCogwheel)) {
                             continue;
                         }
 
@@ -121,7 +121,7 @@ public final class BntCogwheelPicker {
                             for (int y = Math.max(minY, sectionY << 4); y <= Math.min(maxY, (sectionY << 4) + 15); y++) {
                                 for (int z = Math.max(minZ, chunkZ << 4); z <= Math.min(maxZ, (chunkZ << 4) + 15); z++) {
                                     BlockState state = section.getBlockState(x & 15, y & 15, z & 15);
-                                    if (HiddenCogwheelCompat.isFlangedCogwheelBlock(state)) {
+                                    if (HiddenCogwheelCompat.isOwnCogwheel(state)) {
                                         this.consider(pos.set(x, y, z), state, from, to);
                                     }
                                 }

@@ -17,7 +17,6 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -76,14 +75,6 @@ public abstract class PlacingCogwheelChainMixin {
                 }
 
                 boolean isValidCogwheel = type.getCogwheelPredicate().test(state.getBlock());
-                if (!isValidCogwheel && HiddenCogwheelCompat.isHiddenFlangedCogwheel(state)) {
-                    BlockEntity be = level != null ? level.getBlockEntity(pos) : null;
-                    BlockState visibleState = HiddenCogwheelCompat.toVisibleCogwheelState(state, be);
-                    if (visibleState != null && type.getCogwheelPredicate().test(visibleState.getBlock())) {
-                        isValidCogwheel = true;
-                    }
-                }
-
                 if (!isValidCogwheel) {
                     throw new ChainInteractionFailedException("invalid_cogwheel_type." + type.getTranslationKey());
                 } else {

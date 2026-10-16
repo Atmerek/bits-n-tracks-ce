@@ -1,41 +1,18 @@
 package dev.qwxon.bitsntracks.content;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.block.EmptyFlangedGearBlock;
-import com.kipti.bnb.registry.content.blocks.BnbKineticBlocks;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
-import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
-import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
-import dev.qwxon.bitsntracks.index.BitsNTracksItems;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -47,16 +24,12 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
         this.size = size;
     }
 
-    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder.add(new Property[]{BntCogwheelPairing.WIDE}));
+    public CogwheelSize size() {
+        return this.size;
     }
 
-    protected BlockState updateShape(
-        BlockState state, Direction direction, BlockState neighbourState, LevelAccessor level, BlockPos pos, BlockPos neighbourPos
-    ) {
-        return BntCogwheelPairing.unlinkBrokenPair(
-            super.updateShape(state, direction, neighbourState, level, pos, neighbourPos), direction, neighbourState
-        );
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder.add(new Property[]{BntCogwheelPairing.WIDE}));
     }
 
     public Class<KineticBlockEntity> getBlockEntityClass() {
@@ -67,117 +40,11 @@ public class HiddenCogwheelBlock extends EmptyFlangedGearBlock {
         return (BlockEntityType<? extends KineticBlockEntity>)BitsNTracksBlockEntityTypes.HIDDEN_COGWHEEL.get();
     }
 
-    public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.ENTITYBLOCK_ANIMATED;
-    }
-
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        VoxelShape shape = BntCogwheelShapes.get(this.size, (Axis)state.getValue(AXIS));
-        return HiddenCogwheelCompat.offsetShapeForSuspension(shape, level, pos);
-    }
-
-    @SuppressWarnings("deprecation")
-    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
-        Block original = originalBlock(level.getBlockEntity(pos));
-        if (original != null) {
-            return new ItemStack(original);
-        }
-
-        if (this.size == CogwheelSize.LARGE) {
-            return new ItemStack((ItemLike)BnbKineticBlocks.LARGE_FLANGED_COGWHEEL.get());
-        } else if (this.size == CogwheelSize.MEDIUM) {
-            return new ItemStack((ItemLike)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get());
-        } else {
-            return this.size == CogwheelSize.TINY
-                ? new ItemStack((ItemLike)BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.get())
-                : new ItemStack((ItemLike)BnbKineticBlocks.SMALL_FLANGED_COGWHEEL.get());
-        }
-    }
-
-    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
-        BlockEntity be = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
-        Block original = originalBlock(be);
-        List<ItemStack> drops = new ArrayList<>();
-        for (ItemStack drop : super.getDrops(state, params)) {
-            boolean cogwheel = drop.getItem() instanceof BlockItem item && item.getBlock() instanceof BntFlangedCogwheelBlock;
-            drops.add(original != null && cogwheel ? new ItemStack(original, drop.getCount()) : drop);
-        }
-        if (be instanceof KineticBlockEntityPhysicsAccess access
-            && access.bnt$getSuspensionSide() != 0
-            && !BntSuspension.heldByWidePartner(be)) {
-            drops.add(new ItemStack(BitsNTracksItems.SUSPENSION_PIECE.get()));
-        }
-        return drops;
-    }
-
-    private static Block originalBlock(BlockEntity be) {
-        if (!(be instanceof KineticBlockEntityPhysicsAccess access)) {
-            return null;
-        }
-        String id = access.bnt$getOriginalBlock();
-        ResourceLocation location = id == null || id.isEmpty() ? null : ResourceLocation.tryParse(id);
-        if (location == null) {
-            return null;
-        }
-        Block block = BuiltInRegistries.BLOCK.get(location);
-        return block == Blocks.AIR || block instanceof HiddenCogwheelBlock ? null : block;
+        return BntCogwheelShapes.get(this.size, (Axis)state.getValue(AXIS));
     }
 
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return context instanceof EntityCollisionContext entityContext && entityContext.getEntity() != null
-            ? entityCollisionShape(state, level, pos)
-            : Shapes.empty();
-    }
-
-    public VoxelShape entityCollisionShape(BlockState state, BlockGetter level, BlockPos pos) {
-        BlockEntity be = level.getBlockEntity(pos);
-        if (be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isHiddenByLever()) {
-            return Shapes.empty();
-        }
-        return HiddenCogwheelCompat.offsetShapeForSuspension(BntCogwheelShapes.get(this.size, (Axis)state.getValue(AXIS)), be);
-    }
-
-    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        BlockState result = super.playerWillDestroy(level, pos, state, player);
-        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic) {
-            BntSuspension.detach(level, pos, kinetic, !player.isCreative());
-        }
-
-        return result;
-    }
-
-    public static BlockState getOriginalParticleState(Level level, BlockPos pos, BlockState state) {
-        if (level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access) {
-            String originalBlock = access.bnt$getOriginalBlock();
-            if (originalBlock != null && !originalBlock.isEmpty()) {
-                ResourceLocation loc = ResourceLocation.tryParse(originalBlock);
-                if (loc == null) {
-                    return null;
-                } else {
-                    Block original = (Block)BuiltInRegistries.BLOCK.get(loc);
-                    return original != null && original != Blocks.AIR && !(original instanceof HiddenCogwheelBlock)
-                        ? copySharedProperties(state, original.defaultBlockState())
-                        : null;
-                }
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
-
-    private static BlockState copySharedProperties(BlockState from, BlockState to) {
-        for (Property<?> property : from.getProperties()) {
-            if (to.hasProperty(property)) {
-                to = copyProperty(from, to, property);
-            }
-        }
-
-        return to;
-    }
-
-    private static <T extends Comparable<T>> BlockState copyProperty(BlockState from, BlockState to, Property<T> property) {
-        return (BlockState)to.setValue(property, from.getValue(property));
+        return Shapes.empty();
     }
 }

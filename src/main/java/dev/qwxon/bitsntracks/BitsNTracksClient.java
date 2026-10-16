@@ -13,25 +13,17 @@ import dev.qwxon.bitsntracks.client.flywheel.BntFlywheel;
 import dev.qwxon.bitsntracks.client.ponder.BntPonderPlugin;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelRenderer;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelRenderer;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
-import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.createmod.ponder.foundation.PonderIndex;
-import net.minecraft.client.particle.ParticleEngine;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers;
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -65,7 +57,6 @@ public class BitsNTracksClient {
     }
 
     private static void registerRenderers(RegisterRenderers event) {
-        event.registerBlockEntityRenderer((BlockEntityType)BitsNTracksBlockEntityTypes.HIDDEN_COGWHEEL.get(), HiddenCogwheelRenderer::new);
         event.registerBlockEntityRenderer((BlockEntityType)BitsNTracksBlockEntityTypes.SIMPLE_KINETIC.get(), BntFlangedCogwheelRenderer::new);
     }
 
@@ -74,22 +65,5 @@ public class BitsNTracksClient {
         event.registerItem(SimpleCustomRenderer.create(lever, new CogAlignmentLeverItemRenderer()), lever);
         SuspensionToolItem tuner = BitsNTracksItems.SUSPENSION_TOOL.get();
         event.registerItem(SimpleCustomRenderer.create(tuner, new SuspensionToolItemRenderer()), tuner);
-        event.registerBlock(
-            new IClientBlockExtensions() {
-                @Override
-                public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-                    BlockState originalState = HiddenCogwheelBlock.getOriginalParticleState(level, pos, state);
-                    if (originalState == null) {
-                        return false;
-                    }
-                    manager.destroy(pos, originalState);
-                    return true;
-                }
-            },
-            BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL.get(),
-            BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL.get(),
-            BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL.get(),
-            BitsNTracksBlocks.LARGE_HIDDEN_FLANGED_COGWHEEL.get()
-        );
     }
 }

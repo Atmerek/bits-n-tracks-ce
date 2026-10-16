@@ -5,6 +5,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBeha
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -55,7 +56,7 @@ public abstract class CogwheelChainBehaviourVisualMixin {
             return true;
         } else {
             CogwheelChain chain = this.cogwheelChainBehaviour.getControlledChain();
-            return chain != null && chain.getChainType() != null && chain.getChainType().getRenderTexture().getPath().contains("industrial")
+            return chain != null && chain.getChainType() == BntCogwheelChainTypes.INDUSTRIAL_BELT_CHAIN.get()
                 ? true
                 : HiddenCogwheelCompat.shouldForceDynamicRenderer(this.cogwheelChainBehaviour);
         }

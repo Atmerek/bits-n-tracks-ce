@@ -10,6 +10,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.mixin.accessor.RotationPropagatorAccessor;
@@ -59,7 +60,7 @@ public final class BntChainEngagement {
         }
 
         Vec3 displacement = new Vec3(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
-        if (HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState())) {
+        if (BntFlangedCogwheelBlock.physics(be.getBlockState())) {
             displacement = displacement.add(BntSuspension.displacement(be, groundDrop(level, be, access)));
         }
         return displacement;
@@ -106,7 +107,7 @@ public final class BntChainEngagement {
                 signature[i * 5 + 1] = access.bnt$getAlignmentOffsetY();
                 signature[i * 5 + 2] = access.bnt$getAlignmentOffsetZ();
                 signature[i * 5 + 3] = access.bnt$getTrackRouteSide();
-                signature[i * 5 + 4] = HiddenCogwheelCompat.isHiddenCogwheel(be.getBlockState()) ? 1.0 + BntSuspension.WIDE_BOGIE + access.bnt$getSuspensionSide() : 0.0;
+                signature[i * 5 + 4] = BntFlangedCogwheelBlock.physics(be.getBlockState()) ? 1.0 + BntSuspension.WIDE_BOGIE + access.bnt$getSuspensionSide() : 0.0;
             } else {
                 signature[i * 5 + 3] = -1.0;
             }

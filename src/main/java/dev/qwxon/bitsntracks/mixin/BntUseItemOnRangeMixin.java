@@ -27,7 +27,7 @@ public class BntUseItemOnRangeMixin {
     private Vec3 bnt$relativeToDrawnCogwheel(Vec3 location, Vec3 center, Operation<Vec3> original) {
         Level level = this.player.level();
         BlockPos pos = BlockPos.containing(center);
-        if (!HiddenCogwheelCompat.isFlangedCogwheelBlock(level.getBlockState(pos))) {
+        if (!HiddenCogwheelCompat.isOwnCogwheel(level.getBlockState(pos))) {
             return original.call(location, center);
         }
 

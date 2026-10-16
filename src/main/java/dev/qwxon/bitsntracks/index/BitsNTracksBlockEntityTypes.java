@@ -8,19 +8,16 @@ import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlockEntity;
 import dev.qwxon.bitsntracks.content.BntHeadBlockEntity;
 import dev.qwxon.bitsntracks.content.BntHeadRenderer;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelRenderer;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelRenderer;
 
 public class BitsNTracksBlockEntityTypes {
     public static final BlockEntityEntry<KineticBlockEntity> HIDDEN_COGWHEEL = BitsNTracks.REGISTRATE
         .blockEntity("hidden_cogwheel", KineticBlockEntity::new)
-        .visual(() -> BntCogwheelVisual::new, true)
         .validBlocks(
             BitsNTracksBlocks.TINY_HIDDEN_FLANGED_COGWHEEL,
             BitsNTracksBlocks.SMALL_HIDDEN_FLANGED_COGWHEEL,
             BitsNTracksBlocks.MEDIUM_HIDDEN_FLANGED_COGWHEEL,
             BitsNTracksBlocks.LARGE_HIDDEN_FLANGED_COGWHEEL
         )
-        .renderer(() -> HiddenCogwheelRenderer::new)
         .register();
     public static final BlockEntityEntry<BntFlangedCogwheelBlockEntity> SIMPLE_KINETIC = BitsNTracks.REGISTRATE
         .blockEntity("bnt_flanged_cogwheel", BntFlangedCogwheelBlockEntity::new)
