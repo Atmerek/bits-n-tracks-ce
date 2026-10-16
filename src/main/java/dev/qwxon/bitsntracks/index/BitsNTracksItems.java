@@ -12,6 +12,7 @@ public class BitsNTracksItems {
     public static final ItemEntry<Item> TANK_TREAD = BitsNTracks.REGISTRATE.item("tank_tread", Item::new).register();
     public static final ItemEntry<CogAlignmentLeverItem> COG_ALIGNMENT_LEVER = BitsNTracks.REGISTRATE
         .item("cog_alignment_lever", CogAlignmentLeverItem::new)
+        .properties(properties -> properties.stacksTo(1))
         .register();
     public static final ItemEntry<SuspensionToolItem> SUSPENSION_TOOL = BitsNTracks.REGISTRATE
         .item("suspension_tool", SuspensionToolItem::new)
