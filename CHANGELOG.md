@@ -10,6 +10,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - The suspension settings listed under Removed are gone, and any values set in them are ignored. Suspension is now tuned per cogwheel with the Suspension Tool.
 - The Cog Alignment Lever now only works on Bits 'n' Tracks cogwheels.
 - Cogwheels with physics enabled are converted when a 2.x world loads. A Bits 'n' Bobs or Design n' Decor cogwheel with physics enabled becomes the Bits 'n' Tracks cogwheel of the same size.
+- Bits 'n' Tracks cogwheels no longer turn the blocks beside them, or get turned by them. Drive them through their axle or their track.
 - The Cog Alignment Lever now works in modes, switched by holding Alt and scrolling. What replaced its old click controls is listed under Changed.
 
 ### Added

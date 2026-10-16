@@ -6,11 +6,13 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.KineticNetwork;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
+import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.mixin.accessor.RotationPropagatorAccessor;
@@ -502,6 +504,33 @@ public final class BntChainEngagement {
             return false;
         }
         return controllerPos(chainBehaviour(from)) != null || controllerPos(chainBehaviour(to)) != null;
+    }
+
+    public static boolean cutOffFromNeighbour(KineticBlockEntity from, KineticBlockEntity to) {
+        if (!isOwnCogwheelBlock(from.getBlockState()) && !isOwnCogwheelBlock(to.getBlockState())) {
+            return false;
+        }
+        return !connectedByShaft(from, to);
+    }
+
+    private static boolean isOwnCogwheelBlock(BlockState state) {
+        return state.getBlock() instanceof BntFlangedCogwheelBlock || state.getBlock() instanceof HiddenCogwheelBlock;
+    }
+
+    private static boolean connectedByShaft(KineticBlockEntity from, KineticBlockEntity to) {
+        BlockState stateFrom = from.getBlockState();
+        BlockState stateTo = to.getBlockState();
+        if (!(stateFrom.getBlock() instanceof IRotate defFrom) || !(stateTo.getBlock() instanceof IRotate defTo)) {
+            return false;
+        }
+
+        BlockPos diff = to.getBlockPos().subtract(from.getBlockPos());
+        Direction direction = Direction.getNearest(diff.getX(), diff.getY(), diff.getZ());
+        if (diff.distManhattan(BlockPos.ZERO) != Math.abs(direction.getAxis().choose(diff.getX(), diff.getY(), diff.getZ()))) {
+            return false;
+        }
+        return defFrom.hasShaftTowards(from.getLevel(), from.getBlockPos(), stateFrom, direction)
+            && defTo.hasShaftTowards(to.getLevel(), to.getBlockPos(), stateTo, direction.getOpposite());
     }
 
     public static boolean sharesShaft(BlockEntity from, BlockEntity to) {
