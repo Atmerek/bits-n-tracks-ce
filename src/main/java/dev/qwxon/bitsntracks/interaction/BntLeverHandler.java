@@ -3,18 +3,14 @@ package dev.qwxon.bitsntracks.interaction;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
-import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.phys.Vec3;
 
 public final class BntLeverHandler {
-    private static final double REACH_MARGIN = 3.0;
     private static final int MAX_STEPS = 16;
 
     private BntLeverHandler() {
@@ -27,7 +23,7 @@ public final class BntLeverHandler {
         Level level = player.level();
         BlockPos pos = payload.pos();
         Item lever = BitsNTracksItems.COG_ALIGNMENT_LEVER.get();
-        if (level.isClientSide || !level.isLoaded(pos) || !player.getMainHandItem().is(lever) || !withinReach(level, player, pos)) {
+        if (level.isClientSide || !level.isLoaded(pos) || !player.getMainHandItem().is(lever) || !BntReach.block(level, player, pos)) {
             return;
         }
 
@@ -51,13 +47,5 @@ public final class BntLeverHandler {
             default -> {
             }
         }
-    }
-
-    public static boolean withinReach(Level level, Player player, BlockPos pos) {
-        Vec3 centre = Vec3.atCenterOf(pos);
-        SubLevel subLevel = Sable.HELPER.getContaining(level, centre);
-        Vec3 world = subLevel == null ? centre : subLevel.logicalPose().transformPosition(centre);
-        double reach = player.blockInteractionRange() + REACH_MARGIN;
-        return player.getEyePosition().distanceToSqr(world) <= reach * reach;
     }
 }

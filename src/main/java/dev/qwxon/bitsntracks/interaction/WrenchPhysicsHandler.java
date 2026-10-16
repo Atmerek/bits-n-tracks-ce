@@ -140,11 +140,8 @@ public class WrenchPhysicsHandler {
 
         Level level = player.level();
         BlockPos pos = payload.pos();
-        if (level.isClientSide || !level.isLoaded(pos)) {
-            return;
-        }
-        if (!player.getMainHandItem().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
-            && !player.getOffhandItem().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())) {
+        if (level.isClientSide || !level.isLoaded(pos) || !player.getMainHandItem().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
+            || !BntReach.block(level, player, pos)) {
             return;
         }
 

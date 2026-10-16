@@ -2,6 +2,7 @@ package dev.qwxon.bitsntracks.client;
 
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceItem;
+import dev.qwxon.bitsntracks.interaction.BntReach;
 import dev.qwxon.bitsntracks.interaction.BntSuspensionPayload;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
@@ -78,7 +79,7 @@ public final class BntSuspensionPlacement {
             clear();
             return;
         }
-        if (first != null && (!BntSuspension.canCarry(level.getBlockEntity(first)) || !inRange(player, level, first))) {
+        if (first != null && (!BntSuspension.canCarry(level.getBlockEntity(first)) || !BntReach.block(level, player, first))) {
             first = null;
         }
         if (first != null && level instanceof ClientLevel clientLevel) {
@@ -199,15 +200,6 @@ public final class BntSuspensionPlacement {
 
     private static boolean enough(LocalPlayer player) {
         return player.getAbilities().instabuild || held(player).getCount() >= BntSuspension.BOGIE;
-    }
-
-    private static boolean inRange(LocalPlayer player, Level level, BlockPos pos) {
-        Vec3 centre = Vec3.atCenterOf(pos);
-        if (Sable.HELPER.getContainingClient(level.getBlockEntity(pos)) instanceof ClientSubLevel subLevel) {
-            centre = subLevel.logicalPose().transformPosition(centre);
-        }
-        double reach = player.blockInteractionRange() + KEEP_RANGE * 2.0;
-        return player.getEyePosition(1.0F).distanceToSqr(centre) <= reach * reach;
     }
 
     private static void clear() {

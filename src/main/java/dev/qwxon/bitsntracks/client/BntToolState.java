@@ -8,10 +8,9 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.interaction.BntBeltTensionPayload;
 import dev.qwxon.bitsntracks.interaction.BntLeverPayload;
+import dev.qwxon.bitsntracks.interaction.BntReach;
 import dev.qwxon.bitsntracks.interaction.BntTuningPayload;
 import dev.qwxon.bitsntracks.interaction.BntToolMessages;
-import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -21,7 +20,6 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -29,7 +27,6 @@ import org.jetbrains.annotations.Nullable;
 
 @OnlyIn(Dist.CLIENT)
 public final class BntToolState {
-    private static final double REACH_MARGIN = 3.0;
     private static final long RESET_WINDOW_MILLIS = 3000L;
     private static final int TENSION_STEPS_PER_TICK = 4;
 
@@ -175,7 +172,7 @@ public final class BntToolState {
                 selectLeverCog(null);
             }
             if (mode != BntLeverMode.TENSION || leverChain != null
-                && (!HiddenCogwheelCompat.isOwnChain(level, leverChain) || !inReach(level, player, leverChain))) {
+                && (!HiddenCogwheelCompat.isOwnChain(level, leverChain) || !BntReach.track(level, player, leverChain))) {
                 selectLeverChain(null);
             }
             if (mode != BntLeverMode.RESET) {
@@ -187,7 +184,7 @@ public final class BntToolState {
         }
 
         if (stack.getItem() instanceof SuspensionToolItem) {
-            if (tunerCog != null && (!BntSuspension.hasPiece(level.getBlockEntity(tunerCog)) || !inReach(level, player, tunerCog))) {
+            if (tunerCog != null && (!BntSuspension.hasPiece(level.getBlockEntity(tunerCog)) || !BntReach.block(level, player, tunerCog))) {
                 selectTunerCog(null);
             }
             if (tunerCog != null && pendingTuning != 0) {
@@ -227,20 +224,12 @@ public final class BntToolState {
     }
 
     private static boolean validCog(ClientLevel level, LocalPlayer player, @Nullable BlockPos pos) {
-        return pos != null && HiddenCogwheelCompat.isOwnCogwheel(level, pos) && inReach(level, player, pos);
+        return pos != null && HiddenCogwheelCompat.isOwnCogwheel(level, pos) && BntReach.block(level, player, pos);
     }
 
     @Nullable
     static BlockPos chainController(ClientLevel level, BlockPos pos) {
         BlockPos controller = BntBeltTension.controllerPos(level, pos);
         return HiddenCogwheelCompat.isOwnChain(level, controller) ? controller : null;
-    }
-
-    static boolean inReach(ClientLevel level, LocalPlayer player, BlockPos pos) {
-        Vec3 centre = Vec3.atCenterOf(pos);
-        SubLevel subLevel = Sable.HELPER.getContaining(level, centre);
-        Vec3 world = subLevel == null ? centre : subLevel.logicalPose().transformPosition(centre);
-        double reach = player.blockInteractionRange() + REACH_MARGIN;
-        return player.getEyePosition().distanceToSqr(world) <= reach * reach;
     }
 }

@@ -6,8 +6,6 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceItem;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
-import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -16,15 +14,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 
 @EventBusSubscriber
 public final class BntSuspensionHandler {
-    private static final double REACH_MARGIN = 3.0;
-
     private BntSuspensionHandler() {
     }
 
@@ -34,7 +29,7 @@ public final class BntSuspensionHandler {
         }
         Level level = player.level();
         BlockPos pos = payload.pos();
-        if (level.isClientSide || !level.isLoaded(pos) || !withinReach(level, player, pos)) {
+        if (level.isClientSide || !level.isLoaded(pos) || !BntReach.block(level, player, pos)) {
             return;
         }
         InteractionHand hand = player.getMainHandItem().getItem() instanceof BntSuspensionPieceItem ? InteractionHand.MAIN_HAND
@@ -74,7 +69,7 @@ public final class BntSuspensionHandler {
             return;
         }
         BlockPos partnerPos = BntSuspension.neighbour(pos, kinetic.getBlockState(), toward);
-        if (!withinReach(level, player, partnerPos) || !(level.getBlockEntity(partnerPos) instanceof KineticBlockEntity partner)) {
+        if (!BntReach.block(level, player, partnerPos) || !(level.getBlockEntity(partnerPos) instanceof KineticBlockEntity partner)) {
             return;
         }
 
@@ -114,13 +109,5 @@ public final class BntSuspensionHandler {
             player.getInventory().placeItemBackInInventory(new ItemStack(BitsNTracksItems.SUSPENSION_PIECE.get(), pieces));
         }
         BntToolSounds.mount(level, pos, false);
-    }
-
-    private static boolean withinReach(Level level, Player player, BlockPos pos) {
-        Vec3 centre = Vec3.atCenterOf(pos);
-        SubLevel subLevel = Sable.HELPER.getContaining(level, centre);
-        Vec3 world = subLevel == null ? centre : subLevel.logicalPose().transformPosition(centre);
-        double reach = player.blockInteractionRange() + REACH_MARGIN;
-        return player.getEyePosition().distanceToSqr(world) <= reach * reach;
     }
 }

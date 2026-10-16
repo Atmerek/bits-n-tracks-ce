@@ -9,8 +9,6 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.physics.BntTuning;
-import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -19,11 +17,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 
 public final class BntTuningHandler {
-    private static final double REACH_MARGIN = 3.0;
-
     private BntTuningHandler() {
     }
 
@@ -46,7 +41,7 @@ public final class BntTuningHandler {
         if (level.isClientSide || !level.isLoaded(pos) || !(player.getMainHandItem().getItem() instanceof SuspensionToolItem)) {
             return;
         }
-        if (!withinReach(level, player, pos)
+        if (!BntReach.block(level, player, pos)
             || !(level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess target)
             || !BntSuspension.hasPiece(level.getBlockEntity(pos))) {
             return;
@@ -92,14 +87,5 @@ public final class BntTuningHandler {
             BntToolMessages.send(player, Component.translatable(
                 wheels == 1 ? "bits_n_tracks.tool_panel.message.tuned.single" : "bits_n_tracks.tool_panel.message.tuned", wheels));
         }
-    }
-
-
-    private static boolean withinReach(Level level, Player player, BlockPos pos) {
-        Vec3 centre = Vec3.atCenterOf(pos);
-        SubLevel subLevel = Sable.HELPER.getContaining(level, centre);
-        Vec3 world = subLevel == null ? centre : subLevel.logicalPose().transformPosition(centre);
-        double reach = player.blockInteractionRange() + REACH_MARGIN;
-        return player.getEyePosition().distanceToSqr(world) <= reach * reach;
     }
 }
