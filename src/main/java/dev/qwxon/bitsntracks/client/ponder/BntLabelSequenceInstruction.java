@@ -47,7 +47,9 @@ public final class BntLabelSequenceInstruction extends TickingInstruction {
             shown++;
         }
         for (int i = 0; i < this.labels.size(); i++) {
-            this.labels.get(i).setVisible(i == shown);
+            TextWindowElement label = this.labels.get(i);
+            label.setFade(1.0F);
+            label.setVisible(i == shown);
         }
     }
 }
