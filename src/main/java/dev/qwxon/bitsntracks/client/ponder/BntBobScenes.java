@@ -133,7 +133,7 @@ public final class BntBobScenes {
         scene.addInstruction(fall(dropped));
         scene.idle(25);
         scene.overlay().showText(100)
-            .text("The Cog Alignment Lever is the main multitool for Bits 'n' Tracks. So much so that every possible keybind imaginable is mapped to it.")
+            .text("The Cog Alignment Lever is the main multitool for Bits 'n' Tracks. Hold Alt and scroll to switch between its modes.")
             .placeNearTarget()
             .pointAt(util.vector().of(4.5, 1.15, 4.5));
         scene.addKeyframe();
@@ -211,14 +211,15 @@ public final class BntBobScenes {
         scene.idle(30);
         scene.addKeyframe();
 
+        Vec3 firstFace = util.vector().blockSurface(westWheels.get(0), Direction.WEST);
+        scene.overlay().showText(180)
+            .text(tint(ChatFormatting.GRAY, "In Physics mode, right-click a flanged cogwheel with the Cog Alignment Lever"))
+            .placeNearTarget()
+            .pointAt(firstFace);
+        scene.overlay().showControls(firstFace, Pointing.RIGHT, 15).scroll().withItem(lever);
+        scene.idle(20);
         for (BlockPos wheel : westWheels) {
             enable(scene, util, wheel, Direction.WEST, Pointing.RIGHT, lever, 20 * (westWheels.size() - westWheels.indexOf(wheel)) + 10);
-            if (wheel.equals(westWheels.get(0))) {
-                scene.overlay().showText(160)
-                    .text(tint(ChatFormatting.GRAY, "You can do that by left-clicking a flanged cogwheel with the Cog Alignment Lever"))
-                    .placeNearTarget()
-                    .pointAt(util.vector().blockSurface(wheel, Direction.WEST));
-            }
         }
         scene.idle(10);
         scene.rotateCameraY(EAST_YAW - DEFAULT_YAW);
@@ -275,20 +276,21 @@ public final class BntBobScenes {
         caption(scene, "The first thing you can do is " + tint(ChatFormatting.YELLOW, "move already-placed cogwheels however you want them")
             + ChatFormatting.RESET + ".", 80);
 
-        Direction[] everyZone = {null, Direction.UP, Direction.SOUTH, Direction.DOWN, Direction.NORTH};
-        scene.addInstruction(new Zones(tiny, Direction.WEST, rest, everyZone, 6, 120));
-        scene.overlay().showText(110)
-            .text(tint(ChatFormatting.GRAY, "You can shift cogwheels up to 16 pixels, in all directions"))
+        Vec3 face = util.vector().blockSurface(tiny, Direction.WEST).add(rest);
+        scene.overlay().showText(150)
+            .text(tint(ChatFormatting.GRAY, "In Offset mode, right-click a cogwheel to select it, Shift + scroll to pick a direction, and scroll to move it up to 16 pixels"))
             .placeNearTarget()
-            .pointAt(util.vector().blockSurface(tiny, Direction.WEST).add(rest));
+            .pointAt(face);
         scene.addKeyframe();
-        scene.idle(130);
-
-        scene.addInstruction(new Zones(tiny, Direction.WEST, rest, new Direction[]{Direction.UP}, 1, 90));
-        scene.idle(15);
+        scene.idle(20);
+        scene.overlay().showControls(face, Pointing.RIGHT, 15).rightClick().withItem(lever);
+        scene.idle(10);
+        scene.addInstruction(new Selected(tiny, rest, 120));
+        scene.idle(25);
+        scene.overlay().showControls(face, Pointing.RIGHT, 15).scroll().whileSneaking().withItem(lever);
+        scene.idle(25);
         for (int px = 1; px <= 3; px++) {
-            Vec3 target = zoneBox(world, tiny, Direction.WEST, Direction.UP).getCenter().add(0.0, (px - 1) / 16.0, 0.0).add(rest);
-            scene.overlay().showControls(target, Pointing.RIGHT, 10).rightClick().withItem(lever);
+            scene.overlay().showControls(face.add(0.0, (px - 1) / 16.0, 0.0), Pointing.RIGHT, 10).scroll().withItem(lever);
             scene.idle(8);
             float offset = px / 16.0F;
             scene.world().modifyBlockEntity(tiny, KineticBlockEntity.class, be -> shift(be, offset));
@@ -299,14 +301,14 @@ public final class BntBobScenes {
         caption(scene, "Secondly, you can decide " + tint(ChatFormatting.YELLOW, "which way the track wraps around a cogwheel")
             + ChatFormatting.RESET + ".", 80);
 
-        scene.addInstruction(new Zones(tiny, Direction.WEST, rest, new Direction[]{Direction.DOWN}, 1, 90));
+        scene.addInstruction(new RimMarker(tiny, Direction.WEST, rest, Direction.DOWN, 90));
         scene.overlay().showText(120)
-            .text("By selecting which side the track wraps around, the routing switches from "
+            .text("In Route mode, right-clicking the side of a cogwheel wraps the track around that side, and the routing switches from "
                 + ChatFormatting.GREEN + "automatic" + ChatFormatting.RESET + " to " + ChatFormatting.YELLOW + "manual");
         scene.addKeyframe();
         scene.idle(40);
         Vec3 bottom = zoneBox(world, tiny, Direction.WEST, Direction.DOWN).getCenter().add(0.0, SHIFT, 0.0).add(rest);
-        scene.overlay().showControls(bottom, Pointing.RIGHT, 15).leftClick().whileSneaking().withItem(lever);
+        scene.overlay().showControls(bottom, Pointing.RIGHT, 15).rightClick().withItem(lever);
         scene.idle(10);
         scene.world().modifyBlockEntity(tiny, KineticBlockEntity.class, BntBobScenes::wrapUnder);
         scene.idle(90);
@@ -353,15 +355,17 @@ public final class BntBobScenes {
         scene.idle(40);
         caption(scene, "And that is adjusting the track's tension to suit your needs, or your taste.", 90);
 
-        int highlight = 140 + 10 + 10 * TENSION_STEP_TICKS + 30 + 80 + 10 + 10 * TENSION_STEP_TICKS + 40;
-        scene.addInstruction(new BeltHighlight(controller, rest, RUN_MIDDLE, highlight, 120));
+        int highlight = 140 + 20 + 10 + 10 * TENSION_STEP_TICKS + 30 + 80 + 10 + 10 * TENSION_STEP_TICKS + 40;
+        scene.addInstruction(new BeltHighlight(controller, rest, RUN_MIDDLE, highlight, 120, 140 + 10));
         scene.overlay().showText(130)
-            .text("By looking at any point on the track, and shift-right-clicking on it with the Cog Alignment Lever, you can "
-                + ChatFormatting.RED + "slack" + ChatFormatting.RESET + " the track.");
+            .text("In Tension mode, right-click any point on the track with the Cog Alignment Lever to select it, then scroll down to "
+                + ChatFormatting.RED + "slacken" + ChatFormatting.RESET + " the track.");
         scene.addKeyframe();
         scene.idle(140);
 
-        scene.overlay().showControls(run, Pointing.DOWN, 10 * TENSION_STEP_TICKS + 20).rightClick().whileSneaking().withItem(lever);
+        scene.overlay().showControls(run, Pointing.DOWN, 15).rightClick().withItem(lever);
+        scene.idle(20);
+        scene.overlay().showControls(run, Pointing.DOWN, 10 * TENSION_STEP_TICKS + 20).scroll().withItem(lever);
         scene.idle(10);
         List<TextWindowElement> slacker = new ArrayList<>();
         for (int step = 9; step >= 0; step--) {
@@ -374,9 +378,9 @@ public final class BntBobScenes {
         }
         scene.idle(30);
 
-        caption(scene, "And when instead right-clicking...", 70);
+        caption(scene, "And when scrolling up instead...", 70);
 
-        scene.overlay().showControls(run, Pointing.DOWN, 10 * TENSION_STEP_TICKS + 20).rightClick().withItem(lever);
+        scene.overlay().showControls(run, Pointing.DOWN, 10 * TENSION_STEP_TICKS + 20).scroll().withItem(lever);
         scene.idle(10);
         List<TextWindowElement> tighter = new ArrayList<>();
         for (int step = 1; step <= 10; step++) {
@@ -520,7 +524,7 @@ public final class BntBobScenes {
 
     private static void enable(CreateSceneBuilder scene, SceneBuildingUtil util, BlockPos wheel, Direction face, Pointing pointing,
                                ItemStack lever, int outline) {
-        scene.overlay().showControls(util.vector().blockSurface(wheel, face), pointing, 10).leftClick().withItem(lever);
+        scene.overlay().showControls(util.vector().blockSurface(wheel, face), pointing, 10).rightClick().withItem(lever);
         scene.idle(8);
         scene.world().restoreBlocks(util.select().position(wheel));
         scene.effects().indicateSuccess(wheel);
@@ -653,22 +657,22 @@ public final class BntBobScenes {
     }
 
     private static final class BeltHighlight extends TickingInstruction {
-        private static final int LINE_COLOUR = 0x40FF60;
         private static final int POINTER_COLOUR = 0xFFFFFF;
-        private static final float LINE_WIDTH = 1.0F / 48.0F;
         private static final float POINTER_SIZE = 1.0F / 6.0F;
 
         private final BlockPos controller;
         private final Vec3 rest;
         private final Vec3 middle;
         private final int sweep;
+        private final int selectAt;
 
-        BeltHighlight(BlockPos controller, Vec3 rest, Vec3 middle, int ticks, int sweep) {
+        BeltHighlight(BlockPos controller, Vec3 rest, Vec3 middle, int ticks, int sweep, int selectAt) {
             super(false, ticks);
             this.controller = controller;
             this.rest = rest;
             this.middle = middle;
             this.sweep = sweep;
+            this.selectAt = selectAt;
         }
 
         @Override
@@ -694,12 +698,15 @@ public final class BntBobScenes {
 
             Vec3 base = Vec3.atLowerCornerOf(controller).add(rest);
             List<Vec3> ends = edges(shape);
+            int elapsed = totalTicks - remainingTicks;
+            boolean selected = elapsed >= selectAt;
+            int colour = selected ? BntToolVisuals.SELECTED : BntToolVisuals.HOVER;
+            float width = selected ? BntToolVisuals.BOLD : BntToolVisuals.THIN;
             for (int i = 0; i + 1 < ends.size(); i += 2) {
                 scene.getOutliner().showLine(List.of(this, i), ends.get(i).add(base), ends.get(i + 1).add(base))
-                    .colored(LINE_COLOUR).lineWidth(LINE_WIDTH).disableLineNormals();
+                    .colored(colour).lineWidth(width).disableLineNormals();
             }
 
-            int elapsed = totalTicks - remainingTicks;
             double swing = elapsed < sweep ? Math.sin(2.0 * Math.PI * elapsed / SWEEP_PERIOD) : 0.0;
             float centre = shape.getChainPosition(middle.subtract(Vec3.atLowerCornerOf(controller)));
             double side = Math.max(chain.getChainType().getRenderType().getWidth(), chain.getChainType().getRenderType().getHeight()) / 32.0
@@ -991,28 +998,43 @@ public final class BntBobScenes {
         }
     }
 
-    private static final class Zones extends TickingInstruction {
+    private static final class RimMarker extends TickingInstruction {
         private final BlockPos cog;
         private final Direction face;
         private final Vec3 rest;
-        private final Direction[] cycle;
-        private final int step;
+        private final Direction side;
 
-        Zones(BlockPos cog, Direction face, Vec3 rest, Direction[] cycle, int step, int ticks) {
+        RimMarker(BlockPos cog, Direction face, Vec3 rest, Direction side, int ticks) {
             super(false, ticks);
             this.cog = cog;
             this.face = face;
             this.rest = rest;
-            this.cycle = cycle;
-            this.step = step;
+            this.side = side;
         }
 
         @Override
         public void tick(PonderScene scene) {
             super.tick(scene);
-            Direction zone = cycle[(totalTicks - remainingTicks - 1) / step % cycle.length];
-            AABB box = zoneBox(scene.getWorld(), cog, face, zone).move(rest);
+            AABB box = zoneBox(scene.getWorld(), cog, face, side).move(rest);
             scene.getOutliner().showAABB(this, box).colored(BntToolVisuals.HOVER).lineWidth(BntToolVisuals.THIN);
+        }
+    }
+
+    private static final class Selected extends TickingInstruction {
+        private final BlockPos cog;
+        private final Vec3 rest;
+
+        Selected(BlockPos cog, Vec3 rest, int ticks) {
+            super(false, ticks);
+            this.cog = cog;
+            this.rest = rest;
+        }
+
+        @Override
+        public void tick(PonderScene scene) {
+            super.tick(scene);
+            AABB box = BntToolVisuals.shapeBox(scene.getWorld(), cog).move(rest).inflate(BntToolVisuals.BOLD);
+            scene.getOutliner().showAABB(this, box).colored(BntToolVisuals.SELECTED).lineWidth(BntToolVisuals.BOLD);
         }
     }
 

@@ -12,7 +12,6 @@ import java.util.List;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
-import net.createmod.ponder.api.element.InputElementBuilder;
 import net.createmod.ponder.api.element.ParrotElement;
 import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.level.PonderLevel;
@@ -347,11 +346,15 @@ public final class BntSuspensionScenes {
 
         scene.addInstruction(BntPonderCamera.glide(WEST_TRACK.add(resting), TRACK_ZOOM, ZOOM_TILT, WEST_TURN, 35));
         scene.idle(45);
-        BntBobScenes.caption(scene, "The Suspension Tool has " + BntBobScenes.tint(ChatFormatting.YELLOW, "4 different modes") + ChatFormatting.RESET
-            + " and " + BntBobScenes.tint(ChatFormatting.GOLD, "different groupings") + ChatFormatting.RESET + ".", 100);
+        BntBobScenes.caption(scene, "The Suspension Tool has " + BntBobScenes.tint(ChatFormatting.YELLOW, "4 modes") + ChatFormatting.RESET
+            + ", switched by holding Alt and scrolling, and Ctrl + left-click switches between "
+            + BntBobScenes.tint(ChatFormatting.GOLD, "one cogwheel") + ChatFormatting.RESET + " and "
+            + BntBobScenes.tint(ChatFormatting.GOLD, "the whole track") + ChatFormatting.RESET + ".", 120);
 
         scene.addInstruction(dial.raise(true));
         scene.idle(45);
+        scene.overlay().showControls(westTop, Pointing.DOWN, 15).rightClick().withItem(tool);
+        scene.idle(10);
         scene.addInstruction(rig.outline(new AABB(first)));
         scene.addInstruction(dial.look(first));
         scene.idle(40);
@@ -359,14 +362,14 @@ public final class BntSuspensionScenes {
         BntBobScenes.caption(scene, "The gauge on the tool shows the current level of the selected setting.", 90);
 
         for (int i = 1; i <= BntTuning.values().length; i++) {
-            scene.overlay().showControls(westTop, Pointing.DOWN, 15).leftClick().whileSneaking().withItem(tool);
+            scene.overlay().showControls(westTop, Pointing.DOWN, 15).scroll().withItem(tool);
             scene.idle(6);
             scene.addInstruction(dial.mode(BntTuning.byIndex(i)));
             scene.idle(MODE_TICKS);
         }
         scene.idle(10);
 
-        scene.overlay().showText(120).text("Right-click to increase the value, and shift-right-click to decrease it.");
+        scene.overlay().showText(120).text("Right-click a cogwheel to select it, then scroll up or down to change the value.");
         scene.addKeyframe();
         scene.idle(30);
         tuneThrough(scene, dial, List.of(first), westTop, tool);
@@ -374,7 +377,9 @@ public final class BntSuspensionScenes {
         scene.addInstruction(rig.outline(null));
         scene.addInstruction(dial.look(null));
         scene.addInstruction(BntPonderCamera.glide(EAST_TRACK.add(resting), TRACK_ZOOM, 0.0F, ACROSS_TURN, 50));
-        scene.idle(60);
+        scene.idle(50);
+        scene.overlay().showControls(eastTop, Pointing.DOWN, 15).rightClick().withItem(tool);
+        scene.idle(10);
         scene.addInstruction(rig.outline(new AABB(bogie.get(0)).minmax(new AABB(bogie.get(1)))));
         scene.addInstruction(dial.look(bogie.get(0)));
         scene.idle(30);
@@ -405,11 +410,7 @@ public final class BntSuspensionScenes {
 
     private static void tune(CreateSceneBuilder scene, BntToolDial dial, List<BlockPos> cogs, Vec3 at, ItemStack tool, int from, int to) {
         int step = Integer.signum(to - from);
-        InputElementBuilder controls = scene.overlay().showControls(at, Pointing.DOWN, Math.abs(to - from) * TUNE_TICKS + 10)
-            .rightClick().withItem(tool);
-        if (step < 0) {
-            controls.whileSneaking();
-        }
+        scene.overlay().showControls(at, Pointing.DOWN, Math.abs(to - from) * TUNE_TICKS + 10).scroll().withItem(tool);
         scene.idle(6);
         for (int value = from + step; value != to + step; value += step) {
             scene.addInstruction(dial.tune(cogs, value));

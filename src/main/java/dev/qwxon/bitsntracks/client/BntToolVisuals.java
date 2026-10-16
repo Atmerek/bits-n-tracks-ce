@@ -5,6 +5,7 @@ import net.createmod.catnip.outliner.Outliner;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -31,7 +32,7 @@ public final class BntToolVisuals {
         return 0xFF000000 | rgb;
     }
 
-    public static AABB shapeBox(ClientLevel level, BlockPos pos) {
+    public static AABB shapeBox(BlockGetter level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         VoxelShape shape = state.getShape(level, pos);
         AABB box = shape.isEmpty() ? new AABB(BlockPos.ZERO) : shape.bounds();
