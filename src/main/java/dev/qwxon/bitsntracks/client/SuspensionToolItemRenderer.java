@@ -18,9 +18,8 @@ public class SuspensionToolItemRenderer extends CustomRenderedItemModelRenderer 
     private static final PartialModel NEEDLE = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/needle"));
     private static final PartialModel TICK = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/tick"));
     private static final PartialModel SCREEN = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/screen"));
-    private static final float PIVOT_X = (7.5F - 8.0F) / 16.0F;
-    private static final float PIVOT_Y = (25.5F - 8.0F) / 16.0F;
-    private static final float NEEDLE_MODEL_ANGLE = 90.0F;
+    private static final float PIVOT_X = (8.8F - 8.0F) / 16.0F;
+    private static final float PIVOT_Y = (9.75F - 8.0F) / 16.0F;
 
     protected void render(
         ItemStack stack,
@@ -55,7 +54,7 @@ public class SuspensionToolItemRenderer extends CustomRenderedItemModelRenderer 
             ms.popPose();
         }
 
-        aroundDial(ms, BntTunerGauge.needleAngle(stack) + NEEDLE_MODEL_ANGLE);
+        aroundDial(ms, BntTunerGauge.needleAngle(stack));
         renderer.render(NEEDLE.get(), cutout, light);
         ms.popPose();
     }
@@ -63,7 +62,7 @@ public class SuspensionToolItemRenderer extends CustomRenderedItemModelRenderer 
     private static void aroundDial(PoseStack ms, float degrees) {
         ms.pushPose();
         ms.translate(PIVOT_X, PIVOT_Y, 0.0F);
-        ms.mulPose(Axis.XP.rotationDegrees(degrees));
+        ms.mulPose(Axis.XN.rotationDegrees(degrees));
         ms.translate(-PIVOT_X, -PIVOT_Y, 0.0F);
     }
 }
