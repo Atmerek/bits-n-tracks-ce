@@ -41,6 +41,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - The Cog Alignment Lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
 - The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.
 - Tracks and Suspension Pieces add to a vehicle's mass: 0.25 for an Industrial Belt and 0.5 for a Tank Tread whatever their length, and 0.25 for each Suspension Piece.
+- Updated the Russian translation, by Hanahaki.
 
 ### Removed
 
