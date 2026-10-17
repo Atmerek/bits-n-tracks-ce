@@ -56,6 +56,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Turning physics on or off for a cogwheel reset its alignment and visibility, and turned an industrial cogwheel wooden.
 - Create schematics turned industrial cogwheels with physics enabled wooden, and dropped every cogwheel's alignment and visibility.
 - Industrial cogwheels with physics enabled sounded like wooden ones.
+- Cogwheels with physics enabled made no sound while rolling without power.
 - Breaking a physics cogwheel by anything other than hand dropped a plain wooden cogwheel instead of the one that was placed, and breaking it with an axe or pickaxe dropped both.
 - Tracks looked wet and glossy with shader packs, and were lit as if they faced the sky.
 - A wheel pressed against a wall lost its grip as if it were in the air.

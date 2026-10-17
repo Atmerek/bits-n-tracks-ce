@@ -451,9 +451,8 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
             }
 
             this.bnt$lastExtension = this.bnt$extension;
-            if (self.getLevel() != null && self.getLevel().isClientSide) {
-                BntPhysicsEvents.updateClientVisual(self, this);
-            } else if (self.getLevel() != null
+            if (self.getLevel() != null
+                && !self.getLevel().isClientSide
                 && this.bnt$suspensionSide != 0
                 && (self.getLevel().getGameTime() + self.getBlockPos().hashCode()) % 20L == 0L
                 && !BntSuspension.stillHolds(self.getLevel(), self.getBlockPos(), self)) {
@@ -476,6 +475,7 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
     private void bnt$clientTick(CallbackInfo ci) {
         KineticBlockEntity self = (KineticBlockEntity)(Object)this;
         if (this.bnt$isPhysicsEnabled() && Sable.HELPER.getContainingClient(self) instanceof SubLevel subLevel) {
+            BntPhysicsEvents.updateClientRollingSpeed(self, this, subLevel);
             BntWheelEffects.tick(self, subLevel);
         }
     }

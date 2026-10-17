@@ -259,20 +259,6 @@ public final class BntPhysicsEvents {
         }
     }
 
-    public static void updateClientVisual(KineticBlockEntity kbe, KineticBlockEntityPhysicsAccess mixin) {
-        Level level = kbe.getLevel();
-        if (level != null && level.isClientSide) {
-            BlockState state = kbe.getBlockState();
-            if (state.hasProperty(BlockStateProperties.AXIS)) {
-                SubLevel subLevel = Sable.HELPER.getContainingClient(kbe);
-                if (subLevel != null) {
-                    mixin.bnt$setExtension(Mth.lerp(0.7, mixin.bnt$getExtension(), computeMaxExtensionVisual(kbe, mixin, subLevel)));
-                    updateClientRollingSpeed(kbe, mixin, subLevel);
-                }
-            }
-        }
-    }
-
     public record GroundContact(
         @Nullable BlockPos ground, Vec3 point, Vec3 travel, Vec3 side, double rolling, double target, double vertical
     ) {
@@ -1103,10 +1089,6 @@ public final class BntPhysicsEvents {
 
             level.playSound(null, soundPos, hitSound, SoundSource.BLOCKS, volume, pitch);
         }
-    }
-
-    private static double computeMaxExtensionVisual(KineticBlockEntity kbe, KineticBlockEntityPhysicsAccess mixin, SubLevel subLevel) {
-        return computeRenderExtensionForPose(kbe, subLevel.logicalPose(), subLevel);
     }
 
     private static double computeRenderExtensionForPose(
