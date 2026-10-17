@@ -27,6 +27,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Ctrl + left-click with the Cog Alignment Lever switches its Offset mode between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
 - A panel for the Cog Alignment Lever and the Suspension Tool, shown while holding either. It shows the current mode, the values of the cogwheel or track being worked on, and what to click or scroll.
 - Sounds for the Cog Alignment Lever and the Suspension Tool when switching modes, adjusting values, toggling settings and when an action is refused.
+- Physics cogwheels and tracks kick up dust from the ground they roll over, throw more when they spin in place or skid, and raise a burst of it when they land.
 - Ponder scenes for the flanged cogwheels, tracks, the Cog Alignment Lever, the Suspension Piece and the Suspension Tool.
 - Decorative heads of the mod's creators and contributors.
 - Cogwheels with physics enabled now block players and other entities.

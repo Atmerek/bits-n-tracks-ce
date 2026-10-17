@@ -8,6 +8,7 @@ import dev.qwxon.bitsntracks.client.BntToolInput;
 import dev.qwxon.bitsntracks.client.BntToolOutlines;
 import dev.qwxon.bitsntracks.client.BntToolSpin;
 import dev.qwxon.bitsntracks.client.BntTunerGauge;
+import dev.qwxon.bitsntracks.client.BntWheelEffects;
 import dev.qwxon.bitsntracks.client.CogAlignmentLeverItemRenderer;
 import dev.qwxon.bitsntracks.client.SuspensionToolItemRenderer;
 import dev.qwxon.bitsntracks.client.flywheel.BntFlywheel;
@@ -50,6 +51,7 @@ public class BitsNTracksClient {
         NeoForge.EVENT_BUS.addListener(BntTunerGauge::onClientTick);
         NeoForge.EVENT_BUS.addListener(BntTunerGauge::onRenderFrame);
         NeoForge.EVENT_BUS.addListener(BntToolSpin::onRenderFrame);
+        NeoForge.EVENT_BUS.addListener(BntWheelEffects::onClientTick);
         NeoForge.EVENT_BUS.addListener(BntShaderHand::onRenderFrame);
         NeoForge.EVENT_BUS.addListener(BntFlywheel::onRenderFrame);
     }

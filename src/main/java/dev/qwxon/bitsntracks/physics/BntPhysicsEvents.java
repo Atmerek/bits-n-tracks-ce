@@ -273,6 +273,68 @@ public final class BntPhysicsEvents {
         }
     }
 
+    public record GroundContact(
+        @Nullable BlockPos ground, Vec3 point, Vec3 travel, Vec3 side, double rolling, double target, double vertical
+    ) {
+        public boolean grounded() {
+            return this.ground != null;
+        }
+    }
+
+    @Nullable
+    public static GroundContact groundContact(KineticBlockEntity kbe, SubLevel subLevel) {
+        BlockState state = kbe.getBlockState();
+        Level level = kbe.getLevel();
+        if (level == null || !state.hasProperty(BlockStateProperties.AXIS)) {
+            return null;
+        }
+        Axis axis = (Axis)state.getValue(BlockStateProperties.AXIS);
+        if (axis == Axis.Y) {
+            return null;
+        }
+
+        Block block = state.getBlock();
+        Pose3dc pose = subLevel.logicalPose();
+        KineticBlockEntity track = BntCogwheelPairing.beltTwin(kbe);
+        boolean inTrack = isInTrack(kbe);
+        BntSuspension.Arm arm = BntSuspension.arm(kbe);
+        double travel = arm == null ? 0.0 : BntSuspension.travel(kbe);
+        double up = arm == null ? 0.0 : arm.upTravel(travel);
+        double down = arm == null ? 0.0 : arm.downTravel(travel);
+        Vec3 seat = getContactSeat(kbe, state);
+        double radius = getContactRadius(block, inTrack);
+        Vector3dc normalD = getTravelDirection(axis);
+        BntPhysicsEvents.Reach reach = reachGround(kbe, normalD, pose, subLevel, seat, radius, arm, up, down, 0.0, false);
+        boolean grounded = reach.grounded() && reach.cast().minInteractingBlock != null
+            && reach.rise() >= -down - (arm == null ? CONTACT_GAP : RIGID_SLOP);
+
+        double settled = arm == null ? 0.0 : Mth.clamp(reach.rise(), -down, up);
+        Vec3 centre = arm == null ? seat : seat.add(arm.displacement(settled));
+        Vec3 point = pose.transformPosition(centre.subtract(0.0, radius, 0.0));
+        Vector3d velocity = Sable.HELPER.getVelocity(level, new Vector3d(centre.x, centre.y, centre.z));
+        Vector3d localVelocity = pose.transformNormalInverse(new Vector3d(velocity));
+        Vector3dc groundNormalD = groundAxis(normalD, pose.transformNormalInverse(new Vector3d(0.0, 1.0, 0.0)));
+        double rolling = localVelocity.dot(groundNormalD);
+        double target = rolling;
+        if (inTrack && track.getSpeed() != 0.0F) {
+            double brake = level.getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
+            target = surfaceSpeed(CogwheelSizeHelper.getChainRadius(block), track.getSpeed()) * (1.0 - brake);
+        }
+
+        Vec3i sideVec = Direction.get(AxisDirection.POSITIVE, axis).getNormal();
+        Vector3d travelWorld = pose.transformNormal(new Vector3d(groundNormalD));
+        Vector3d sideWorld = pose.transformNormal(new Vector3d(sideVec.getX(), sideVec.getY(), sideVec.getZ()));
+        return new GroundContact(
+            grounded ? reach.cast().minInteractingBlock : null,
+            point,
+            new Vec3(travelWorld.x, travelWorld.y, travelWorld.z),
+            new Vec3(sideWorld.x, sideWorld.y, sideWorld.z),
+            rolling,
+            target,
+            velocity.y
+        );
+    }
+
     /** Drop the chain is shaped by, raw terrain only. */
     public static double getClientRenderExtension(KineticBlockEntity kbe, float partialTick) {
         return getRawRenderExtension(kbe, partialTick);
@@ -477,12 +539,19 @@ public final class BntPhysicsEvents {
         KineticBlockEntity kbe, Vector3dc normalD, Pose3dc pose, SubLevel subLevel, Vec3 seat, double radius,
         @Nullable BntSuspension.Arm arm, double up, double down, double carried
     ) {
+        return reachGround(kbe, normalD, pose, subLevel, seat, radius, arm, up, down, carried, true);
+    }
+
+    private static BntPhysicsEvents.Reach reachGround(
+        KineticBlockEntity kbe, Vector3dc normalD, Pose3dc pose, SubLevel subLevel, Vec3 seat, double radius,
+        @Nullable BntSuspension.Arm arm, double up, double down, double carried, boolean shared
+    ) {
         double rise = 0.0;
         BntPhysicsEvents.TerrainCastResult cast = null;
         for (int iteration = 0; iteration < ARM_ITERATIONS; iteration++) {
             double at = Mth.clamp(rise, -down, up);
             Vec3 centre = arm == null ? seat : seat.add(arm.displacement(at));
-            cast = computeMaxExtensionToTerrain(kbe, centre, radius, radius + up - at, radius + down + at + 1.0, normalD, pose, subLevel);
+            cast = computeMaxExtensionToTerrain(kbe, centre, radius, radius + up - at, radius + down + at + 1.0, normalD, pose, subLevel, shared);
             if (cast.minInteractingBlock == null && cast.maxExtension >= NO_GROUND) {
                 return new BntPhysicsEvents.Reach(-NO_GROUND, cast, false);
             }
@@ -1059,12 +1128,12 @@ public final class BntPhysicsEvents {
 
     private static BntPhysicsEvents.TerrainCastResult computeMaxExtensionToTerrain(
         KineticBlockEntity kbe, Vec3 centre, double radius, double above, double below,
-        Vector3dc normalD, Pose3dc pose, SubLevel containingSubLevel
+        Vector3dc normalD, Pose3dc pose, SubLevel containingSubLevel, boolean shared
     ) {
         Vec3 sampleAxis = JOMLConversion.toMojang(normalD).normalize();
         long now = kbe.getLevel().getGameTime();
         double[] castKey = castKey(pose, centre, sampleAxis, radius, above, below);
-        if (kbe instanceof KineticBlockEntityPhysicsAccess cached
+        if (shared && kbe instanceof KineticBlockEntityPhysicsAccess cached
             && cached.bnt$getTerrainCast() instanceof BntPhysicsEvents.TerrainCast cast
             && cast.matches(now, containingSubLevel, castKey)) {
             return cast.result;
@@ -1154,7 +1223,7 @@ public final class BntPhysicsEvents {
             }
         }
 
-        if (kbe instanceof KineticBlockEntityPhysicsAccess access) {
+        if (shared && kbe instanceof KineticBlockEntityPhysicsAccess access) {
             if (minInteractingBlock != null) {
                 access.bnt$setLastTerrainExtension(minExtension);
             } else if (blocked && Double.isFinite(access.bnt$getLastTerrainExtension())) {
@@ -1164,7 +1233,7 @@ public final class BntPhysicsEvents {
 
         BntPhysicsEvents.TerrainCastResult result =
             new BntPhysicsEvents.TerrainCastResult(minExtension, minNormal, minHitSubLevel, minInteractingBlock);
-        if (kbe instanceof KineticBlockEntityPhysicsAccess access) {
+        if (shared && kbe instanceof KineticBlockEntityPhysicsAccess access) {
             access.bnt$setTerrainCast(new BntPhysicsEvents.TerrainCast(now, containingSubLevel, castKey, result));
         }
         return result;

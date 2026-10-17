@@ -8,6 +8,7 @@ import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.client.BntWheelEffects;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntLegacyCogwheels;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
@@ -23,7 +24,9 @@ import dev.qwxon.bitsntracks.physics.BntPhysicsRegistry;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
@@ -459,6 +462,21 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
                 BntChainEngagement.refresh(self.getLevel(), self.getBlockPos(), engagementBefore);
                 BntBeltRefit.queue(self.getLevel(), self.getBlockPos());
             }
+        }
+    }
+
+    @Inject(
+        method = {"tick"},
+        at = {@At(
+            value = "INVOKE",
+            target = "Lnet/createmod/catnip/platform/services/PlatformHelper;executeOnClientOnly(Ljava/util/function/Supplier;)V",
+            remap = false
+        )}
+    )
+    private void bnt$clientTick(CallbackInfo ci) {
+        KineticBlockEntity self = (KineticBlockEntity)(Object)this;
+        if (this.bnt$isPhysicsEnabled() && Sable.HELPER.getContainingClient(self) instanceof SubLevel subLevel) {
+            BntWheelEffects.tick(self, subLevel);
         }
     }
 
