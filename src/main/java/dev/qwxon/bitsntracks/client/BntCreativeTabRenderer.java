@@ -15,7 +15,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class BntCreativeTabRenderer {
-    private static final ResourceLocation BANNER = BitsNTracks.asResource("textures/gui/sprites/bitsntracks_banner.png");
+    private static final ResourceLocation BANNER = BitsNTracks.asResource("textures/gui/bitsntracks_banner.png");
     private static final ResourceLocation BANNER_STILL = BitsNTracks.asResource("bitsntracks_banner_still");
     private static final int BANNER_FRAMES = 15;
     private static final long FRAME_MILLIS = 300L;

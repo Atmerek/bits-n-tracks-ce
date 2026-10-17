@@ -67,6 +67,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - The Small Physical Flanged Cogwheel was drawn larger than the other cogwheels in inventories, and turned differently in item frames.
 - The Cog Alignment Lever stacked up to 64.
 - A cogwheel with physics enabled added no mass to its vehicle.
+- The creative tab banner was stretched while hovered with some texture animation mods installed.
 
 ## 2.1.0
 
