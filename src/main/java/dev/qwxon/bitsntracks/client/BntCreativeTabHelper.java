@@ -42,6 +42,7 @@ public class BntCreativeTabHelper {
             new ItemStack((ItemLike)BitsNTracksItems.SUSPENSION_TOOL.get()),
             new ItemStack((ItemLike)BitsNTracksItems.SUSPENSION_PIECE.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.get()),
+            new ItemStack((ItemLike)BitsNTracksBlocks.INTERMEDIATE_FLANGED_COGWHEEL.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get()),
             new ItemStack((ItemLike)BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.get()),

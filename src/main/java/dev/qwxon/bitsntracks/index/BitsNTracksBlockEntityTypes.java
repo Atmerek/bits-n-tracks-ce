@@ -24,6 +24,7 @@ public class BitsNTracksBlockEntityTypes {
         .visual(() -> BntCogwheelVisual::new, true)
         .validBlocks(
             BitsNTracksBlocks.TINY_FLANGED_COGWHEEL,
+            BitsNTracksBlocks.INTERMEDIATE_FLANGED_COGWHEEL,
             BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL,
             BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL,
             BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL,

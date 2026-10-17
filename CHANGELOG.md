@@ -21,7 +21,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - The run of track between cogwheels now meets the ground. It drapes over terrain, carries the vehicle over what it crosses, and grips and drives along its length.
 - Track tension. In the Cog Alignment Lever's Tension mode, right-click a track to select it and scroll to tighten or slacken it.
 - Tank Tread, a plated track made in a Mechanical Crafter and strung between cogwheels like the Industrial Belt.
-- Intermediate Industrial Flanged Cogwheel, a size between tiny and small.
+- Intermediate Physical Flanged Cogwheel and Intermediate Industrial Flanged Cogwheel, a size between tiny and small.
 - Suspension Piece, which mounts a swinging arm on a physics cogwheel, or a bogie across two small, intermediate or tiny cogwheels of the same size, two-wide ones included. It is crafted with the spring from Create Aeronautics.
 - Suspension Tool, which reads and tunes a suspended cogwheel's stiffness, damping, travel and spring strength over 11 levels, for one cogwheel or a whole track at once.
 - Ctrl + left-click with the Cog Alignment Lever switches its Offset mode between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.

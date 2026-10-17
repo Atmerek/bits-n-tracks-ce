@@ -1,6 +1,7 @@
 {
   "values": [
     "bits_n_tracks:tiny_flanged_cogwheel",
+    "bits_n_tracks:intermediate_flanged_cogwheel",
     "bits_n_tracks:flanged_cogwheel",
     "bits_n_tracks:medium_flanged_cogwheel",
     "bits_n_tracks:large_flanged_cogwheel",

@@ -77,7 +77,7 @@ public final class BntLegacyCogwheels {
     private static Block wooden(CogwheelSize size) {
         return switch (size) {
             case TINY -> BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.get();
-            case INTERMEDIATE -> BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL.get();
+            case INTERMEDIATE -> BitsNTracksBlocks.INTERMEDIATE_FLANGED_COGWHEEL.get();
             case SMALL -> BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get();
             case MEDIUM -> BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get();
             case LARGE -> BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.get();

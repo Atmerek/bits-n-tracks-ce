@@ -12,6 +12,7 @@ public final class BntPonderScenes {
     public static void register(PonderSceneRegistrationHelper<ResourceLocation> helper) {
         helper.forComponents(
                 BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.getId(),
+                BitsNTracksBlocks.INTERMEDIATE_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.getId(),
