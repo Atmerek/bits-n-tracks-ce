@@ -17,6 +17,7 @@ public final class BntTankTread {
     private static final double SHEET_V = 16.0;
 
     public static final double CELL = 4.0 * PX;
+    private static final double MIN_SPAN = 1.0E-3;
     private static final double CELL_START = -2.0;
     private static final double CENTRE_Y = 1.0;
     private static final int WHITE = -1;
@@ -95,12 +96,12 @@ public final class BntTankTread {
         Target target, List<Vec3> source, List<Vec3> destination, double start, double span, boolean wide,
         boolean frameTopOutward
     ) {
-        if (source.size() != 4 || destination.size() != 4 || span <= 1.0E-6) {
+        if (source.size() != 4 || destination.size() != 4 || span <= MIN_SPAN) {
             return;
         }
 
         double rate = target.sink() == null ? 0.0 : target.sink().scrollRate();
-        double ahead = target.sink() == null ? 0.0 : Math.abs(rate) * target.sink().reach();
+        double ahead = target.sink() == null ? 0.0 : Math.min(Math.abs(rate) * target.sink().reach(), span);
         Segment segment = new Segment(target, source, destination, frameTopOutward ? 1.0 : -1.0, rate / span);
         double from = rate < 0.0 ? start - ahead : start;
         double to = rate > 0.0 ? start + span + ahead : start + span;
