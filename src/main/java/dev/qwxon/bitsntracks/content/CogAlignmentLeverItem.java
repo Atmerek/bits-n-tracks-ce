@@ -60,6 +60,11 @@ public class CogAlignmentLeverItem extends Item {
     }
 
     @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        return slotChanged || !ItemStack.isSameItem(oldStack, newStack);
+    }
+
+    @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("tooltip.bits_n_tracks.alignment.mode",
                 Component.translatable(mode(stack).translationKey()).withStyle(ChatFormatting.GOLD))
