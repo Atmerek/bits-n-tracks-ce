@@ -30,6 +30,7 @@
         "BntEntityCollideMixin",
         "BntBlockEntityLoadMixin",
         "SmartBlockEntitySchematicMixin",
+        "RapierPhysicsPipelineMixin",
         "accessor.RotationPropagatorAccessor"
     ],
     "client": [
