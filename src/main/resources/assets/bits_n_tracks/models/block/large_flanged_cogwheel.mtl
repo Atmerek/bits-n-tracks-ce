@@ -1,0 +1,14 @@
+newmtl planks
+map_Kd #planks
+
+newmtl log
+map_Kd #log
+
+newmtl axis_top
+map_Kd #axis_top
+
+newmtl axis
+map_Kd #axis
+
+newmtl belt
+map_Kd #belt

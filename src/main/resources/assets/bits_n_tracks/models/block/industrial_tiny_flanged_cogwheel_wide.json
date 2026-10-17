@@ -1,12 +1,10 @@
 {
-	"format_version": "1.21.11",
-	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"render_type": "minecraft:cutout",
 	"textures": {
-		"0": "create:block/cogwheel_axis",
-		"1": "create:block/axis_top",
-		"3": "bits_n_tracks:block/industrial_tiny_flanged_cogwheel",
+		"axis": "create:block/axis",
+		"axis_top": "create:block/axis_top",
+		"gear": "bits_n_tracks:block/industrial_tiny_flanged_cogwheel",
 		"particle": "bits_n_tracks:block/industrial_tiny_flanged_cogwheel"
 	},
 	"elements": [
@@ -15,36 +13,36 @@
 			"from": [6, 0, 6],
 			"to": [10, 16, 10],
 			"faces": {
-				"north": {"uv": [6, 0, 10, 16], "rotation": 180, "texture": "#0"},
-				"east": {"uv": [6, 0, 10, 16], "rotation": 180, "texture": "#0"},
-				"south": {"uv": [6, 0, 10, 16], "rotation": 180, "texture": "#0"},
-				"west": {"uv": [6, 0, 10, 16], "rotation": 180, "texture": "#0"},
-				"up": {"uv": [6, 6, 10, 10], "texture": "#1"},
-				"down": {"uv": [6, 6, 10, 10], "texture": "#1"}
+				"north": {"uv": [6, 0, 10, 16], "rotation": 180, "texture": "#axis"},
+				"east": {"uv": [6, 0, 10, 16], "rotation": 180, "texture": "#axis"},
+				"south": {"uv": [6, 0, 10, 16], "rotation": 180, "texture": "#axis"},
+				"west": {"uv": [6, 0, 10, 16], "rotation": 180, "texture": "#axis"},
+				"up": {"uv": [6, 6, 10, 10], "texture": "#axis_top"},
+				"down": {"uv": [6, 6, 10, 10], "texture": "#axis_top"}
 			}
 		},
 		{
-			"from": [4, 2, 4],
-			"to": [12, 5, 12],
-			"rotation": {"angle": 0, "axis": "y", "origin": [0, 16, 0]},
-			"faces": {
-				"north": {"uv": [5.5, 5, 9.5, 6.5], "rotation": 180, "texture": "#3"},
-				"east": {"uv": [5.5, 5, 9.5, 6.5], "rotation": 180, "texture": "#3"},
-				"south": {"uv": [5.5, 5, 9.5, 6.5], "rotation": 180, "texture": "#3"},
-				"west": {"uv": [5.5, 5, 9.5, 6.5], "rotation": 180, "texture": "#3"},
-				"up": {"uv": [5.5, 4.5, 9.5, 0.5], "texture": "#3"},
-				"down": {"uv": [5.5, 4.5, 9.5, 0.5], "rotation": 180, "texture": "#3"}
-			}
-		},
-		{
-			"from": [5, 5, 5],
+			"name": "cube",
+			"from": [5, 4.5, 5],
 			"to": [11, 16, 11],
-			"shade": false,
 			"faces": {
-				"north": {"uv": [1, 3, 4, 6], "rotation": 180, "texture": "#3"},
-				"east": {"uv": [1, 3, 4, 6], "rotation": 180, "texture": "#3"},
-				"south": {"uv": [1, 3, 4, 6], "rotation": 180, "texture": "#3"},
-				"west": {"uv": [1, 3, 4, 6], "rotation": 180, "texture": "#3"}
+				"north": {"uv": [1, 2.5, 4, 6], "rotation": 180, "texture": "#gear"},
+				"east": {"uv": [1, 2.5, 4, 6], "rotation": 180, "texture": "#gear"},
+				"south": {"uv": [1, 2.5, 4, 6], "rotation": 180, "texture": "#gear"},
+				"west": {"uv": [1, 2.5, 4, 6], "rotation": 180, "texture": "#gear"}
+			}
+		},
+		{
+			"name": "cube",
+			"from": [4, 2.5, 4],
+			"to": [12, 4.5, 12],
+			"faces": {
+				"north": {"uv": [5.5, 5, 9.5, 6], "rotation": 180, "texture": "#gear"},
+				"east": {"uv": [5.5, 5, 9.5, 6], "rotation": 180, "texture": "#gear"},
+				"south": {"uv": [5.5, 5, 9.5, 6], "rotation": 180, "texture": "#gear"},
+				"west": {"uv": [5.5, 5, 9.5, 6], "rotation": 180, "texture": "#gear"},
+				"up": {"uv": [10.5, 4.5, 14.5, 0.5], "texture": "#gear"},
+				"down": {"uv": [5.5, 4.5, 9.5, 0.5], "rotation": 180, "texture": "#gear"}
 			}
 		}
 	]

@@ -1,0 +1,8 @@
+newmtl axis_top
+map_Kd #axis_top
+
+newmtl cogwheel_axis
+map_Kd #cogwheel_axis
+
+newmtl gear
+map_Kd #gear
