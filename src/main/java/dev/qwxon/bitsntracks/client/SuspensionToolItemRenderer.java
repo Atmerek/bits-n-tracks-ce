@@ -18,6 +18,7 @@ public class SuspensionToolItemRenderer extends CustomRenderedItemModelRenderer 
     private static final PartialModel NEEDLE = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/needle"));
     private static final PartialModel TICK = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/tick"));
     private static final PartialModel SCREEN = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/screen"));
+    private static final PartialModel GEAR = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/gear"));
     private static final float PIVOT_X = (8.8F - 8.0F) / 16.0F;
     private static final float PIVOT_Y = (9.75F - 8.0F) / 16.0F;
 
@@ -47,6 +48,11 @@ public class SuspensionToolItemRenderer extends CustomRenderedItemModelRenderer 
     private static void renderBody(ItemStack stack, CustomRenderedItemModel model, PartialItemModelRenderer renderer, PoseStack ms, int light) {
         RenderType cutout = Sheets.cutoutBlockSheet();
         renderer.render(model.getOriginalModel(), cutout, light);
+
+        ms.pushPose();
+        ms.mulPose(Axis.YP.rotationDegrees(BntToolSpin.angle()));
+        renderer.render(GEAR.get(), cutout, light);
+        ms.popPose();
 
         for (int level = BntTuning.MIN; level <= BntTuning.MAX; level++) {
             aroundDial(ms, BntTunerGauge.levelAngle(level));

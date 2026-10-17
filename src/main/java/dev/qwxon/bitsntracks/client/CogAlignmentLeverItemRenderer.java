@@ -7,7 +7,6 @@ import com.simibubi.create.foundation.item.render.CustomRenderedItemModelRendere
 import com.simibubi.create.foundation.item.render.PartialItemModelRenderer;
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.qwxon.bitsntracks.BitsNTracks;
-import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +26,7 @@ public class CogAlignmentLeverItemRenderer extends CustomRenderedItemModelRender
     ) {
         renderer.render(model.getOriginalModel(), light);
         ms.pushPose();
-        ms.mulPose(Axis.YP.rotationDegrees(AnimationTickHolder.getRenderTime() * 8.0F % 360.0F));
+        ms.mulPose(Axis.YP.rotationDegrees(BntToolSpin.angle()));
         renderer.render(GEAR.get(), light);
         ms.popPose();
     }

@@ -115,6 +115,7 @@ public final class BntToolInput {
         if (steps == 0) {
             return;
         }
+        BntToolSpin.kick(steps);
 
         if (focused) {
             cycleMode(stack, lever, steps < 0 ? 1 : -1);
