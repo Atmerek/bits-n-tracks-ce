@@ -77,7 +77,7 @@ public final class BntToolState {
     @Nullable
     static Axis blockAxis(ClientLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
-        return state.hasProperty(BlockStateProperties.AXIS) ? (Axis)state.getValue(BlockStateProperties.AXIS) : null;
+        return state.hasProperty(BlockStateProperties.AXIS) ? state.getValue(BlockStateProperties.AXIS) : null;
     }
 
     static int axisRow(ClientLevel level, BlockPos pos) {

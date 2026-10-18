@@ -73,11 +73,11 @@ public class CogAlignmentLeverItem extends Item {
         BlockState state = level.getBlockState(pos);
         BlockEntity be = level.getBlockEntity(pos);
         if (steps == 0 || !state.hasProperty(BlockStateProperties.AXIS)
-            || !(be instanceof KineticBlockEntity) || !(be instanceof KineticBlockEntityPhysicsAccess access)) {
+            || !(be instanceof KineticBlockEntity kinetic) || !(be instanceof KineticBlockEntityPhysicsAccess access)) {
             return;
         }
 
-        Axis blockAxis = (Axis)state.getValue(BlockStateProperties.AXIS);
+        Axis blockAxis = state.getValue(BlockStateProperties.AXIS);
         float delta = STEP * steps;
         if (moveAxis == blockAxis && !wholeTrack && BntSuspension.isBogie(be)) {
             BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.bogie.axle"));
@@ -135,14 +135,14 @@ public class CogAlignmentLeverItem extends Item {
 
         if (!moved.isEmpty()) {
             for (BlockPos nodePos : moved) {
-                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic) {
-                    kinetic.setChanged();
-                    kinetic.sendData();
+                if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity node) {
+                    node.setChanged();
+                    node.sendData();
                 }
             }
         } else {
-            be.setChanged();
-            ((KineticBlockEntity)be).sendData();
+            kinetic.setChanged();
+            kinetic.sendData();
             BntCogwheelPairing.pushSettingsToPartner(level, pos);
         }
 

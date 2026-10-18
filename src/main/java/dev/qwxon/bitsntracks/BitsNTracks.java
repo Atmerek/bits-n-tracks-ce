@@ -17,6 +17,7 @@ import dev.qwxon.bitsntracks.physics.BntStressValues;
 import net.createmod.catnip.lang.FontHelper.Palette;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -25,7 +26,7 @@ import net.neoforged.fml.config.ModConfig.Type;
 @Mod("bits_n_tracks")
 public class BitsNTracks {
     public static final String MOD_ID = "bits_n_tracks";
-    public static final CreateRegistrate REGISTRATE = (CreateRegistrate)CreateRegistrate.create("bits_n_tracks").defaultCreativeTab((ResourceKey)null);
+    public static final CreateRegistrate REGISTRATE = CreateRegistrate.create(MOD_ID).defaultCreativeTab((ResourceKey<CreativeModeTab>)null);
 
     public BitsNTracks(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(Type.CLIENT, BntClientConfig.SPEC);

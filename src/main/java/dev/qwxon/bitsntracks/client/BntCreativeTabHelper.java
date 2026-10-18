@@ -4,61 +4,64 @@ import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 
-public class BntCreativeTabHelper {
-    public static int CURRENT_ROW = 0;
-    public static int BNB_ROW = 0;
-    public static int BNT_ROW = 0;
+public final class BntCreativeTabHelper {
+    private static final int ROW = 9;
+    private static final List<Supplier<? extends ItemLike>> ITEMS = List.of(
+        BitsNTracksItems.INDUSTRIAL_BELT,
+        BitsNTracksItems.TANK_TREAD,
+        BitsNTracksItems.COG_ALIGNMENT_LEVER,
+        BitsNTracksItems.SUSPENSION_TOOL,
+        BitsNTracksItems.SUSPENSION_PIECE,
+        BitsNTracksBlocks.TINY_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.INTERMEDIATE_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.QWXONN_HEAD,
+        BitsNTracksBlocks.ATMEREK_HEAD,
+        BitsNTracksBlocks.CUBESTER_HEAD,
+        BitsNTracksBlocks.ALESRR_HEAD,
+        BitsNTracksBlocks.SPECIAL_THANKS_HEAD
+    );
+
+    public static int currentRow;
+    public static int tracksRow;
+
+    private BntCreativeTabHelper() {
+    }
 
     public static void processItems(List<ItemStack> baseItems, List<ItemStack> displayItems, Set<ItemStack> searchItems) {
-        BNB_ROW = 0;
-        int bnbCount = 0;
-
+        int baseCount = 0;
         for (ItemStack item : baseItems) {
             if (!item.isEmpty()) {
                 displayItems.add(item);
                 searchItems.add(item);
-                bnbCount++;
+                baseCount++;
             }
         }
 
-        int bnbPadding = 9 - bnbCount % 9;
-        if (bnbPadding < 9) {
-            bnbPadding += 9;
+        int padding = ROW - baseCount % ROW;
+        if (padding < ROW) {
+            padding += ROW;
         }
-
-        for (int i = 0; i < bnbPadding; i++) {
+        for (int i = 0; i < padding; i++) {
             displayItems.add(ItemStack.EMPTY);
         }
+        tracksRow = (baseCount + ROW - 1) / ROW + padding / ROW - 1;
 
-        BNT_ROW = (int)Math.ceil(bnbCount / 9.0) + bnbPadding / 9 - 1;
-
-        for (ItemStack itemx : List.of(
-            new ItemStack((ItemLike)BitsNTracksItems.INDUSTRIAL_BELT.get()),
-            new ItemStack((ItemLike)BitsNTracksItems.TANK_TREAD.get()),
-            new ItemStack((ItemLike)BitsNTracksItems.COG_ALIGNMENT_LEVER.get()),
-            new ItemStack((ItemLike)BitsNTracksItems.SUSPENSION_TOOL.get()),
-            new ItemStack((ItemLike)BitsNTracksItems.SUSPENSION_PIECE.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.INTERMEDIATE_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.QWXONN_HEAD.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.ATMEREK_HEAD.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.CUBESTER_HEAD.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.ALESRR_HEAD.get()),
-            new ItemStack((ItemLike)BitsNTracksBlocks.SPECIAL_THANKS_HEAD.get())
-        )) {
-            displayItems.add(itemx);
-            searchItems.add(itemx);
+        for (Supplier<? extends ItemLike> entry : ITEMS) {
+            ItemStack item = new ItemStack(entry.get());
+            displayItems.add(item);
+            searchItems.add(item);
         }
     }
 }

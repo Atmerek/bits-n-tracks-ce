@@ -16,11 +16,8 @@ public class BntCreativeModeInventoryScreenMixin {
     @Shadow
     private static CreativeModeTab selectedTab;
 
-    @Inject(
-        method = {"render"},
-        at = {@At("TAIL")}
-    )
-    private void bitsntracks$render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+    @Inject(method = "render", at = @At("TAIL"))
+    private void bnt$renderBanners(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
         if (selectedTab == BnbCreativeTabs.BASE_CREATIVE_TAB.get()) {
             BntCreativeTabRenderer.renderBanners((CreativeModeInventoryScreen)(Object)this, guiGraphics, mouseX, mouseY);
         }

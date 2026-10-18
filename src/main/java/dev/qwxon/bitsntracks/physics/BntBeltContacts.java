@@ -175,7 +175,7 @@ public final class BntBeltContacts {
             radii[i] = BntChainGeometry.trackRadius(node);
             sides[i] = node.side();
             if (nodeBe instanceof KineticBlockEntity kinetic && centre.y < lowest
-                && BntChainEngagement.isEngaged((CogwheelChainBehaviour)kinetic.getBehaviour(CogwheelChainBehaviour.TYPE))) {
+                && BntChainEngagement.isEngaged(kinetic.getBehaviour(CogwheelChainBehaviour.TYPE))) {
                 lowest = centre.y;
                 surfaceSpeed = BntPhysicsEvents.surfaceSpeed(
                     CogwheelSizeHelper.getChainRadius(level.getBlockState(nodePos).getBlock()), kinetic.getSpeed());

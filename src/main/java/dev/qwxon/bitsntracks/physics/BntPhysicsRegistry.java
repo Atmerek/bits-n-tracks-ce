@@ -7,24 +7,24 @@ import net.createmod.catnip.data.WorldAttached;
 import net.minecraft.server.level.ServerLevel;
 
 public final class BntPhysicsRegistry {
-    private static final WorldAttached<Collection<KineticBlockEntity>> ENABLED_WHEELS = new WorldAttached(ignored -> new ObjectOpenHashSet());
+    private static final WorldAttached<Collection<KineticBlockEntity>> ENABLED_WHEELS = new WorldAttached<>(ignored -> new ObjectOpenHashSet<>());
 
     private BntPhysicsRegistry() {
     }
 
     public static void add(KineticBlockEntity be) {
         if (be.getLevel() != null) {
-            ((Collection)ENABLED_WHEELS.get(be.getLevel())).add(be);
+            ENABLED_WHEELS.get(be.getLevel()).add(be);
         }
     }
 
     public static void remove(KineticBlockEntity be) {
         if (be.getLevel() != null) {
-            ((Collection)ENABLED_WHEELS.get(be.getLevel())).remove(be);
+            ENABLED_WHEELS.get(be.getLevel()).remove(be);
         }
     }
 
     public static Collection<KineticBlockEntity> getEnabled(ServerLevel level) {
-        return (Collection<KineticBlockEntity>)ENABLED_WHEELS.get(level);
+        return ENABLED_WHEELS.get(level);
     }
 }

@@ -19,7 +19,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -50,7 +49,7 @@ public class WrenchPhysicsHandler {
     public static void onLeftClickBlock(LeftClickBlock event) {
         Level level = event.getLevel();
         BlockPos pos = event.getPos();
-        if (event.getEntity() != null && event.getItemStack().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
+        if (event.getEntity() != null && event.getItemStack().is(BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
             && HiddenCogwheelCompat.isOwnCogwheel(level, pos)) {
             event.setCanceled(true);
         }
@@ -85,7 +84,7 @@ public class WrenchPhysicsHandler {
 
     @SubscribeEvent
     public static void onBlockBreak(BreakEvent event) {
-        if (event.getPlayer() != null && event.getPlayer().getMainHandItem().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
+        if (event.getPlayer() != null && event.getPlayer().getMainHandItem().is(BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
             && HiddenCogwheelCompat.isOwnCogwheel(event.getLevel(), event.getPos())) {
             event.setCanceled(true);
         }
@@ -118,7 +117,7 @@ public class WrenchPhysicsHandler {
 
         Level level = player.level();
         BlockPos pos = payload.pos();
-        if (level.isClientSide || !level.isLoaded(pos) || !player.getMainHandItem().is((Item)BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
+        if (level.isClientSide || !level.isLoaded(pos) || !player.getMainHandItem().is(BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
             || !BntReach.block(level, player, pos)) {
             return;
         }

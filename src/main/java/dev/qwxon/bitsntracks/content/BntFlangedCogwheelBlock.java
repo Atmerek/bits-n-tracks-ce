@@ -32,7 +32,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
@@ -80,7 +79,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder.add(new Property[]{BntCogwheelPairing.WIDE, PHYSICS}));
+        super.createBlockStateDefinition(builder.add(BntCogwheelPairing.WIDE, PHYSICS));
     }
 
     public BlockState getStateForPlacement(BlockPlaceContext context) {
@@ -106,7 +105,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     public Axis getRotationAxis(BlockState state) {
-        return (Axis)state.getValue(AXIS);
+        return state.getValue(AXIS);
     }
 
     public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
@@ -135,7 +134,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     private VoxelShape getGridShape(BlockState state) {
-        return BntCogwheelShapes.get(this.size, (Axis)state.getValue(AXIS));
+        return BntCogwheelShapes.get(this.size, state.getValue(AXIS));
     }
 
     protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
@@ -163,7 +162,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     public BlockEntityType<? extends BntFlangedCogwheelBlockEntity> getBlockEntityType() {
-        return (BlockEntityType<? extends BntFlangedCogwheelBlockEntity>)BitsNTracksBlockEntityTypes.SIMPLE_KINETIC.get();
+        return BitsNTracksBlockEntityTypes.SIMPLE_KINETIC.get();
     }
 
     public boolean isLargeCog() {

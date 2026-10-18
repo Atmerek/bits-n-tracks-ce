@@ -14,6 +14,7 @@ import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
@@ -39,7 +40,7 @@ public final class BntCogwheelPairing {
 
     public static Direction partnerDirection(BlockState state) {
         BntWideSide side = sideOf(state);
-        return side == BntWideSide.NONE ? null : side.toDirection((Axis)state.getValue(RotatedPillarKineticBlock.AXIS));
+        return side == BntWideSide.NONE ? null : side.toDirection(state.getValue(RotatedPillarKineticBlock.AXIS));
     }
 
     public static BlockPos partnerPos(BlockGetter level, BlockPos pos) {
@@ -78,7 +79,7 @@ public final class BntCogwheelPairing {
     }
 
     private static boolean onBelt(KineticBlockEntity wheel) {
-        CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)wheel.getBehaviour(CogwheelChainBehaviour.TYPE);
+        CogwheelChainBehaviour behaviour = wheel.getBehaviour(CogwheelChainBehaviour.TYPE);
         return behaviour != null && behaviour.isPartOfChain();
     }
 
@@ -153,14 +154,14 @@ public final class BntCogwheelPairing {
 
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        Axis axis = (Axis)state.getValue(RotatedPillarKineticBlock.AXIS);
+        Axis axis = state.getValue(RotatedPillarKineticBlock.AXIS);
 
         for (AxisDirection axisDirection : AxisDirection.values()) {
             Direction direction = Direction.fromAxisAndDirection(axis, axisDirection);
             BlockPos neighbourPos = pos.relative(direction);
             BlockState neighbour = level.getBlockState(neighbourPos);
             if (canPair(state, neighbour) && sideOf(neighbour) == BntWideSide.NONE) {
-                return (BlockState)state.setValue(WIDE, BntWideSide.of(direction));
+                return state.setValue(WIDE, BntWideSide.of(direction));
             }
         }
 
@@ -181,7 +182,7 @@ public final class BntCogwheelPairing {
 
         BntWideSide expected = BntWideSide.of(direction.getOpposite());
         if (sideOf(partner) != expected) {
-            level.setBlock(partnerPos, (BlockState)partner.setValue(WIDE, expected), 3);
+            level.setBlock(partnerPos, partner.setValue(WIDE, expected), Block.UPDATE_ALL);
         }
     }
 
@@ -193,7 +194,7 @@ public final class BntCogwheelPairing {
 
         return canPair(state, neighbour) && sideOf(neighbour) == BntWideSide.of(direction.getOpposite())
             ? state
-            : (BlockState)state.setValue(WIDE, BntWideSide.NONE);
+            : state.setValue(WIDE, BntWideSide.NONE);
     }
 
     private static boolean canPair(BlockState state, BlockState neighbour) {

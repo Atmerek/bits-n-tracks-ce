@@ -11,13 +11,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin({ItemPickerMenu.class})
 public abstract class BntItemPickerMenuMixin {
     @Shadow
-    protected abstract int getRowIndexForScroll(float var1);
+    protected abstract int getRowIndexForScroll(float scroll);
 
-    @Inject(
-        method = {"scrollTo"},
-        at = {@At("HEAD")}
-    )
-    private void bitsntracks$scrollTo(float f, CallbackInfo ci) {
-        BntCreativeTabHelper.CURRENT_ROW = this.getRowIndexForScroll(f);
+    @Inject(method = "scrollTo", at = @At("HEAD"))
+    private void bnt$rememberRow(float scroll, CallbackInfo ci) {
+        BntCreativeTabHelper.currentRow = this.getRowIndexForScroll(scroll);
     }
 }

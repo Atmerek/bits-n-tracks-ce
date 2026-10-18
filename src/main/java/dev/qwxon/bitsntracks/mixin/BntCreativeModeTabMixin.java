@@ -6,12 +6,11 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.qwxon.bitsntracks.client.BntCreativeTabHelper;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackLinkedSet;
 import net.minecraft.world.item.CreativeModeTab.ItemDisplayParameters;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,21 +22,16 @@ public class BntCreativeModeTabMixin {
     @Shadow
     private Set<ItemStack> displayItemsSearchTab;
 
-    @WrapMethod(
-        method = {"buildContents"}
-    )
-    private void bitsntracks$buildContents(ItemDisplayParameters parameters, Operation<Void> original) {
-        CreativeModeTab self = (CreativeModeTab)(Object)this;
-        if (self == BnbCreativeTabs.BASE_CREATIVE_TAB.get()) {
-            original.call(new Object[]{parameters});
-            List<ItemStack> baseItems = new ArrayList<>(this.displayItems);
-            List<ItemStack> newDisplayItems = new LinkedList<>();
-            Set<ItemStack> newSearchItems = new LinkedHashSet<>();
-            BntCreativeTabHelper.processItems(baseItems, newDisplayItems, newSearchItems);
-            this.displayItems = newDisplayItems;
-            this.displayItemsSearchTab = newSearchItems;
-        } else {
-            original.call(new Object[]{parameters});
+    @WrapMethod(method = "buildContents")
+    private void bnt$buildContents(ItemDisplayParameters parameters, Operation<Void> original) {
+        original.call(parameters);
+        if ((Object)this != BnbCreativeTabs.BASE_CREATIVE_TAB.get()) {
+            return;
         }
+        List<ItemStack> displayItems = new ArrayList<>();
+        Set<ItemStack> searchItems = ItemStackLinkedSet.createTypeAndComponentsSet();
+        BntCreativeTabHelper.processItems(new ArrayList<>(this.displayItems), displayItems, searchItems);
+        this.displayItems = displayItems;
+        this.displayItemsSearchTab = searchItems;
     }
 }

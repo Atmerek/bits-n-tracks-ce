@@ -30,7 +30,7 @@ public final class BntClientRouteClick {
             return;
         }
 
-        Axis blockAxis = (Axis)state.getValue(BlockStateProperties.AXIS);
+        Axis blockAxis = state.getValue(BlockStateProperties.AXIS);
         if (hit.getDirection().getAxis() != blockAxis) {
             PacketDistributor.sendToServer(new BntRouteSidePayload(pos, WrenchPhysicsHandler.FLAT_FACE));
             return;

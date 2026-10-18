@@ -299,7 +299,7 @@ public final class BntPhysicsEvents {
         Level level = kbe.getLevel();
         BlockState state = kbe.getBlockState();
         if (level != null && state != null && state.hasProperty(BlockStateProperties.AXIS)) {
-            Axis axis = (Axis)state.getValue(BlockStateProperties.AXIS);
+            Axis axis = state.getValue(BlockStateProperties.AXIS);
             Vec3 localPos = getWheelCenter(kbe, state);
             Pose3dc pose = subLevel.logicalPose();
             Vector3d velocity = Sable.HELPER.getVelocity(level, new Vector3d(localPos.x, localPos.y, localPos.z));
@@ -330,7 +330,7 @@ public final class BntPhysicsEvents {
         if (level == null || !state.hasProperty(BlockStateProperties.AXIS)) {
             return null;
         }
-        Axis axis = (Axis)state.getValue(BlockStateProperties.AXIS);
+        Axis axis = state.getValue(BlockStateProperties.AXIS);
         if (axis == Axis.Y) {
             return null;
         }
@@ -460,13 +460,13 @@ public final class BntPhysicsEvents {
         }
 
         Block block = state.getBlock();
-        Axis axis = (Axis)state.getValue(BlockStateProperties.AXIS);
+        Axis axis = state.getValue(BlockStateProperties.AXIS);
         Vec3i sideVec = Direction.get(AxisDirection.POSITIVE, axis).getNormal();
         Vector3dc sideD = new Vector3d(sideVec.getX(), sideVec.getY(), sideVec.getZ());
         Vector3dc normalD = getTravelDirection(axis);
         Pose3d pose = subLevel.logicalPose();
         KineticBlockEntity track = BntCogwheelPairing.beltTwin(kbe);
-        CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)track.getBehaviour(CogwheelChainBehaviour.TYPE);
+        CogwheelChainBehaviour behaviour = track.getBehaviour(CogwheelChainBehaviour.TYPE);
         boolean isConnected = behaviour != null && behaviour.isPartOfChain();
 
         BntSuspension.Arm arm = BntSuspension.arm(kbe);
@@ -616,7 +616,7 @@ public final class BntPhysicsEvents {
     }
 
     private static boolean isInTrack(KineticBlockEntity kbe) {
-        CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)BntCogwheelPairing.beltTwin(kbe).getBehaviour(CogwheelChainBehaviour.TYPE);
+        CogwheelChainBehaviour behaviour = BntCogwheelPairing.beltTwin(kbe).getBehaviour(CogwheelChainBehaviour.TYPE);
         return behaviour != null && behaviour.isPartOfChain();
     }
 
@@ -1156,7 +1156,7 @@ public final class BntPhysicsEvents {
         double travel = BntSuspension.travel(kbe);
         double up = arm.upTravel(travel);
         double down = arm.downTravel(travel);
-        Axis axis = (Axis)state.getValue(BlockStateProperties.AXIS);
+        Axis axis = state.getValue(BlockStateProperties.AXIS);
         BntPhysicsEvents.Reach reach = reachGround(kbe, getTravelDirection(axis), pose, subLevel, getContactSeat(kbe, state),
             getContactRadius(state.getBlock(), isInTrack(kbe)), arm, up, down, 0.0);
         return reach.grounded() ? -Mth.clamp(reach.rise(), -down, up) : down;

@@ -30,7 +30,7 @@ public class BntCreativeTabRenderer {
         int left = ((CreativeModeInventoryScreenAccessor)screen).getLeftPos() + 8;
         int top = ((CreativeModeInventoryScreenAccessor)screen).getTopPos() + 17;
         graphics.pose().translate(left, top, 0.0F);
-        int bntRow = BntCreativeTabHelper.BNT_ROW - BntCreativeTabHelper.CURRENT_ROW;
+        int bntRow = BntCreativeTabHelper.tracksRow - BntCreativeTabHelper.currentRow;
         if (bntRow >= 0 && bntRow <= 4) {
             int y = bntRow * 18;
             int x = 0;

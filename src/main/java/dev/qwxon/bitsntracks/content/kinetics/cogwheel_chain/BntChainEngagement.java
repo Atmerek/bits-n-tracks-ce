@@ -529,7 +529,7 @@ public final class BntChainEngagement {
             return false;
         }
 
-        Axis axis = (Axis)stateFrom.getValue(BlockStateProperties.AXIS);
+        Axis axis = stateFrom.getValue(BlockStateProperties.AXIS);
         if (axis != stateTo.getValue(BlockStateProperties.AXIS)) {
             return false;
         }
