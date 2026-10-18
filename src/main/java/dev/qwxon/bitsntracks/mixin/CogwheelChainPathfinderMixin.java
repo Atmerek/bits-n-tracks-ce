@@ -12,7 +12,6 @@ import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSolver;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntLegacyChainPath;
-import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.Direction.Axis;
@@ -67,19 +66,6 @@ public class CogwheelChainPathfinderMixin {
     private static void bnt$ownNodeTangent(ICogwheelNode from, ICogwheelNode to, int toSide, CallbackInfoReturnable<Vec3> cir) {
         if (BntChainGeometry.ownGeometry()) {
             cir.setReturnValue(bnt$pathingTangentOnCog(from, to, toSide));
-        }
-    }
-
-    @Inject(
-        method = {"getPathingTangentOnCog(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;ZLnet/minecraft/world/phys/Vec3;I)Lnet/minecraft/world/phys/Vec3;"},
-        at = {@At("HEAD")},
-        cancellable = true
-    )
-    private static void bnt$ownTangent(Vec3 fromCenter, Vec3 fromRotationAxis, Vec3 toCenter, boolean toLarge, Vec3 toRotationAxis, int toSide,
-                                       CallbackInfoReturnable<Vec3> cir) {
-        if (BntChainGeometry.ownGeometry()) {
-            double toRadius = toLarge ? BntPhysicsTuning.getLargeTrackRadius() : BntPhysicsTuning.getSmallTrackRadius();
-            cir.setReturnValue(bnt$getPathingTangentOnCog(fromCenter, fromRotationAxis, toCenter, toRadius, toRotationAxis, toSide));
         }
     }
 

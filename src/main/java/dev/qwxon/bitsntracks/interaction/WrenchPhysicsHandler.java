@@ -1,7 +1,6 @@
 package dev.qwxon.bitsntracks.interaction;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.block.EmptyFlangedGearBlock;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -10,6 +9,7 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
+import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
@@ -18,12 +18,12 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -95,31 +95,20 @@ public class WrenchPhysicsHandler {
     @SubscribeEvent
     public static void onRightClickBlock(RightClickBlock event) {
         Level level = event.getLevel();
+        BlockPos pos = event.getPos();
+        Player player = event.getEntity();
+        Block block = level.getBlockState(pos).getBlock();
+        if (!(block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock)
+            || !AllItems.WRENCH.isIn(player.getMainHandItem()) && !AllItems.WRENCH.isIn(player.getOffhandItem())
+            || !(BlockEntityBehaviour.get(level, pos, CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour chain)
+            || !chain.isPartOfChain()) {
+            return;
+        }
+
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.SUCCESS);
         if (!level.isClientSide) {
-            BlockPos pos = event.getPos();
-            Block block = level.getBlockState(pos).getBlock();
-            if (block instanceof BntFlangedCogwheelBlock || block instanceof EmptyFlangedGearBlock) {
-                ItemStack[] handItems = new ItemStack[]{event.getEntity().getMainHandItem(), event.getEntity().getOffhandItem()};
-                boolean hasWrench = false;
-
-                for (ItemStack stack : handItems) {
-                    if (AllItems.WRENCH.isIn(stack)) {
-                        hasWrench = true;
-                        break;
-                    }
-                }
-
-                if (hasWrench) {
-                    BlockEntity be = level.getBlockEntity(pos);
-                    if (be instanceof KineticBlockEntity) {
-                        CogwheelChainBehaviour chainBehaviour = (CogwheelChainBehaviour)BlockEntityBehaviour.get(level, pos, CogwheelChainBehaviour.TYPE);
-                        if (chainBehaviour != null && chainBehaviour.isPartOfChain()) {
-                            chainBehaviour.destroyChain(!event.getEntity().isCreative(), true);
-                            event.setCanceled(true);
-                        }
-                    }
-                }
-            }
+            chain.destroyChain(!player.isCreative(), true);
         }
     }
 
