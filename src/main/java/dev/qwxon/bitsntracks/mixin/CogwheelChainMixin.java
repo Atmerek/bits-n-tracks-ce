@@ -69,8 +69,8 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         return this.bnt$own || BntCogwheelChainTypes.isOwn(this.type);
     }
 
-    @Unique
-    private boolean bnt$claim(Level level, BlockPos controllerPos) {
+    @Override
+    public boolean bnt$claim(Level level, BlockPos controllerPos) {
         if (!this.bnt$own && (BntCogwheelChainTypes.isOwn(this.type) || HiddenCogwheelCompat.isOwnChain(level, controllerPos))) {
             this.bnt$own = true;
             this.bnt$builtDisplacements = null;

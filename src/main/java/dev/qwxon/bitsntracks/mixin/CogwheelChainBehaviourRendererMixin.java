@@ -3,7 +3,6 @@ package dev.qwxon.bitsntracks.mixin;
 import com.cake.azimuth.behaviour.SuperBlockEntityBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviourRenderer;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.block.EmptyFlangedGearBlock;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.render.ChainQuadBuilder;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.render.CogwheelChainRenderGeometryBuilder;
@@ -25,7 +24,6 @@ import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntTreadView;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
-import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.TrackModelRenderContext;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltFaces;
@@ -43,7 +41,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import net.createmod.catnip.animation.AnimationTickHolder;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -53,8 +50,6 @@ import net.minecraft.core.Position;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -84,17 +79,12 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         int overlay,
         Operation<Void> original
     ) {
-        if (be.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof TrackModelBehaviourAccess access) {
-            TrackModelRenderContext.setRenderingTrack(access.bnt$isTrackModel());
-        } else {
-            TrackModelRenderContext.setRenderingTrack(false);
-        }
-
-        TrackModelRenderContext.setRenderingCustomChain(TrackModelRenderContext.isCustomOrIndustrialCogwheel(be));
+        TrackModelRenderContext.setRenderingTrack(
+            be.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof TrackModelBehaviourAccess access && access.bnt$isTrackModel());
+        TrackModelRenderContext.setRenderingCustomChain(HiddenCogwheelCompat.isOwnCogwheel(be.getBlockState()));
         TrackModelRenderContext.setRenderingWideChain(BntCogwheelPairing.isWide(be.getBlockState()));
-        TrackModelRenderContext.setRenderingLevel(HiddenCogwheelCompat.getActualLevel(be));
         BntClientCompat.beginChainLight(be);
-        BntTreadView.begin(ms.last().pose(), TrackModelRenderContext.getRenderingLevel());
+        BntTreadView.begin(ms.last().pose(), HiddenCogwheelCompat.getActualLevel(be));
 
         try {
             original.call(behaviour, be, partialTicks, ms, buffer, light, overlay);
@@ -102,7 +92,6 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             TrackModelRenderContext.setRenderingTrack(false);
             TrackModelRenderContext.setRenderingCustomChain(false);
             TrackModelRenderContext.setRenderingWideChain(false);
-            TrackModelRenderContext.setRenderingLevel(null);
             BntBeltLinks.clearLoop();
             BntClientCompat.endChainLight();
             BntTreadView.end();
@@ -231,25 +220,8 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         ms.pushPose();
         boolean isCustomBeltItem = BntCogwheelChainTypes.isOwn(type);
         boolean industrialBelt = type == BntCogwheelChainTypes.INDUSTRIAL_BELT_CHAIN.get();
-        boolean isCustomBeltPlacement = false;
-        if (chainRenderInfo == ChainRenderInfo.BELT) {
-            if (!isCustomBeltItem && !TrackModelRenderContext.isRenderingCustomChain()) {
-                Level level = TrackModelRenderContext.getRenderingLevel();
-                if (level == null) {
-                    level = Minecraft.getInstance().level;
-                }
-
-                if (level != null) {
-                    BlockPos posFrom = bnt$findCogwheelBlock(level, from, fromCogwheelAxis);
-                    BlockPos posTo = bnt$findCogwheelBlock(level, to, toCogwheelAxis);
-                    if (bnt$isCustomOrIndustrialCogwheel(level, posFrom) && bnt$isCustomOrIndustrialCogwheel(level, posTo)) {
-                        isCustomBeltPlacement = true;
-                    }
-                }
-            } else {
-                isCustomBeltPlacement = true;
-            }
-        }
+        boolean isCustomBeltPlacement = chainRenderInfo == ChainRenderInfo.BELT
+            && (isCustomBeltItem || TrackModelRenderContext.isRenderingCustomChain());
 
         boolean tankTread = type == BntCogwheelChainTypes.TANK_TREAD_CHAIN.get();
         boolean wideBelt = isCustomBeltPlacement && TrackModelRenderContext.isRenderingWideChain();
@@ -469,42 +441,4 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         }
     }
 
-    @Unique
-    private static BlockPos bnt$findCogwheelBlock(Level level, Vec3 pos, Vec3 axis) {
-        double ax = Math.abs(axis.x);
-        double ay = Math.abs(axis.y);
-        double az = Math.abs(axis.z);
-        int centerX = Mth.floor(pos.x);
-        int centerY = Mth.floor(pos.y);
-        int centerZ = Mth.floor(pos.z);
-        int rx = ax > 0.5 ? 1 : 2;
-        int ry = ay > 0.5 ? 1 : 2;
-        int rz = az > 0.5 ? 1 : 2;
-        BlockPos bestPos = null;
-        double bestDistSq = Double.MAX_VALUE;
-
-        for (int dx = -rx; dx <= rx; dx++) {
-            for (int dy = -ry; dy <= ry; dy++) {
-                for (int dz = -rz; dz <= rz; dz++) {
-                    BlockPos p = new BlockPos(centerX + dx, centerY + dy, centerZ + dz);
-                    BlockState state = level.getBlockState(p);
-                    Block block = state.getBlock();
-                    if (block instanceof BntFlangedCogwheelBlock || block instanceof EmptyFlangedGearBlock) {
-                        double distSq = pos.distanceToSqr(Vec3.atCenterOf(p));
-                        if (distSq < bestDistSq) {
-                            bestDistSq = distSq;
-                            bestPos = p;
-                        }
-                    }
-                }
-            }
-        }
-
-        return bestPos != null ? bestPos : BlockPos.containing(pos);
-    }
-
-    @Unique
-    private static boolean bnt$isCustomOrIndustrialCogwheel(Level level, BlockPos pos) {
-        return HiddenCogwheelCompat.isOwnCogwheel(level.getBlockState(pos));
-    }
 }

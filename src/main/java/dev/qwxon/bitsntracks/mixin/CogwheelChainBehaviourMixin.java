@@ -2,7 +2,6 @@ package dev.qwxon.bitsntracks.mixin;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
@@ -35,16 +34,8 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
         Level level = self.getLevel();
         BlockPos controllerPos = bnt$getControllerPos(self);
-        CogwheelChain chain = bnt$getTrackedChain(self);
-        if (level == null || controllerPos == null || chain == null) {
-            return false;
-        }
-        for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
-            if (bnt$isTrackCogwheel(level, controllerPos.offset(node.localPos()))) {
-                return true;
-            }
-        }
-        return false;
+        return level != null && controllerPos != null
+            && bnt$getTrackedChain(self) instanceof BntChainGeometryRefresh chain && chain.bnt$claim(level, controllerPos);
     }
 
     @Inject(
@@ -191,10 +182,5 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         } else {
             return self.getControllerOffset() == null ? null : self.getBlockEntity().getBlockPos().offset(self.getControllerOffset());
         }
-    }
-
-    @Unique
-    private static boolean bnt$isTrackCogwheel(Level level, BlockPos pos) {
-        return HiddenCogwheelCompat.isOwnCogwheel(level.getBlockState(pos));
     }
 }
