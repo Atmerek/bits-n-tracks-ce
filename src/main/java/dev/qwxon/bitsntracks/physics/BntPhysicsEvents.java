@@ -386,11 +386,6 @@ public final class BntPhysicsEvents {
         );
     }
 
-    /** Drop the chain is shaped by, raw terrain only. */
-    public static double getClientRenderExtension(KineticBlockEntity kbe, float partialTick) {
-        return getRawRenderExtension(kbe, partialTick);
-    }
-
     /** Drop a wheel is drawn at, eased across the tick so terrain steps do not snap. */
     public static double getHeldRenderExtension(KineticBlockEntity kbe, float partialTick) {
         double staged = BntPonderPhysics.wheelDrop(kbe);

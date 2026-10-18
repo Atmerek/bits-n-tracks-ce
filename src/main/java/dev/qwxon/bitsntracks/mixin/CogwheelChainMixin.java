@@ -457,23 +457,14 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         method = {"write"},
         at = {@At("TAIL")}
     )
-    private void bnt$writeLayout(CompoundTag tag, CallbackInfo ci) {
-        BntChainGeometry.Layout layout = this.bnt$latched != null ? this.bnt$latched : this.bnt$restoredLayout;
-        if (layout == null || layout.sides().length != this.cogwheelNodes.size()) {
-            return;
-        }
-
-        tag.putIntArray("BNT_PathOrder", layout.sequence());
-        tag.putIntArray("BNT_PathSides", layout.sides());
-    }
-
-    @Inject(
-        method = {"write"},
-        at = {@At("TAIL")}
-    )
-    private void bnt$writeOwn(CompoundTag tag, CallbackInfo ci) {
+    private void bnt$write(CompoundTag tag, CallbackInfo ci) {
         if (this.bnt$own) {
             tag.putBoolean("BNT_Own", true);
+        }
+        BntChainGeometry.Layout layout = this.bnt$latched != null ? this.bnt$latched : this.bnt$restoredLayout;
+        if (layout != null && layout.sides().length == this.cogwheelNodes.size()) {
+            tag.putIntArray("BNT_PathOrder", layout.sequence());
+            tag.putIntArray("BNT_PathSides", layout.sides());
         }
     }
 

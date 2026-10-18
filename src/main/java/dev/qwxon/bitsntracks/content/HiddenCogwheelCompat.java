@@ -3,7 +3,6 @@ package dev.qwxon.bitsntracks.content;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.render.CogwheelChainRenderGeometryBuilder.ChainSegment;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
@@ -13,7 +12,6 @@ import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
-import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.BlockGetter;
@@ -77,7 +75,7 @@ public final class HiddenCogwheelCompat {
 
     public static double getVisualDrop(BlockEntity be, float partialTick) {
         return be instanceof KineticBlockEntity kinetic && isPhysicsEnabled(be)
-            ? BntPhysicsEvents.getClientRenderExtension(kinetic, partialTick)
+            ? BntPhysicsEvents.getRawRenderExtension(kinetic, partialTick)
             : 0.0;
     }
 
@@ -145,14 +143,6 @@ public final class HiddenCogwheelCompat {
     public static void replaceBlockForPhysicsSwap(Level level, BlockPos pos, BlockState newState) {
         Runnable swap = () -> level.setBlock(pos, newState, 3);
         runWithChainDestroySuppressed(swap);
-    }
-
-    public static Vec3 getTransformedPosition(BlockEntity controllerBe, Vec3 localPos, BlockPos relativePos) {
-        return BntClientCompat.getTransformedPosition(controllerBe, localPos, relativePos);
-    }
-
-    public static List<ChainSegment> transformChainSegments(List<ChainSegment> segments, CogwheelChain chain, KineticBlockEntity be) {
-        return BntClientCompat.transformChainSegments(segments, chain, be);
     }
 
     public static boolean hasPhysicsEnabledNode(CogwheelChainBehaviour behaviour) {

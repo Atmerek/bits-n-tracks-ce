@@ -42,10 +42,6 @@ public class BntClientCompat {
             : subLevel.logicalPose();
     }
 
-    public static double getVisualDrop(BlockEntity be, float partialTick) {
-        return HiddenCogwheelCompat.getVisualDrop(be, partialTick);
-    }
-
     /** Tracks are drawn by a block entity renderer, so they need the sublevel's reach rather than the default 64. */
     public static int trackViewDistance() {
         return Math.max(Minecraft.getInstance().options.getEffectiveRenderDistance() * 16, 64);

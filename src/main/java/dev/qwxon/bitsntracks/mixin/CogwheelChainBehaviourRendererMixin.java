@@ -71,32 +71,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
     remap = false
 )
 public abstract class CogwheelChainBehaviourRendererMixin {
-    @Redirect(
-        method = {"renderChainSlowerButWithoutGaps"},
-        at = @At(
-            value = "INVOKE",
-            target = "Lcom/kipti/bnb/content/kinetics/cogwheel_chain/types/CogwheelChainType;getRenderTexture()Lnet/minecraft/resources/ResourceLocation;"
-        )
-    )
-    private static ResourceLocation bnt$redirectRenderTextureSlow(CogwheelChainType instance) {
-        return TrackModelRenderContext.isRenderingTrack() && instance != BntCogwheelChainTypes.INDUSTRIAL_BELT_CHAIN.get()
-            ? BntChainTextures.BELT
-            : instance.getRenderTexture();
-    }
-
-    @Redirect(
-        method = {"renderChainFastButWithGaps"},
-        at = @At(
-            value = "INVOKE",
-            target = "Lcom/kipti/bnb/content/kinetics/cogwheel_chain/types/CogwheelChainType;getRenderTexture()Lnet/minecraft/resources/ResourceLocation;"
-        )
-    )
-    private static ResourceLocation bnt$redirectRenderTextureFast(CogwheelChainType instance) {
-        return TrackModelRenderContext.isRenderingTrack() && instance != BntCogwheelChainTypes.INDUSTRIAL_BELT_CHAIN.get()
-            ? BntChainTextures.BELT
-            : instance.getRenderTexture();
-    }
-
     @WrapMethod(
         method = "renderSafe"
     )
