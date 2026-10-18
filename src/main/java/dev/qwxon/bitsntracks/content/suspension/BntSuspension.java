@@ -297,6 +297,7 @@ public final class BntSuspension {
         Level level = kinetic.getLevel();
         BlockPos partnerPos = level == null ? null : BntCogwheelPairing.partnerPos(level, kinetic.getBlockPos());
         return partnerPos != null && level.getBlockEntity(partnerPos) instanceof KineticBlockEntity partner
+            && partner instanceof KineticBlockEntityPhysicsAccess
             ? List.of(kinetic, partner)
             : List.of(kinetic);
     }

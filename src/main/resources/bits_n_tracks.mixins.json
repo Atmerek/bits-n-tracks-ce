@@ -4,7 +4,8 @@
     "package": "dev.qwxon.bitsntracks.mixin",
     "compatibilityLevel": "JAVA_21",
     "mixins": [
-        "KineticBlockEntityPhysicsMixin",
+        "BntLegacyCogwheelMixin",
+        "BntBlockEntityStateMixin",
         "PlacingCogwheelChainMixin",
         "PlaceCogwheelChainPacketMixin",
         "CogwheelChainBehaviourMixin",
@@ -26,8 +27,6 @@
         "MassTrackerMixin",
         "SubLevelEntityCollisionMixin",
         "BntEntityCollideMixin",
-        "BntBlockEntityLoadMixin",
-        "SmartBlockEntitySchematicMixin",
         "RapierPhysicsPipelineMixin",
         "accessor.RotationPropagatorAccessor"
     ],

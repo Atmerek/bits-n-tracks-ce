@@ -16,35 +16,44 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 public final class BntLegacyCogwheels {
+    private static final String PHYSICS = "BntPhysicsEnabled";
+    private static final String ORIGINAL = "BntOriginalBlock";
+
     private BntLegacyCogwheels() {
     }
 
-    public static boolean convert(KineticBlockEntity be, @Nullable String originalId, boolean legacyPhysics) {
+    public static boolean isLegacy(KineticBlockEntity be, @Nullable CompoundTag tag) {
+        return be.getBlockState().getBlock() instanceof HiddenCogwheelBlock
+            || tag != null && (tag.getBoolean(PHYSICS) || tag.contains(ORIGINAL));
+    }
+
+    public static void convert(KineticBlockEntity be, @Nullable CompoundTag legacy) {
         Level level = be.getLevel();
         if (level == null || level.isClientSide) {
-            return false;
+            return;
         }
         BlockPos pos = be.getBlockPos();
         BlockState state = be.getBlockState();
+        boolean legacyPhysics = legacy != null && legacy.getBoolean(PHYSICS);
         if (state.getBlock() instanceof BntFlangedCogwheelBlock) {
             if (legacyPhysics) {
                 BntFlangedCogwheelBlock.setPhysics(level, pos, true);
             }
-            return false;
+            return;
         }
         if (!(state.getBlock() instanceof HiddenCogwheelBlock) && !legacyPhysics) {
-            return false;
+            return;
         }
-        Block target = successor(state.getBlock(), originalId);
+        Block target = successor(state.getBlock(), legacy != null && legacy.contains(ORIGINAL) ? legacy.getString(ORIGINAL) : null);
         if (target == null) {
-            return false;
+            return;
         }
 
         BlockState next = target.defaultBlockState()
             .setValue(RotatedPillarKineticBlock.AXIS, state.getValue(RotatedPillarKineticBlock.AXIS))
             .setValue(BntCogwheelPairing.WIDE, BntCogwheelPairing.sideOf(state))
             .setValue(BntFlangedCogwheelBlock.PHYSICS, true);
-        CompoundTag tag = be.saveWithoutMetadata(level.registryAccess());
+        CompoundTag tag = (legacy == null ? new CompoundTag() : legacy.copy()).merge(be.saveWithoutMetadata(level.registryAccess()));
         HiddenCogwheelCompat.replaceBlockForPhysicsSwap(level, pos, next);
         BlockEntity fresh = level.getBlockEntity(pos);
         if (fresh != null) {
@@ -55,7 +64,6 @@ public final class BntLegacyCogwheels {
             }
         }
         BntChainEngagement.rebuild(level, pos);
-        return true;
     }
 
     @Nullable

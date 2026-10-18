@@ -2,53 +2,47 @@ package dev.qwxon.bitsntracks.access;
 
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.state.BlockState;
 
 public interface KineticBlockEntityPhysicsAccess {
     boolean bnt$isPhysicsEnabled();
 
-    void bnt$physicsChanged(BlockState state, boolean enabled);
-
-    void bnt$writeSettings(CompoundTag tag);
-
     double bnt$getExtension();
 
-    void bnt$setExtension(double var1);
+    void bnt$setExtension(double extension);
 
-    double bnt$getLerpedExtension(float var1);
+    double bnt$getLerpedExtension(float partialTick);
 
     double bnt$getLastTerrainExtension();
 
-    void bnt$setLastTerrainExtension(double var1);
+    void bnt$setLastTerrainExtension(double extension);
 
     long bnt$getGroundDropTick();
 
     double bnt$getGroundDrop();
 
-    void bnt$setGroundDrop(long var1, double var3);
+    void bnt$setGroundDrop(long gameTime, double drop);
 
     long bnt$getRawDropTick();
 
     double bnt$getRawDrop();
 
-    void bnt$setRawDrop(long var1, double var3);
+    void bnt$setRawDrop(long gameTime, double drop);
 
     Object bnt$getTerrainCast();
 
-    void bnt$setTerrainCast(Object var1);
+    void bnt$setTerrainCast(Object cast);
 
     boolean bnt$isLiftedUp();
 
-    void bnt$setLiftedUp(boolean var1);
+    void bnt$setLiftedUp(boolean liftedUp);
 
     double bnt$getMaxAirExtension();
 
-    void bnt$setMaxAirExtension(double var1);
+    void bnt$setMaxAirExtension(double maxAirExtension);
 
     double bnt$getSpringImpulse();
 
-    void bnt$setSpringImpulse(double var1);
+    void bnt$setSpringImpulse(double springImpulse);
 
     int bnt$getSuspensionSide();
 
@@ -56,66 +50,65 @@ public interface KineticBlockEntityPhysicsAccess {
 
     void bnt$setSuspension(int side, int facing);
 
-
     ForceTotal bnt$getForceTotal();
 
     void bnt$markQueuedForForceApplication();
 
     boolean bnt$consumeQueuedForForceApplication();
 
-    void bnt$setPhysicalSpeed(float var1);
+    void bnt$setPhysicalSpeed(float speed);
 
     float bnt$getAlignmentOffsetX();
 
-    void bnt$setAlignmentOffsetX(float var1);
+    void bnt$setAlignmentOffsetX(float x);
 
     float bnt$getAlignmentOffsetY();
 
-    void bnt$setAlignmentOffsetY(float var1);
+    void bnt$setAlignmentOffsetY(float y);
 
     float bnt$getAlignmentOffsetZ();
 
-    void bnt$setAlignmentOffsetZ(float var1);
+    void bnt$setAlignmentOffsetZ(float z);
 
     boolean bnt$isHiddenByLever();
 
-    void bnt$setHiddenByLever(boolean var1);
+    void bnt$setHiddenByLever(boolean hidden);
 
     int bnt$getTrackRouteSide();
 
-    void bnt$setTrackRouteSide(int var1);
+    void bnt$setTrackRouteSide(int side);
 
     float bnt$getBeltTension();
 
-    void bnt$setBeltTension(float var1);
+    void bnt$setBeltTension(float tension);
 
     int bnt$getBeltLinks();
 
-    void bnt$setBeltLinks(int var1);
+    void bnt$setBeltLinks(int links);
 
     long bnt$getDrawnDropTick();
 
-    void bnt$advanceDrawnDrop(long var1, double var3, double var5);
+    void bnt$advanceDrawnDrop(long gameTime, double sample, double rate);
 
-    double bnt$getDrawnDrop(float var1);
+    double bnt$getDrawnDrop(float partialTick);
 
     double bnt$getBeltFit();
 
-    void bnt$setBeltFit(double var1);
+    void bnt$setBeltFit(double fit);
 
     long bnt$getTrackLiftTick();
 
     double bnt$getTrackLift();
 
-    void bnt$setTrackLift(long var1, double var3);
+    void bnt$setTrackLift(long tick, double lift);
 
     long bnt$getBeltHoldTick();
 
     double bnt$getBeltHold();
 
-    void bnt$setBeltHold(long var1, double var3);
+    void bnt$setBeltHold(long tick, double hold);
 
-    int bnt$getTuning(BntTuning var1);
+    int bnt$getTuning(BntTuning setting);
 
-    void bnt$setTuning(BntTuning var1, int var2);
+    void bnt$setTuning(BntTuning setting, int level);
 }
