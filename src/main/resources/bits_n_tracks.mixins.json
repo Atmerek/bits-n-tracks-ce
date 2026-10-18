@@ -22,7 +22,6 @@
         "PathedCogwheelNodeMixin",
         "RenderedChainPathNodeMixin",
         "BntCreativeModeTabMixin",
-        "BracketedKineticBlockEntityMixin",
         "BntUseItemOnRangeMixin",
         "PhysicsBlockPropertyHelperMixin",
         "MassTrackerMixin",

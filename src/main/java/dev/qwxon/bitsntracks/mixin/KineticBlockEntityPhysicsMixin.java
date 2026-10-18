@@ -1,7 +1,5 @@
 package dev.qwxon.bitsntracks.mixin;
 
-import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
-import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.gearbox.GearboxBlock;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
@@ -12,7 +10,6 @@ import dev.qwxon.bitsntracks.client.BntWheelEffects;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntLegacyCogwheels;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
@@ -33,7 +30,6 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -43,7 +39,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin({KineticBlockEntity.class})
-public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEntityPhysicsAccess, TransformableBlockEntity {
+public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEntityPhysicsAccess {
     @Unique
     private boolean bnt$legacyPhysics = false;
     @Unique
@@ -554,11 +550,6 @@ public abstract class KineticBlockEntityPhysicsMixin implements KineticBlockEnti
         KineticBlockEntity self = (KineticBlockEntity)(Object)this;
         BntPhysicsRegistry.remove(self);
         BntExtraMass.release(self);
-    }
-
-    @Override
-    public void transform(BlockEntity be, StructureTransform transform) {
-        HiddenCogwheelCompat.transformControlledChain((KineticBlockEntity)(Object)this, transform);
     }
 
     @Inject(

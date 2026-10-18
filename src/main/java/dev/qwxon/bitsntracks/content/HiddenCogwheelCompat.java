@@ -4,7 +4,6 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBeha
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.render.CogwheelChainRenderGeometryBuilder.ChainSegment;
-import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
@@ -70,18 +69,6 @@ public final class HiddenCogwheelCompat {
 
     public static boolean isIndustrial(BlockState state) {
         return state.getBlock() instanceof BntFlangedCogwheelBlock cogwheel && cogwheel.material() == CogwheelMaterial.INDUSTRIAL;
-    }
-
-    public static void transformControlledChain(BlockEntity be, StructureTransform transform) {
-        if (be instanceof SmartBlockEntity smartBe) {
-            CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)smartBe.getBehaviour(CogwheelChainBehaviour.TYPE);
-            if (behaviour != null) {
-                CogwheelChain chain = behaviour.getControlledChain();
-                if (chain != null) {
-                    chain.transform(transform);
-                }
-            }
-        }
     }
 
     public static boolean isPhysicsEnabled(BlockEntity be) {
