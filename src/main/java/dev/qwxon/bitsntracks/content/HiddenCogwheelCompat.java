@@ -4,40 +4,38 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBeha
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.sublevel.ServerSubLevel;
-import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class HiddenCogwheelCompat {
-    private static final ThreadLocal<Integer> bnt$chainSwapDepth = ThreadLocal.withInitial(() -> 0);
-    private static final ThreadLocal<Level> bnt$placementLevel = ThreadLocal.withInitial(() -> null);
+    private static final ThreadLocal<Integer> CHAIN_SWAP_DEPTH = ThreadLocal.withInitial(() -> 0);
+    private static final ThreadLocal<Level> PLACEMENT_LEVEL = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> RESTING = ThreadLocal.withInitial(() -> false);
 
     private HiddenCogwheelCompat() {
     }
 
     public static Level getPlacementLevel() {
-        return bnt$placementLevel.get();
+        return PLACEMENT_LEVEL.get();
     }
 
     public static void setPlacementLevel(Level level) {
         if (level == null) {
-            bnt$placementLevel.remove();
+            PLACEMENT_LEVEL.remove();
         } else {
-            bnt$placementLevel.set(level);
+            PLACEMENT_LEVEL.set(level);
         }
     }
 
@@ -49,14 +47,16 @@ public final class HiddenCogwheelCompat {
         return level != null && isOwnCogwheel(level.getBlockState(pos));
     }
 
+    public static boolean isOwnOrLegacyCogwheel(Block block) {
+        return block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock;
+    }
+
     public static boolean isOwnChain(Level level, BlockPos controllerPos) {
-        if (level == null || controllerPos == null
-            || !(level.getBlockEntity(controllerPos) instanceof SmartBlockEntity smart)
-            || !(smart.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour behaviour)
-            || behaviour.getControlledChain() == null) {
+        CogwheelChain chain = level == null ? null : BntChains.chainAt(level, controllerPos);
+        if (chain == null) {
             return false;
         }
-        for (PathedCogwheelNode node : behaviour.getControlledChain().getChainPathCogwheelNodes()) {
+        for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
             BlockPos pos = controllerPos.offset(node.localPos());
             if (level.isLoaded(pos) && !isOwnCogwheel(level, pos)) {
                 return false;
@@ -99,13 +99,10 @@ public final class HiddenCogwheelCompat {
         if (!(be instanceof KineticBlockEntityPhysicsAccess access)) {
             return Vec3.ZERO;
         }
-
         Vec3 translation = new Vec3(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
-        if (BntFlangedCogwheelBlock.physics(be.getBlockState())) {
-            translation = translation.add(BntSuspension.displacement(be, getHeldVisualDrop(be, partialTick)));
-        }
-
-        return translation;
+        return BntFlangedCogwheelBlock.physics(be.getBlockState())
+            ? translation.add(BntSuspension.displacement(be, getHeldVisualDrop(be, partialTick)))
+            : translation;
     }
 
     public static VoxelShape offsetShapeForSuspension(VoxelShape shape, BlockGetter getter, BlockPos pos) {
@@ -116,136 +113,54 @@ public final class HiddenCogwheelCompat {
         if (be == null || be.getLevel() == null || !be.getLevel().isClientSide) {
             return shape;
         }
-
         Vec3 translation = getModelTranslation(be, BntClientCompat.getPartialTick());
         return translation.equals(Vec3.ZERO) ? shape : shape.move(translation.x, translation.y, translation.z);
     }
 
     public static boolean isSuppressingChainDestroy() {
-        return bnt$chainSwapDepth.get() > 0;
-    }
-
-    public static void runWithChainDestroySuppressed(Runnable action) {
-        int depth = bnt$chainSwapDepth.get();
-        bnt$chainSwapDepth.set(depth + 1);
-
-        try {
-            action.run();
-        } finally {
-            if (depth == 0) {
-                bnt$chainSwapDepth.remove();
-            } else {
-                bnt$chainSwapDepth.set(depth);
-            }
-        }
+        return CHAIN_SWAP_DEPTH.get() > 0;
     }
 
     public static void replaceBlockForPhysicsSwap(Level level, BlockPos pos, BlockState newState) {
-        Runnable swap = () -> level.setBlock(pos, newState, 3);
-        runWithChainDestroySuppressed(swap);
-    }
-
-    public static boolean hasPhysicsEnabledNode(CogwheelChainBehaviour behaviour) {
-        if (behaviour == null) {
-            return false;
-        } else {
-            BlockEntity selfBe = behaviour.blockEntity;
-            if (selfBe != null && isPhysicsEnabled(selfBe)) {
-                return true;
+        int depth = CHAIN_SWAP_DEPTH.get();
+        CHAIN_SWAP_DEPTH.set(depth + 1);
+        try {
+            level.setBlock(pos, newState, Block.UPDATE_ALL);
+        } finally {
+            if (depth == 0) {
+                CHAIN_SWAP_DEPTH.remove();
             } else {
-                Level level = getActualLevel(selfBe);
-                if (level == null) {
-                    return false;
-                } else {
-                    CogwheelChain chain = behaviour.getControlledChain();
-                    if (chain != null) {
-                        return bnt$checkChainPhysics(level, selfBe.getBlockPos(), chain);
-                    }
-
-                    Vec3i offset = behaviour.getControllerOffset();
-                    if (offset != null) {
-                        BlockPos controllerPos = selfBe.getBlockPos().offset(offset);
-                        BlockEntity controllerBe = level.getBlockEntity(controllerPos);
-                        if (controllerBe != null) {
-                            if (isPhysicsEnabled(controllerBe)) {
-                                return true;
-                            }
-
-                            if (controllerBe instanceof SmartBlockEntity smartBe) {
-                                CogwheelChainBehaviour controllerChainBehaviour = (CogwheelChainBehaviour)smartBe.getBehaviour(CogwheelChainBehaviour.TYPE);
-                                if (controllerChainBehaviour != null) {
-                                    CogwheelChain controllerChain = controllerChainBehaviour.getControlledChain();
-                                    if (controllerChain != null) {
-                                        return bnt$checkChainPhysics(level, controllerPos, controllerChain);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    return false;
-                }
+                CHAIN_SWAP_DEPTH.set(depth);
             }
         }
     }
 
     public static boolean shouldForceDynamicRenderer(CogwheelChainBehaviour behaviour) {
-        if (behaviour == null || behaviour.blockEntity == null) {
-            return false;
-        }
-        if (BntVisualized.ownType(behaviour.blockEntity)) {
-            return true;
-        }
-
-        Level level = behaviour.blockEntity.getLevel();
-        if (level != null && level.isClientSide() && Sable.HELPER.getContainingClient(behaviour.blockEntity) != null) {
-            return true;
-        }
-        return hasPhysicsEnabledNode(behaviour);
-    }
-
-    private static boolean bnt$checkChainPhysics(Level level, BlockPos controllerPos, CogwheelChain chain) {
-        if (level != null && chain != null) {
-            for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
-                BlockPos nodePos = controllerPos.offset(node.localPos());
-                BlockEntity nodeBe = level.getBlockEntity(nodePos);
-                if (nodeBe != null && isPhysicsEnabled(nodeBe)) {
-                    return true;
-                }
-
-                if (BntFlangedCogwheelBlock.physics(level.getBlockState(nodePos))) {
-                    return true;
-                }
-            }
-
-            return false;
-        } else {
-            return false;
-        }
-    }
-
-    public static Level getActualLevel(BlockEntity be) {
+        BlockEntity be = behaviour == null ? null : behaviour.getBlockEntity();
         if (be == null) {
-            return null;
-        } else {
-            Level level = be.getLevel();
-            if (level == null) {
-                return null;
-            } else {
-                if (level.isClientSide) {
-                    Object subLevel = Sable.HELPER.getContainingClient(be);
-                    if (subLevel instanceof SubLevel containing) {
-                        return containing.getLevel();
-                    }
-                } else {
-                    ServerSubLevel subLevel = (ServerSubLevel)Sable.HELPER.getContaining(be);
-                    if (subLevel != null) {
-                        return subLevel.getLevel();
-                    }
-                }
+            return false;
+        }
+        if (BntVisualized.ownType(be)) {
+            return true;
+        }
+        Level level = be.getLevel();
+        if (level != null && level.isClientSide() && Sable.HELPER.getContainingClient(be) != null) {
+            return true;
+        }
+        return hasPhysicsEnabledNode(behaviour, level);
+    }
 
-                return level;
+    private static boolean hasPhysicsEnabledNode(CogwheelChainBehaviour behaviour, Level level) {
+        BlockPos controllerPos = BntChains.controllerPos(behaviour);
+        CogwheelChain chain = BntChains.chainOf(behaviour);
+        if (level == null || controllerPos == null || chain == null) {
+            return false;
+        }
+        for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
+            if (BntFlangedCogwheelBlock.physics(level.getBlockState(controllerPos.offset(node.localPos())))) {
+                return true;
             }
         }
+        return false;
     }
 }

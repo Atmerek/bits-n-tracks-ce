@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.simibubi.create.content.kinetics.RotationPropagator;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainStops;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -32,8 +33,7 @@ public class RotationPropagatorMixin {
             return;
         }
         if (BntChainEngagement.sharesChain(from, to)) {
-            if (!BntChainEngagement.isEngaged(BntChainEngagement.chainBehaviour(from))
-                || !BntChainEngagement.isEngaged(BntChainEngagement.chainBehaviour(to))) {
+            if (!BntChainEngagement.isEngaged(BntChains.behaviour(from)) || !BntChainEngagement.isEngaged(BntChains.behaviour(to))) {
                 cir.setReturnValue(0.0F);
             }
             return;

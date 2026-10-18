@@ -1,7 +1,6 @@
 package dev.qwxon.bitsntracks.mixin;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
@@ -10,6 +9,7 @@ import dev.qwxon.bitsntracks.content.BntVisualized;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -33,9 +33,9 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
     public boolean bnt$isTrackModel() {
         CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
         Level level = self.getLevel();
-        BlockPos controllerPos = bnt$getControllerPos(self);
+        BlockPos controllerPos = BntChains.controllerPos(self);
         return level != null && controllerPos != null
-            && bnt$getTrackedChain(self) instanceof BntChainGeometryRefresh chain && chain.bnt$claim(level, controllerPos);
+            && BntChains.chainOf(self) instanceof BntChainGeometryRefresh chain && chain.bnt$claim(level, controllerPos);
     }
 
     @Inject(
@@ -147,40 +147,6 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         }
         if (this.bnt$isTrackModel() || HiddenCogwheelCompat.shouldForceDynamicRenderer((CogwheelChainBehaviour)(Object)this)) {
             cir.setReturnValue(true);
-        }
-    }
-
-    @Unique
-    private static CogwheelChain bnt$getTrackedChain(CogwheelChainBehaviour self) {
-        CogwheelChain directChain = self.getControlledChain();
-        if (directChain != null) {
-            return directChain;
-        } else {
-            Level level = self.getLevel();
-            BlockPos controllerPos = bnt$getControllerPos(self);
-            if (level != null && controllerPos != null) {
-                if (level.getBlockEntity(controllerPos) instanceof SmartBlockEntity smartBe) {
-                    CogwheelChainBehaviour controllerBehaviour = (CogwheelChainBehaviour)smartBe.getBehaviour(CogwheelChainBehaviour.TYPE);
-                    if (controllerBehaviour != null) {
-                        return controllerBehaviour.getControlledChain();
-                    }
-                }
-
-                return null;
-            } else {
-                return null;
-            }
-        }
-    }
-
-    @Unique
-    private static BlockPos bnt$getControllerPos(CogwheelChainBehaviour self) {
-        if (self.getBlockEntity() == null) {
-            return null;
-        } else if (self.isController()) {
-            return self.getBlockEntity().getBlockPos();
-        } else {
-            return self.getControllerOffset() == null ? null : self.getBlockEntity().getBlockPos().offset(self.getControllerOffset());
         }
     }
 }

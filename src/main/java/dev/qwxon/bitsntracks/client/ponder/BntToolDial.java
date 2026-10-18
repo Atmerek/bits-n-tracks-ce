@@ -7,7 +7,7 @@ import com.mojang.math.Axis;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntTunerGauge;
 import dev.qwxon.bitsntracks.client.BntTunerNeedle;
-import dev.qwxon.bitsntracks.content.SuspensionToolItem;
+import dev.qwxon.bitsntracks.content.BntToolScope;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import java.util.List;
@@ -107,7 +107,7 @@ final class BntToolDial extends PonderElementBase implements PonderOverlayElemen
 
     private static Component selected(BntTuning setting) {
         return Component.translatable("chat.bits_n_tracks.tuning.selected", Component.translatable(setting.translationKey()),
-            SuspensionToolItem.scopeName(false)).withStyle(ChatFormatting.GOLD);
+            BntToolScope.name(false)).withStyle(ChatFormatting.GOLD);
     }
 
     private void say(Component text) {

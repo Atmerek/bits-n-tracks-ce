@@ -10,7 +10,6 @@ import dev.engine_room.flywheel.api.model.Model;
 import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntClientConfig;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackSink;
@@ -155,7 +154,7 @@ final class BntTrackVisual implements BntTrackSink {
     }
 
     private int shapeOf(CogwheelChain chain) {
-        Level level = HiddenCogwheelCompat.getActualLevel(be);
+        Level level = be.getLevel();
         int hash = 1;
         for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
             Vec3 shift = BntClientCompat.getNodeDisplacement(be, node.localPos());

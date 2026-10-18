@@ -1,8 +1,8 @@
 package dev.qwxon.bitsntracks.client;
 
-import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.ArrayList;
@@ -189,16 +189,8 @@ public final class BntWheelEffects {
     }
 
     private static BlockPos trackKey(KineticBlockEntity kbe) {
-        KineticBlockEntity track = BntCogwheelPairing.beltTwin(kbe);
-        if (track.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour behaviour && behaviour.isPartOfChain()) {
-            if (behaviour.getControlledChain() != null) {
-                return track.getBlockPos();
-            }
-            if (behaviour.getControllerOffset() != null) {
-                return track.getBlockPos().offset(behaviour.getControllerOffset());
-            }
-        }
-        return kbe.getBlockPos();
+        BlockPos controller = BntChains.controllerPos(BntCogwheelPairing.beltTwin(kbe));
+        return controller == null ? kbe.getBlockPos() : controller;
     }
 
     private static void forget(Level level) {

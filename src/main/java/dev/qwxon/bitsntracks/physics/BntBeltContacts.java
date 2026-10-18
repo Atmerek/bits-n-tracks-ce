@@ -13,6 +13,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltPath;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSlack;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
@@ -100,7 +101,7 @@ public final class BntBeltContacts {
         Map<BlockPos, Float> speeds = new LinkedHashMap<>();
         for (KineticBlockEntity wheel : wheels) {
             KineticBlockEntity track = BntCogwheelPairing.beltTwin(wheel);
-            BlockPos controllerPos = controllerPos(track);
+            BlockPos controllerPos = BntChains.controllerPos(track);
             if (controllerPos == null) {
                 continue;
             }
@@ -112,7 +113,7 @@ public final class BntBeltContacts {
         Pose3d pose = subLevel.logicalPose();
         for (Map.Entry<BlockPos, Double> entry : brakes.entrySet()) {
             BlockPos controllerPos = entry.getKey();
-            CogwheelChain chain = chainAt(level, controllerPos);
+            CogwheelChain chain = BntChains.chainAt(level, controllerPos);
             if (chain == null) {
                 continue;
             }
@@ -329,21 +330,4 @@ public final class BntBeltContacts {
         weight.carrier.bnt$markQueuedForForceApplication();
     }
 
-    private static BlockPos controllerPos(KineticBlockEntity wheel) {
-        CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)wheel.getBehaviour(CogwheelChainBehaviour.TYPE);
-        if (behaviour == null || !behaviour.isPartOfChain()) {
-            return null;
-        }
-        if (behaviour.getControlledChain() != null) {
-            return wheel.getBlockPos();
-        }
-        return behaviour.getControllerOffset() == null ? null : wheel.getBlockPos().offset(behaviour.getControllerOffset());
-    }
-
-    private static CogwheelChain chainAt(Level level, BlockPos controllerPos) {
-        return level.getBlockEntity(controllerPos) instanceof KineticBlockEntity kinetic
-            && kinetic.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour behaviour
-            ? behaviour.getControlledChain()
-            : null;
-    }
 }

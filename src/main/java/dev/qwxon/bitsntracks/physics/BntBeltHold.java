@@ -1,11 +1,7 @@
 package dev.qwxon.bitsntracks.physics;
 
-import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
-import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
@@ -14,6 +10,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltPath;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSolver;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
@@ -57,7 +54,7 @@ public final class BntBeltHold {
             return access.bnt$getBeltHold();
         }
 
-        BlockPos controllerPos = controllerPos(wheel);
+        BlockPos controllerPos = BntChains.controllerPos(wheel);
         if (controllerPos != null) {
             solve(level, controllerPos, now);
         }
@@ -74,7 +71,7 @@ public final class BntBeltHold {
     }
 
     private static void solve(Level level, BlockPos controllerPos, long now) {
-        List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
+        List<PathedCogwheelNode> nodes = BntChains.beltOrder(level, controllerPos);
         int count = nodes.size();
         Axis axis = BntChainGeometry.sharedAxis(nodes);
         boolean solvable = count >= 3 && axis != null && axis != Axis.Y;
@@ -233,29 +230,4 @@ public final class BntBeltHold {
         return total;
     }
 
-    private static List<PathedCogwheelNode> beltOrder(Level level, BlockPos controllerPos) {
-        if (!(level.getBlockEntity(controllerPos) instanceof SmartBlockEntity smart)
-            || !(smart.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour behaviour)) {
-            return List.of();
-        }
-        CogwheelChain chain = behaviour.getControlledChain();
-        if (chain == null) {
-            return List.of();
-        }
-        List<PathedCogwheelNode> latched = chain instanceof BntChainGeometryRefresh refreshable
-            ? refreshable.bnt$latchedBeltOrder()
-            : List.of();
-        return latched.size() >= 2 ? latched : chain.getChainPathCogwheelNodes();
-    }
-
-    private static BlockPos controllerPos(KineticBlockEntity wheel) {
-        CogwheelChainBehaviour behaviour = (CogwheelChainBehaviour)wheel.getBehaviour(CogwheelChainBehaviour.TYPE);
-        if (behaviour == null || !behaviour.isPartOfChain()) {
-            return null;
-        }
-        if (behaviour.getControlledChain() != null) {
-            return wheel.getBlockPos();
-        }
-        return behaviour.getControllerOffset() == null ? null : wheel.getBlockPos().offset(behaviour.getControllerOffset());
-    }
 }

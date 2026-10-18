@@ -9,7 +9,6 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
@@ -98,7 +97,7 @@ public class WrenchPhysicsHandler {
         BlockPos pos = event.getPos();
         Player player = event.getEntity();
         Block block = level.getBlockState(pos).getBlock();
-        if (!(block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock)
+        if (!HiddenCogwheelCompat.isOwnOrLegacyCogwheel(block)
             || !AllItems.WRENCH.isIn(player.getMainHandItem()) && !AllItems.WRENCH.isIn(player.getOffhandItem())
             || !(BlockEntityBehaviour.get(level, pos, CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour chain)
             || !chain.isPartOfChain()) {

@@ -1,10 +1,8 @@
 package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 
-import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
@@ -15,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.jetbrains.annotations.Nullable;
 
 public final class BntBeltTension {
     public static final float MIN = 0.0F;
@@ -63,10 +62,10 @@ public final class BntBeltTension {
     }
 
     public static void refit(Level level, BlockPos pos) {
-        CogwheelChainBehaviour behaviour = behaviour(level.getBlockEntity(pos));
-        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
-        BlockPos linkPos = (behaviour == null || !behaviour.isPartOfChain()) && partnerPos != null ? partnerPos : pos;
-        BlockPos controller = controllerPos(level, linkPos);
+        BlockPos controller = trackController(level, pos);
+        if (controller == null) {
+            return;
+        }
         double fit = BntBeltLinks.fitLength(level, controller);
         int links = BntBeltLinks.linksFor(fit);
         if (links > BntBeltLinks.UNSET) {
@@ -128,53 +127,31 @@ public final class BntBeltTension {
 
     /** Block that owns the chain this position belongs to, or the position itself. */
     public static BlockPos controllerPos(Level level, BlockPos pos) {
-        CogwheelChainBehaviour behaviour = behaviour(level.getBlockEntity(pos));
-        if (behaviour == null || behaviour.getControlledChain() != null || behaviour.getControllerOffset() == null) {
-            return pos;
+        BlockPos controller = BntChains.controllerPos(level, pos);
+        return controller == null ? pos : controller;
+    }
+
+    /** Controller of the track this cogwheel or its wide twin runs on. */
+    @Nullable
+    private static BlockPos trackController(Level level, BlockPos pos) {
+        BlockPos controller = BntChains.controllerPos(level, pos);
+        if (controller != null) {
+            return controller;
         }
-        return pos.offset(behaviour.getControllerOffset());
+        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+        return partnerPos == null ? null : BntChains.controllerPos(level, partnerPos);
     }
 
     public static Set<BlockPos> chainPositions(Level level, BlockPos pos) {
         Set<BlockPos> positions = new LinkedHashSet<>();
         positions.add(pos);
-
-        BlockPos linkPos = pos;
-        CogwheelChainBehaviour behaviour = behaviour(level.getBlockEntity(linkPos));
-        if (behaviour == null || !behaviour.isPartOfChain()) {
-            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
-            CogwheelChainBehaviour partner = partnerPos == null ? null : behaviour(level.getBlockEntity(partnerPos));
-            if (partner != null && partner.isPartOfChain()) {
-                linkPos = partnerPos;
-                behaviour = partner;
+        BlockPos controllerPos = trackController(level, pos);
+        CogwheelChain chain = BntChains.chainAt(level, controllerPos);
+        if (chain != null) {
+            for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
+                positions.add(controllerPos.offset(node.localPos()));
             }
-        }
-        if (behaviour == null) {
-            return positions;
-        }
-
-        BlockPos controllerPos = linkPos;
-        CogwheelChain chain = behaviour.getControlledChain();
-        if (chain == null && behaviour.getControllerOffset() != null) {
-            controllerPos = linkPos.offset(behaviour.getControllerOffset());
-            CogwheelChainBehaviour controller = behaviour(level.getBlockEntity(controllerPos));
-            if (controller != null) {
-                chain = controller.getControlledChain();
-            }
-        }
-        if (chain == null) {
-            return positions;
-        }
-
-        for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
-            positions.add(controllerPos.offset(node.localPos()));
         }
         return positions;
-    }
-
-    private static CogwheelChainBehaviour behaviour(BlockEntity be) {
-        return be instanceof SmartBlockEntity smart
-            ? (CogwheelChainBehaviour)smart.getBehaviour(CogwheelChainBehaviour.TYPE)
-            : null;
     }
 }

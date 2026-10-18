@@ -6,14 +6,11 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import com.kipti.bnb.registry.core.BnbResourceKeys;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
-import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.IEventBus;
@@ -30,7 +27,7 @@ public class BntCogwheelChainTypes {
             .renderTexture(BitsNTracks.asResource("textures/block/industrial_belt.png"))
             .permitsAxisChange(false)
             .breakEffectsBlock(() -> Blocks.CHAIN)
-            .setCogwheelPredicate(BntCogwheelChainTypes::isFlangedDriveCogwheel)
+            .setCogwheelPredicate(HiddenCogwheelCompat::isOwnOrLegacyCogwheel)
             .build()
     );
 
@@ -42,16 +39,12 @@ public class BntCogwheelChainTypes {
             .renderTexture(BitsNTracks.asResource("textures/block/tank_tread.png"))
             .permitsAxisChange(false)
             .breakEffectsBlock(() -> Blocks.CHAIN)
-            .setCogwheelPredicate(BntCogwheelChainTypes::isFlangedDriveCogwheel)
+            .setCogwheelPredicate(HiddenCogwheelCompat::isOwnOrLegacyCogwheel)
             .build()
     );
 
     public static boolean isOwn(CogwheelChainType type) {
         return type == INDUSTRIAL_BELT_CHAIN.get() || type == TANK_TREAD_CHAIN.get();
-    }
-
-    public static boolean isFlangedDriveCogwheel(Block block) {
-        return block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock;
     }
 
     /** Message key refusing the chain here, or null. */

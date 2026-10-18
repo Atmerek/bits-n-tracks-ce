@@ -6,7 +6,6 @@ import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -32,10 +31,6 @@ public class SuspensionToolItem extends Item {
         stack.set(BitsNTracksDataComponents.TUNING_WHOLE_TRACK.get(), wholeTrack);
     }
 
-    public static MutableComponent scopeName(boolean wholeTrack) {
-        return Component.translatable(wholeTrack ? "bits_n_tracks.scope.track" : "bits_n_tracks.scope.cogwheel");
-    }
-
     @Override
     public boolean canAttackBlock(BlockState state, Level level, BlockPos pos, Player player) {
         return false;
@@ -52,7 +47,7 @@ public class SuspensionToolItem extends Item {
                 Component.translatable(setting(stack).translationKey()).withStyle(ChatFormatting.GOLD))
             .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("tooltip.bits_n_tracks.tuning.scope",
-                scopeName(wholeTrack(stack)).withStyle(ChatFormatting.GOLD))
+                BntToolScope.name(wholeTrack(stack)).withStyle(ChatFormatting.GOLD))
             .withStyle(ChatFormatting.GRAY));
     }
 }

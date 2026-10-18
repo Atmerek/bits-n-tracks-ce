@@ -304,16 +304,7 @@ public final class BntPhysicsEvents {
             Pose3dc pose = subLevel.logicalPose();
             Vector3d velocity = Sable.HELPER.getVelocity(level, new Vector3d(localPos.x, localPos.y, localPos.z));
             Vector3d localVelocity = pose.transformNormalInverse(new Vector3d(velocity)).div(20.0);
-            Vec3i sideVec = Direction.get(AxisDirection.POSITIVE, axis).getNormal();
-            Vec3i normalVec;
-            if (axis == Axis.Y) {
-                normalVec = new Vec3i(1, 0, 0);
-            } else {
-                normalVec = new Vec3i(-sideVec.getZ(), 0, sideVec.getX());
-            }
-
-            Vector3dc normalD = new Vector3d(normalVec.getX(), normalVec.getY(), normalVec.getZ());
-            double translation = localVelocity.dot(normalD);
+            double translation = localVelocity.dot(getTravelDirection(axis));
             double wheelRadius = CogwheelSizeHelper.getChainRadius(state.getBlock());
             double angularVelocity = translation / wheelRadius;
             if (axis == Axis.Z) {

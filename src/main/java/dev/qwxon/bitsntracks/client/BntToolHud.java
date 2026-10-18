@@ -5,6 +5,7 @@ import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
+import dev.qwxon.bitsntracks.content.BntToolScope;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
@@ -215,7 +216,7 @@ public final class BntToolHud {
                 }
             }
         }
-        Component scope = mode == BntLeverMode.OFFSET ? CogAlignmentLeverItem.scopeName(CogAlignmentLeverItem.wholeTrack(stack)) : null;
+        Component scope = mode == BntLeverMode.OFFSET ? BntToolScope.name(CogAlignmentLeverItem.wholeTrack(stack)) : null;
         return panel(Component.translatable(mode.translationKey()), mode.ordinal(), BntLeverMode.values().length, scope, rows, hint, hintColour, focused);
     }
 
@@ -242,7 +243,7 @@ public final class BntToolHud {
             }
             hint = selected != null ? "bits_n_tracks.tool_panel.hint.tuning" : "bits_n_tracks.tool_panel.hint.select";
         }
-        Component scope = SuspensionToolItem.scopeName(SuspensionToolItem.wholeTrack(stack));
+        Component scope = BntToolScope.name(SuspensionToolItem.wholeTrack(stack));
         return panel(Component.translatable(setting.translationKey()), setting.ordinal(), BntTuning.values().length, scope, rows, hint, HINT, focused);
     }
 

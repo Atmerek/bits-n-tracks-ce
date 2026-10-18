@@ -1,14 +1,10 @@
 package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 
-import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
-import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
-import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
+import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
@@ -219,7 +215,7 @@ public final class BntBeltLinks {
 
     /** Taut path the loop is fitted to, measured with the suspension parked at its ride height. */
     public static double fitLength(Level level, BlockPos controllerPos) {
-        List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
+        List<PathedCogwheelNode> nodes = BntChains.beltOrder(level, controllerPos);
         if (nodes.size() < 2) {
             return 0.0;
         }
@@ -230,7 +226,7 @@ public final class BntBeltLinks {
 
     /** Rebuilds the loop for a tension and returns its link count. */
     public static int relatch(Level level, BlockPos controllerPos, float tension) {
-        List<PathedCogwheelNode> nodes = beltOrder(level, controllerPos);
+        List<PathedCogwheelNode> nodes = BntChains.beltOrder(level, controllerPos);
         if (nodes.size() < 2) {
             return UNSET;
         }
@@ -312,21 +308,6 @@ public final class BntBeltLinks {
         if (links > UNSET) {
             BntBeltTension.write(level, controllerPos, tension, links, fit);
         }
-    }
-
-    private static List<PathedCogwheelNode> beltOrder(Level level, BlockPos controllerPos) {
-        if (!(level.getBlockEntity(controllerPos) instanceof SmartBlockEntity smart)
-            || !(smart.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour behaviour)) {
-            return List.of();
-        }
-        CogwheelChain chain = behaviour.getControlledChain();
-        if (chain == null) {
-            return List.of();
-        }
-        List<PathedCogwheelNode> latched = chain instanceof BntChainGeometryRefresh refreshable
-            ? refreshable.bnt$latchedBeltOrder()
-            : List.of();
-        return latched.size() >= 2 ? latched : chain.getChainPathCogwheelNodes();
     }
 
     public static int at(Level level, BlockPos controllerPos) {

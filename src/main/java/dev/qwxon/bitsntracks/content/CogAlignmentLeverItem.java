@@ -19,7 +19,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -55,10 +54,6 @@ public class CogAlignmentLeverItem extends Item {
         stack.set(BitsNTracksDataComponents.ALIGNMENT_MODE.get(), mode.ordinal());
     }
 
-    public static MutableComponent scopeName(boolean wholeTrack) {
-        return Component.translatable(wholeTrack ? "bits_n_tracks.scope.track" : "bits_n_tracks.scope.cogwheel");
-    }
-
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         return slotChanged || !ItemStack.isSameItem(oldStack, newStack);
@@ -70,7 +65,7 @@ public class CogAlignmentLeverItem extends Item {
                 Component.translatable(mode(stack).translationKey()).withStyle(ChatFormatting.GOLD))
             .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("tooltip.bits_n_tracks.alignment.scope",
-                scopeName(wholeTrack(stack)).withStyle(ChatFormatting.GOLD))
+                BntToolScope.name(wholeTrack(stack)).withStyle(ChatFormatting.GOLD))
             .withStyle(ChatFormatting.GRAY));
     }
 

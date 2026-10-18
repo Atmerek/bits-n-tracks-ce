@@ -116,7 +116,7 @@ public class BntClientCompat {
     }
 
     public static Vec3 getTransformedPosition(BlockEntity controllerBe, Vec3 localPos, BlockPos relativePos) {
-        Level level = HiddenCogwheelCompat.getActualLevel(controllerBe);
+        Level level = controllerBe.getLevel();
         if (level == null) {
             return localPos;
         }
@@ -127,7 +127,7 @@ public class BntClientCompat {
     }
 
     public static Vec3 getNodeDisplacement(BlockEntity controllerBe, BlockPos relativePos) {
-        Level level = HiddenCogwheelCompat.getActualLevel(controllerBe);
+        Level level = controllerBe.getLevel();
         if (level == null) {
             return Vec3.ZERO;
         }
@@ -197,7 +197,7 @@ public class BntClientCompat {
     private static Vec3[] nodeShifts(KineticBlockEntity be, List<RenderedChainPathNode> pathNodes) {
         int size = pathNodes.size();
         Vec3[] shifts = new Vec3[size];
-        Level level = HiddenCogwheelCompat.getActualLevel(be);
+        Level level = be.getLevel();
         if (level == null) {
             Arrays.fill(shifts, Vec3.ZERO);
             return shifts;

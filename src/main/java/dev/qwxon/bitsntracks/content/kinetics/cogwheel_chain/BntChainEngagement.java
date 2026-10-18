@@ -8,11 +8,9 @@ import com.simibubi.create.content.kinetics.KineticNetwork;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.mixin.accessor.RotationPropagatorAccessor;
@@ -33,7 +31,6 @@ import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -197,8 +194,8 @@ public final class BntChainEngagement {
     }
 
     public static Map<BlockPos, Integer> snapshot(Level level, BlockPos pos) {
-        BlockPos controllerPos = controllerPos(level, pos);
-        CogwheelChain chain = chain(level, controllerPos);
+        BlockPos controllerPos = BntChains.controllerPos(level, pos);
+        CogwheelChain chain = BntChains.chainAt(level, controllerPos);
         if (controllerPos == null || chain == null) {
             return Map.of();
         }
@@ -454,12 +451,6 @@ public final class BntChainEngagement {
         }
     }
 
-    public static CogwheelChainBehaviour chainBehaviour(BlockEntity be) {
-        return be instanceof SmartBlockEntity smartBe
-            ? (CogwheelChainBehaviour)smartBe.getBehaviour(CogwheelChainBehaviour.TYPE)
-            : null;
-    }
-
     /** Medium ratios have no exact float, so a loop hands speed back a hair fast; within Create's loop tolerance that is no change. */
     public static float settleConveyed(KineticBlockEntity from, KineticBlockEntity to, float conveyed) {
         float held = to.getTheoreticalSpeed();
@@ -490,31 +481,28 @@ public final class BntChainEngagement {
     }
 
     public static boolean partOfChain(BlockEntity be) {
-        CogwheelChainBehaviour behaviour = chainBehaviour(be);
+        CogwheelChainBehaviour behaviour = BntChains.behaviour(be);
         return behaviour != null && behaviour.isPartOfChain();
     }
 
     public static boolean sharesChain(BlockEntity from, BlockEntity to) {
-        BlockPos fromController = controllerPos(chainBehaviour(from));
-        return fromController != null && fromController.equals(controllerPos(chainBehaviour(to)));
+        BlockPos fromController = BntChains.controllerPos(from);
+        return fromController != null && fromController.equals(BntChains.controllerPos(to));
     }
 
     public static boolean meshingWouldFightChain(BlockEntity from, BlockEntity to) {
         if (!isChainCogwheel(from) || !isChainCogwheel(to)) {
             return false;
         }
-        return controllerPos(chainBehaviour(from)) != null || controllerPos(chainBehaviour(to)) != null;
+        return BntChains.controllerPos(from) != null || BntChains.controllerPos(to) != null;
     }
 
     public static boolean cutOffFromNeighbour(KineticBlockEntity from, KineticBlockEntity to) {
-        if (!isOwnCogwheelBlock(from.getBlockState()) && !isOwnCogwheelBlock(to.getBlockState())) {
+        if (!HiddenCogwheelCompat.isOwnOrLegacyCogwheel(from.getBlockState().getBlock())
+            && !HiddenCogwheelCompat.isOwnOrLegacyCogwheel(to.getBlockState().getBlock())) {
             return false;
         }
         return !connectedByShaft(from, to);
-    }
-
-    private static boolean isOwnCogwheelBlock(BlockState state) {
-        return state.getBlock() instanceof BntFlangedCogwheelBlock || state.getBlock() instanceof HiddenCogwheelBlock;
     }
 
     private static boolean connectedByShaft(KineticBlockEntity from, KineticBlockEntity to) {
@@ -560,61 +548,12 @@ public final class BntChainEngagement {
         }
 
         Level level = behaviour.getLevel();
-        BlockPos controllerPos = controllerPos(behaviour);
-        CogwheelChain chain = chainOf(behaviour);
+        BlockPos controllerPos = BntChains.controllerPos(behaviour);
+        CogwheelChain chain = BntChains.chainOf(behaviour);
         if (level == null || controllerPos == null || !(chain instanceof BntChainGeometryRefresh engagement)) {
             return true;
         }
         return engagement.bnt$isNodeEngaged(
             level, controllerPos, behaviour.getBlockEntity().getBlockPos().subtract(controllerPos));
-    }
-
-    public static BlockPos controllerPos(CogwheelChainBehaviour behaviour) {
-        if (behaviour == null || behaviour.getBlockEntity() == null) {
-            return null;
-        }
-        if (behaviour.isController()) {
-            return behaviour.getBlockEntity().getBlockPos();
-        }
-        Vec3i offset = behaviour.getControllerOffset();
-        return offset == null ? null : behaviour.getBlockEntity().getBlockPos().offset(offset);
-    }
-
-    private static CogwheelChain chainOf(CogwheelChainBehaviour behaviour) {
-        CogwheelChain direct = behaviour.getControlledChain();
-        if (direct != null) {
-            return direct;
-        }
-
-        Level level = behaviour.getLevel();
-        BlockPos controllerPos = controllerPos(behaviour);
-        if (level == null || controllerPos == null) {
-            return null;
-        }
-        CogwheelChainBehaviour controller = behaviour(level, controllerPos);
-        return controller == null ? null : controller.getControlledChain();
-    }
-
-    private static BlockPos controllerPos(Level level, BlockPos pos) {
-        CogwheelChainBehaviour behaviour = behaviour(level, pos);
-        if (behaviour == null) {
-            return null;
-        }
-        if (behaviour.getControlledChain() != null) {
-            return pos;
-        }
-        Vec3i offset = behaviour.getControllerOffset();
-        return offset == null ? null : pos.offset(offset);
-    }
-
-    private static CogwheelChain chain(Level level, BlockPos controllerPos) {
-        CogwheelChainBehaviour behaviour = controllerPos == null ? null : behaviour(level, controllerPos);
-        return behaviour == null ? null : behaviour.getControlledChain();
-    }
-
-    private static CogwheelChainBehaviour behaviour(Level level, BlockPos pos) {
-        return level.getBlockEntity(pos) instanceof SmartBlockEntity smartBe
-            ? (CogwheelChainBehaviour)smartBe.getBehaviour(CogwheelChainBehaviour.TYPE)
-            : null;
     }
 }

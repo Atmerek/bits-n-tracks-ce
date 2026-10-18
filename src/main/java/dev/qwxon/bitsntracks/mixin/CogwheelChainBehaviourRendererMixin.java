@@ -84,7 +84,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         TrackModelRenderContext.setRenderingCustomChain(HiddenCogwheelCompat.isOwnCogwheel(be.getBlockState()));
         TrackModelRenderContext.setRenderingWideChain(BntCogwheelPairing.isWide(be.getBlockState()));
         BntClientCompat.beginChainLight(be);
-        BntTreadView.begin(ms.last().pose(), HiddenCogwheelCompat.getActualLevel(be));
+        BntTreadView.begin(ms.last().pose(), be.getLevel());
 
         try {
             original.call(behaviour, be, partialTicks, ms, buffer, light, overlay);
@@ -122,7 +122,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         )
     )
     private List<ChainSegment> bnt$transformChainSegments(CogwheelChain chain, Vec3 origin, @Local(argsOnly = true) KineticBlockEntity be) {
-        Level level = HiddenCogwheelCompat.getActualLevel(be);
+        Level level = be.getLevel();
         BlockPos controllerPos = be.getBlockPos();
         Function<BlockPos, Vec3> outerDisplacement = BntChainMotion.swapDisplacementSource(
             relativePos -> BntClientCompat.getNodeDisplacement(be, relativePos));

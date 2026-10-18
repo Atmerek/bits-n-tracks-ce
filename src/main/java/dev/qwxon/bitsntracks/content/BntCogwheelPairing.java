@@ -159,7 +159,7 @@ public final class BntCogwheelPairing {
             Direction direction = Direction.fromAxisAndDirection(axis, axisDirection);
             BlockPos neighbourPos = pos.relative(direction);
             BlockState neighbour = level.getBlockState(neighbourPos);
-            if (canJoin(level, pos, state, neighbourPos, neighbour) && sideOf(neighbour) == BntWideSide.NONE) {
+            if (canPair(state, neighbour) && sideOf(neighbour) == BntWideSide.NONE) {
                 return (BlockState)state.setValue(WIDE, BntWideSide.of(direction));
             }
         }
@@ -175,7 +175,7 @@ public final class BntCogwheelPairing {
 
         BlockPos partnerPos = pos.relative(direction);
         BlockState partner = level.getBlockState(partnerPos);
-        if (!canJoin(level, pos, state, partnerPos, partner)) {
+        if (!canPair(state, partner)) {
             return;
         }
 
@@ -194,10 +194,6 @@ public final class BntCogwheelPairing {
         return canPair(state, neighbour) && sideOf(neighbour) == BntWideSide.of(direction.getOpposite())
             ? state
             : (BlockState)state.setValue(WIDE, BntWideSide.NONE);
-    }
-
-    private static boolean canJoin(BlockGetter level, BlockPos pos, BlockState state, BlockPos neighbourPos, BlockState neighbour) {
-        return canPair(state, neighbour);
     }
 
     private static boolean canPair(BlockState state, BlockState neighbour) {
