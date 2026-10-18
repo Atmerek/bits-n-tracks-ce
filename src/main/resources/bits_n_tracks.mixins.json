@@ -40,6 +40,7 @@
         "ChainDriveShapeHelperMixin",
         "CogwheelChainWholeShapeMixin",
         "VisualizationManagerMixin",
+        "IndirectInstancePageMixin",
         "BntCreativeModeInventoryScreenMixin",
         "BntItemPickerMenuMixin",
         "BntGameRendererPickMixin",
