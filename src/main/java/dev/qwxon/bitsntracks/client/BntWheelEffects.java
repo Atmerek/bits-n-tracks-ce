@@ -76,6 +76,13 @@ public final class BntWheelEffects {
     }
 
     public static void onClientTick(ClientTickEvent.Post event) {
+        if (Minecraft.getInstance().level == null) {
+            PENDING.clear();
+            AIR.clear();
+            pendingLevel = null;
+            airLevel = null;
+            return;
+        }
         Level level = pendingLevel;
         if (airLevel != level) {
             AIR.clear();
