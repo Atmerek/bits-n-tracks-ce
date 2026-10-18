@@ -92,7 +92,7 @@ public final class BntTankTread {
         }
 
         double rate = target.sink() == null ? 0.0 : target.sink().scrollRate();
-        double ahead = target.sink() == null ? 0.0 : Math.min(Math.abs(rate) * target.sink().reach(), span);
+        double ahead = target.sink() == null ? 0.0 : Math.abs(rate) * target.sink().reach();
         Segment segment = new Segment(target, source, destination, frameTopOutward ? 1.0 : -1.0, rate / span);
         double from = rate < 0.0 ? start - ahead : start;
         double to = rate > 0.0 ? start + span + ahead : start + span;
@@ -115,12 +115,12 @@ public final class BntTankTread {
         }
 
         double along = (offset + length - at) / length;
-        Vec3 frame0 = segment.source.get(0).lerp(segment.destination.get(0), along);
-        Vec3 frame1 = segment.source.get(1).lerp(segment.destination.get(1), along);
-        Vec3 frame2 = segment.source.get(2).lerp(segment.destination.get(2), along);
-        Vec3 frame3 = segment.source.get(3).lerp(segment.destination.get(3), along);
+        double inside = Mth.clamp(along, 0.0, 1.0);
+        Vec3 frame0 = segment.source.get(0).lerp(segment.destination.get(0), inside);
+        Vec3 frame1 = segment.source.get(1).lerp(segment.destination.get(1), inside);
+        Vec3 frame2 = segment.source.get(2).lerp(segment.destination.get(2), inside);
 
-        Vec3 centre = frame0.add(frame1).add(frame2).add(frame3).scale(0.25);
+        Vec3 centre = segment.origin.add(segment.run.scale(along));
         Vec3 across = unit(frame0.subtract(frame1)).scale(segment.facing);
         Vec3 thick = unit(frame1.subtract(frame2)).scale(segment.facing);
         if (across.lengthSqr() < 0.5 || thick.lengthSqr() < 0.5) {
@@ -334,6 +334,8 @@ public final class BntTankTread {
         private final List<Vec3> source;
         private final List<Vec3> destination;
         private final double facing;
+        private final Vec3 origin;
+        private final Vec3 run;
         private final Vec3 forward;
         private final double lengthSqr;
         private final double alongRate;
@@ -351,7 +353,9 @@ public final class BntTankTread {
             this.source = source;
             this.destination = destination;
             this.facing = facing;
-            Vec3 run = sourceCentre(destination).subtract(sourceCentre(source));
+            this.origin = sourceCentre(source);
+            Vec3 run = sourceCentre(destination).subtract(this.origin);
+            this.run = run;
             this.forward = unit(run);
             this.lengthSqr = target.relTo().lengthSqr();
             this.alongRate = alongRate;
