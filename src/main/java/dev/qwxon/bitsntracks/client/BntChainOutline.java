@@ -59,13 +59,10 @@ public final class BntChainOutline extends Outline {
         }
         CogwheelChainWholeShape shape;
         BntChainShapeContext.set(level, pos);
-        BntRadiusProvider.setLevel(level);
-        BntRadiusProvider.setOrigin(pos);
-        try {
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, pos)) {
             shape = CogwheelChainWholeShape.buildShape(chain);
         } finally {
             BntChainShapeContext.clear();
-            BntRadiusProvider.clearLevel();
         }
         if (shape == null) {
             return;

@@ -89,15 +89,8 @@ public final class BntBeltHold {
             return;
         }
 
-        Level heldLevel = BntRadiusProvider.level();
-        BlockPos heldOrigin = BntRadiusProvider.origin();
-        try {
-            BntRadiusProvider.setLevel(level);
-            BntRadiusProvider.setOrigin(controllerPos);
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             apply(level, controllerPos, nodes, axis, now);
-        } finally {
-            BntRadiusProvider.setLevel(heldLevel);
-            BntRadiusProvider.setOrigin(heldOrigin);
         }
     }
 

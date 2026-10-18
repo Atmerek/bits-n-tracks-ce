@@ -48,6 +48,7 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Position;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -158,28 +159,26 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         )
     )
     private List<ChainSegment> bnt$transformChainSegments(CogwheelChain chain, Vec3 origin, @Local(argsOnly = true) KineticBlockEntity be) {
-        List var5;
-        try {
-            BntRadiusProvider.setLevel(HiddenCogwheelCompat.getActualLevel(be));
-            BntRadiusProvider.setOrigin(be.getBlockPos());
-            BntChainMotion.setDisplacementSource(relativePos -> BntClientCompat.getNodeDisplacement(be, relativePos));
-            BntChainMotion.swapRouteSource(relativePos -> BntChainEngagement.routeSide(
-                HiddenCogwheelCompat.getActualLevel(be), be.getBlockPos().offset(relativePos)));
+        Level level = HiddenCogwheelCompat.getActualLevel(be);
+        BlockPos controllerPos = be.getBlockPos();
+        Function<BlockPos, Vec3> outerDisplacement = BntChainMotion.swapDisplacementSource(
+            relativePos -> BntClientCompat.getNodeDisplacement(be, relativePos));
+        Function<BlockPos, Direction> outerRoute = BntChainMotion.swapRouteSource(
+            relativePos -> BntChainEngagement.routeSide(level, controllerPos.offset(relativePos)));
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             if (chain instanceof BntChainGeometryRefresh refreshable) {
-                refreshable.bnt$refreshChainGeometry(HiddenCogwheelCompat.getActualLevel(be), be.getBlockPos());
+                refreshable.bnt$refreshChainGeometry(level, controllerPos);
             }
 
-            List<ChainSegment> segments = CogwheelChainRenderGeometryBuilder.buildSegments(chain, origin);
-            var5 = BntClientCompat.transformChainSegments(segments, chain, be);
-            float tension = BntBeltTension.contextTension();
-            double belt = BntBeltLinks.length(BntBeltLinks.context()) + BntBeltLinks.slackLength(tension);
+            List<ChainSegment> segments = BntClientCompat.transformChainSegments(
+                CogwheelChainRenderGeometryBuilder.buildSegments(chain, origin), chain, be);
+            double belt = BntBeltLinks.length(BntBeltLinks.context()) + BntBeltLinks.slackLength(BntBeltTension.contextTension());
             BntBeltLinks.setLoop(belt, bnt$chainScroll(be));
+            return segments;
         } finally {
-            BntChainMotion.clearDisplacementSource();
-            BntRadiusProvider.clearLevel();
+            BntChainMotion.swapDisplacementSource(outerDisplacement);
+            BntChainMotion.swapRouteSource(outerRoute);
         }
-
-        return var5;
     }
 
     /** Bits 'n' Bobs drops the chain to its cheap form past 24 blocks, measured against sublevel-local coordinates. */

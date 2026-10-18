@@ -223,15 +223,8 @@ public final class BntBeltLinks {
         if (nodes.size() < 2) {
             return 0.0;
         }
-        Level heldLevel = BntRadiusProvider.level();
-        BlockPos heldOrigin = BntRadiusProvider.origin();
-        try {
-            BntRadiusProvider.setLevel(level);
-            BntRadiusProvider.setOrigin(controllerPos);
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             return tautLength(level, controllerPos, nodes, true);
-        } finally {
-            BntRadiusProvider.setLevel(heldLevel);
-            BntRadiusProvider.setOrigin(heldOrigin);
         }
     }
 
@@ -241,15 +234,8 @@ public final class BntBeltLinks {
         if (nodes.size() < 2) {
             return UNSET;
         }
-        Level heldLevel = BntRadiusProvider.level();
-        BlockPos heldOrigin = BntRadiusProvider.origin();
-        try {
-            BntRadiusProvider.setLevel(level);
-            BntRadiusProvider.setOrigin(controllerPos);
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             return linksFor(tautLength(level, controllerPos, nodes, true));
-        } finally {
-            BntRadiusProvider.setLevel(heldLevel);
-            BntRadiusProvider.setOrigin(heldOrigin);
         }
     }
 

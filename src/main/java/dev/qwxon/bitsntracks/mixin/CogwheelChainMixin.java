@@ -531,15 +531,8 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
 
     @Unique
     private void bnt$refreshWithLevel(Level level, BlockPos controllerPos) {
-        Level outerLevel = BntRadiusProvider.level();
-        BlockPos outerOrigin = BntRadiusProvider.origin();
-        BntRadiusProvider.setLevel(level);
-        BntRadiusProvider.setOrigin(controllerPos);
-        try {
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             this.bnt$refreshChainGeometry(level, controllerPos);
-        } finally {
-            BntRadiusProvider.setLevel(outerLevel);
-            BntRadiusProvider.setOrigin(outerOrigin);
         }
     }
 

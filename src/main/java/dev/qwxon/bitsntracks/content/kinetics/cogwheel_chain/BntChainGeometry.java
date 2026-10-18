@@ -98,7 +98,7 @@ public final class BntChainGeometry {
         double fallback = node.isLarge()
             ? (node.hasSmallCogwheelOffset() ? BntPhysicsTuning.getMediumTrackRadius() : BntPhysicsTuning.getLargeTrackRadius())
             : (node.hasSmallCogwheelOffset() ? BntPhysicsTuning.getSmallTrackRadius() : BntPhysicsTuning.getTinyTrackRadius());
-        double radius = BntRadiusProvider.getTrackRadius(node.pos(), node.isLarge(), fallback);
+        double radius = BntRadiusProvider.getTrackRadius(node.pos(), fallback);
         return radius > 0.0 ? radius : fallback;
     }
 

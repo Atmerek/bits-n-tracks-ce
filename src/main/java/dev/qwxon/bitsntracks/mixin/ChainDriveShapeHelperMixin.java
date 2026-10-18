@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
@@ -18,6 +19,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
     remap = false
 )
 public abstract class ChainDriveShapeHelperMixin {
+    @Unique
+    private static final ThreadLocal<BntRadiusProvider.Scope> bnt$outerRadius = new ThreadLocal<>();
+
     @Redirect(
         method = "findClosestRayHit(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;DZ)Lcom/kipti/bnb/content/kinetics/cogwheel_chain/shape/ChainDriveShapeHelper$ChainShapeHit;",
         at = @At(
@@ -29,8 +33,7 @@ public abstract class ChainDriveShapeHelperMixin {
         Map.Entry<BlockPos, CogwheelChain> entry, Level level, Vec3 from, Vec3 to, double maxDistance, boolean rendered
     ) {
         BntChainShapeContext.set(rendered ? level : null, entry.getKey());
-        BntRadiusProvider.setLevel(level);
-        BntRadiusProvider.setOrigin(entry.getKey());
+        bnt$outerRadius.set(BntRadiusProvider.at(level, entry.getKey()));
         return entry.getValue();
     }
 
@@ -46,7 +49,11 @@ public abstract class ChainDriveShapeHelperMixin {
             return CogwheelChainWholeShape.buildShape(chain);
         } finally {
             BntChainShapeContext.clear();
-            BntRadiusProvider.clearLevel();
+            BntRadiusProvider.Scope outer = bnt$outerRadius.get();
+            bnt$outerRadius.remove();
+            if (outer != null) {
+                outer.close();
+            }
         }
     }
 }

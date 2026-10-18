@@ -29,10 +29,6 @@ public final class BntChainMotion {
     private BntChainMotion() {
     }
 
-    public static void setDisplacementSource(Function<BlockPos, Vec3> source) {
-        DISPLACEMENT.set(source);
-    }
-
     public static Function<BlockPos, Vec3> swapDisplacementSource(Function<BlockPos, Vec3> source) {
         Function<BlockPos, Vec3> previous = DISPLACEMENT.get();
         if (source == null) {
@@ -41,11 +37,6 @@ public final class BntChainMotion {
             DISPLACEMENT.set(source);
         }
         return previous;
-    }
-
-    public static void clearDisplacementSource() {
-        DISPLACEMENT.remove();
-        ROUTE.remove();
     }
 
     public static Vec3 displacement(BlockPos localPos) {

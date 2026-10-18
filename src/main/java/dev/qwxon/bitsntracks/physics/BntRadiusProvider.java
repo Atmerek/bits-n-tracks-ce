@@ -2,23 +2,43 @@ package dev.qwxon.bitsntracks.physics;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Block;
 
-public class BntRadiusProvider {
+public final class BntRadiusProvider {
     private static final ThreadLocal<Level> CURRENT_LEVEL = new ThreadLocal<>();
     private static final ThreadLocal<BlockPos> CURRENT_ORIGIN = new ThreadLocal<>();
 
-    public static void setLevel(Level level) {
-        CURRENT_LEVEL.set(level);
+    private BntRadiusProvider() {
     }
 
-    public static void setOrigin(BlockPos origin) {
-        CURRENT_ORIGIN.set(origin);
+    public record Scope(Level level, BlockPos origin) implements AutoCloseable {
+        @Override
+        public void close() {
+            set(this.level, this.origin);
+        }
     }
 
-    public static void clearLevel() {
-        CURRENT_LEVEL.remove();
-        CURRENT_ORIGIN.remove();
+    public static Scope at(Level level, BlockPos origin) {
+        Scope previous = keep();
+        set(level, origin);
+        return previous;
+    }
+
+    public static Scope keep() {
+        return new Scope(CURRENT_LEVEL.get(), CURRENT_ORIGIN.get());
+    }
+
+    private static void set(Level level, BlockPos origin) {
+        if (level == null) {
+            CURRENT_LEVEL.remove();
+        } else {
+            CURRENT_LEVEL.set(level);
+        }
+        if (origin == null) {
+            CURRENT_ORIGIN.remove();
+        } else {
+            CURRENT_ORIGIN.set(origin);
+        }
     }
 
     public static Level level() {
@@ -29,24 +49,13 @@ public class BntRadiusProvider {
         return CURRENT_ORIGIN.get();
     }
 
-    public static double getTrackRadius(BlockPos bPos, boolean isLargeDefault, double fallbackRadius) {
+    public static double getTrackRadius(BlockPos localPos, double fallbackRadius) {
         Level level = CURRENT_LEVEL.get();
-        BlockPos lookupPos = CURRENT_ORIGIN.get() != null ? CURRENT_ORIGIN.get().offset(bPos) : bPos;
         if (level == null) {
             return fallbackRadius;
-        } else {
-            BlockState state = level.getBlockState(lookupPos);
-            if (CogwheelSizeHelper.isLarge(state.getBlock())) {
-                return BntPhysicsTuning.getLargeTrackRadius();
-            } else if (CogwheelSizeHelper.isMedium(state.getBlock())) {
-                return BntPhysicsTuning.getMediumTrackRadius();
-            } else if (CogwheelSizeHelper.isIntermediate(state.getBlock())) {
-                return BntPhysicsTuning.getIntermediateTrackRadius();
-            } else if (CogwheelSizeHelper.isTiny(state.getBlock())) {
-                return BntPhysicsTuning.getTinyTrackRadius();
-            } else {
-                return fallbackRadius;
-            }
         }
+        BlockPos origin = CURRENT_ORIGIN.get();
+        Block block = level.getBlockState(origin != null ? origin.offset(localPos) : localPos).getBlock();
+        return CogwheelSizeHelper.sizedByBlock(block) ? CogwheelSizeHelper.getTrackRadius(block) : fallbackRadius;
     }
 }

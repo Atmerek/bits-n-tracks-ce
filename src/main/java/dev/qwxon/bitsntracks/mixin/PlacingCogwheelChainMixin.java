@@ -10,9 +10,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
-import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.List;
@@ -29,41 +27,29 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin({PlacingCogwheelChain.class})
+@Mixin(value = PlacingCogwheelChain.class, remap = false)
 public abstract class PlacingCogwheelChainMixin {
-    @Shadow(
-        remap = false
-    )
+    @Unique
+    private static final double CROSS_STRUCTURE_REACH = 32.0;
+
+    @Shadow
     public abstract List<PlacingCogwheelNode> getVisitedNodes();
 
-    @Shadow(
-        remap = false
-    )
+    @Shadow
     public abstract PlacingCogwheelNode getLastNode();
 
-    @Shadow(
-        remap = false
-    )
+    @Shadow
     public abstract int getSize();
 
-    @Shadow(
-        remap = false
-    )
-    public abstract boolean exceedsMaxBounds(PlacingCogwheelNode var1);
+    @Shadow
+    public abstract boolean exceedsMaxBounds(PlacingCogwheelNode node);
 
-    @Shadow(
-        remap = false
-    )
+    @Shadow
     private static boolean isValidLargeCogAxisConnection(PlacingCogwheelNode previousNode, BlockPos pos, Axis axis, boolean isLarge) {
         throw new AssertionError();
     }
 
-    @Inject(
-        method = {"tryAddNode"},
-        at = {@At("HEAD")},
-        cancellable = true,
-        remap = false
-    )
+    @Inject(method = "tryAddNode", at = @At("HEAD"), cancellable = true)
     private void bnt$addOwnNode(BlockPos pos, BlockState state, CogwheelChainType type, CallbackInfoReturnable<Boolean> cir)
         throws ChainInteractionFailedException {
         if (BntChainGeometry.ownGeometry() || BntCogwheelChainTypes.isOwn(type) || HiddenCogwheelCompat.isOwnCogwheel(state)) {
@@ -78,127 +64,80 @@ public abstract class PlacingCogwheelChainMixin {
 
     @Unique
     private boolean bnt$tryAddNode(BlockPos pos, BlockState state, CogwheelChainType type) throws ChainInteractionFailedException {
-        PlacingCogwheelNode previousNode = this.getLastNode();
         CogwheelChainCandidate candidate = CogwheelChainCandidate.getForBlock(state);
         if (candidate == null) {
             return false;
-        } else {
-            Level level = HiddenCogwheelCompat.getPlacementLevel();
-
-            try {
-                List<PlacingCogwheelNode> visitedNodes = this.getVisitedNodes();
-                if (level != null && !visitedNodes.isEmpty()) {
-                    BntRadiusProvider.setLevel(level);
-                    BntRadiusProvider.setOrigin(visitedNodes.get(0).pos());
-                }
-
-                boolean isValidCogwheel = type.getCogwheelPredicate().test(state.getBlock());
-                if (!isValidCogwheel) {
-                    throw new ChainInteractionFailedException("invalid_cogwheel_type." + type.getTranslationKey());
-                } else {
-                    for (int i = 1; i < this.getVisitedNodes().size(); i++) {
-                        if (this.getVisitedNodes().get(i).pos().equals(pos)) {
-                            throw new ChainInteractionFailedException("cannot_revisit_node");
-                        }
-                    }
-
-                    Axis axis = candidate.axis();
-                    boolean isLarge = candidate.isLarge();
-                    boolean hasSmallOffset = candidate.hasSmallCogwheelOffset();
-                    PlacingCogwheelNode nextNode = new PlacingCogwheelNode(pos, axis, isLarge, hasSmallOffset);
-                    if (level != null) {
-                        SubLevel subLevelA = Sable.HELPER.getContaining(level, previousNode.pos());
-                        SubLevel subLevelB = Sable.HELPER.getContaining(level, pos);
-                        if (subLevelA != subLevelB) {
-                            Vec3 worldPosA = previousNode.pos().getCenter();
-                            if (subLevelA != null) {
-                                worldPosA = subLevelA.logicalPose().transformPosition(worldPosA);
-                            }
-
-                            Vec3 worldPosB = pos.getCenter();
-                            if (subLevelB != null) {
-                                worldPosB = subLevelB.logicalPose().transformPosition(worldPosB);
-                            }
-
-                            double distance = worldPosA.distanceTo(worldPosB);
-                            if (distance > 32.0) {
-                                throw new ChainInteractionFailedException("out_of_bounds");
-                            }
-
-                            this.getVisitedNodes().add(nextNode);
-                            return true;
-                        }
-                    }
-
-                    if (this.exceedsMaxBounds(nextNode)) {
-                        throw new ChainInteractionFailedException("out_of_bounds");
-                    } else {
-                        int sameAxisOffset = Math.abs(pos.get(axis) - previousNode.pos().get(axis));
-                        PlacingCogwheelNode prePreviousNode = this.getSize() >= 2 ? this.getVisitedNodes().get(this.getVisitedNodes().size() - 2) : null;
-                        boolean sameAxisPlane = sameAxisOffset == 0;
-                        boolean sameRotationAxis = axis == previousNode.rotationAxis();
-                        double thisRadius = CogwheelSizeHelper.getTrackRadius(state.getBlock());
-
-                        double prevRadius = previousNode.isLarge() ? BntPhysicsTuning.getLargeTrackRadius() : BntPhysicsTuning.getSmallTrackRadius();
-                        if (level != null) {
-                            prevRadius = CogwheelSizeHelper.getTrackRadius(level.getBlockState(previousNode.pos()).getBlock());
-                        }
-
-                        double radiusSum = thisRadius + prevRadius;
-                        boolean touching = sameAxisPlane && pos.distSqr(previousNode.pos()) <= radiusSum * radiusSum;
-                        if (sameRotationAxis && sameAxisPlane && touching && bnt$isDirectNeighbor(pos, previousNode.pos())) {
-                            boolean var45 = true;
-                        } else {
-                            boolean var10000 = false;
-                        }
-
-                        boolean validFlatConnection = sameRotationAxis && sameAxisPlane;
-                        boolean validLargeConnection = isValidLargeCogAxisConnection(previousNode, pos, axis, isLarge);
-                        boolean validConnection = validFlatConnection || validLargeConnection;
-                        if (validConnection) {
-                            List<Integer> validPathSteps = CogwheelChainPathfinder.getValidPathSteps(previousNode, nextNode);
-                            if (validPathSteps.isEmpty()) {
-                                throw new ChainInteractionFailedException("no_cogwheel_connection");
-                            } else {
-                                if (prePreviousNode != null) {
-                                    boolean anyPathValid = false;
-
-                                    for (Integer validPathStep : validPathSteps) {
-                                        if (anyPathValid) {
-                                            break;
-                                        }
-
-                                        anyPathValid = CogwheelChainPathfinder.isValidPathStep(prePreviousNode, 1, previousNode, validPathStep)
-                                            || CogwheelChainPathfinder.isValidPathStep(prePreviousNode, -1, previousNode, validPathStep);
-                                    }
-
-                                    if (!anyPathValid) {
-                                        throw new ChainInteractionFailedException("no_path_to_cogwheel");
-                                    }
-                                }
-
-                                this.getVisitedNodes().add(nextNode);
-                                return true;
-                            }
-                        } else if (!sameRotationAxis) {
-                            throw new ChainInteractionFailedException("not_valid_axis_change");
-                        } else {
-                            throw new ChainInteractionFailedException("not_flat_connection");
-                        }
-                    }
-                }
-            } finally {
-                BntRadiusProvider.clearLevel();
+        }
+        Level level = HiddenCogwheelCompat.getPlacementLevel();
+        List<PlacingCogwheelNode> visited = this.getVisitedNodes();
+        try (BntRadiusProvider.Scope ignored = level != null && !visited.isEmpty()
+            ? BntRadiusProvider.at(level, visited.get(0).pos())
+            : BntRadiusProvider.keep()) {
+            if (!type.getCogwheelPredicate().test(state.getBlock())) {
+                throw new ChainInteractionFailedException("invalid_cogwheel_type." + type.getTranslationKey());
             }
+            for (int i = 1; i < visited.size(); i++) {
+                if (visited.get(i).pos().equals(pos)) {
+                    throw new ChainInteractionFailedException("cannot_revisit_node");
+                }
+            }
+
+            PlacingCogwheelNode previousNode = this.getLastNode();
+            Axis axis = candidate.axis();
+            PlacingCogwheelNode nextNode = new PlacingCogwheelNode(pos, axis, candidate.isLarge(), candidate.hasSmallCogwheelOffset());
+            if (level != null && bnt$acrossStructures(level, previousNode.pos(), pos)) {
+                visited.add(nextNode);
+                return true;
+            }
+            if (this.exceedsMaxBounds(nextNode)) {
+                throw new ChainInteractionFailedException("out_of_bounds");
+            }
+
+            boolean sameRotationAxis = axis == previousNode.rotationAxis();
+            boolean flat = sameRotationAxis && pos.get(axis) == previousNode.pos().get(axis);
+            if (!flat && !isValidLargeCogAxisConnection(previousNode, pos, axis, candidate.isLarge())) {
+                throw new ChainInteractionFailedException(sameRotationAxis ? "not_flat_connection" : "not_valid_axis_change");
+            }
+
+            List<Integer> steps = CogwheelChainPathfinder.getValidPathSteps(previousNode, nextNode);
+            if (steps.isEmpty()) {
+                throw new ChainInteractionFailedException("no_cogwheel_connection");
+            }
+            if (this.getSize() >= 2 && !bnt$anyStepContinues(visited.get(visited.size() - 2), previousNode, steps)) {
+                throw new ChainInteractionFailedException("no_path_to_cogwheel");
+            }
+            visited.add(nextNode);
+            return true;
         }
     }
 
-    @Inject(
-        method = {"checkMissingNodesInLevel"},
-        at = {@At("HEAD")},
-        cancellable = true,
-        remap = false
-    )
+    @Unique
+    private static boolean bnt$acrossStructures(Level level, BlockPos from, BlockPos to) throws ChainInteractionFailedException {
+        SubLevel fromSubLevel = Sable.HELPER.getContaining(level, from);
+        SubLevel toSubLevel = Sable.HELPER.getContaining(level, to);
+        if (fromSubLevel == toSubLevel) {
+            return false;
+        }
+        Vec3 fromWorld = fromSubLevel == null ? from.getCenter() : fromSubLevel.logicalPose().transformPosition(from.getCenter());
+        Vec3 toWorld = toSubLevel == null ? to.getCenter() : toSubLevel.logicalPose().transformPosition(to.getCenter());
+        if (fromWorld.distanceTo(toWorld) > CROSS_STRUCTURE_REACH) {
+            throw new ChainInteractionFailedException("out_of_bounds");
+        }
+        return true;
+    }
+
+    @Unique
+    private static boolean bnt$anyStepContinues(PlacingCogwheelNode prePrevious, PlacingCogwheelNode previous, List<Integer> steps) {
+        for (int step : steps) {
+            if (CogwheelChainPathfinder.isValidPathStep(prePrevious, 1, previous, step)
+                || CogwheelChainPathfinder.isValidPathStep(prePrevious, -1, previous, step)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Inject(method = "checkMissingNodesInLevel", at = @At("HEAD"), cancellable = true)
     private void bnt$refuseNodes(Level level, CogwheelChainType type, CallbackInfoReturnable<Boolean> cir) {
         for (PlacingCogwheelNode node : this.getVisitedNodes()) {
             if (BntCogwheelChainTypes.refusal(type, level, node.pos(), level.getBlockState(node.pos())) != null) {
@@ -208,19 +147,7 @@ public abstract class PlacingCogwheelChainMixin {
         }
     }
 
-    private static boolean bnt$isDirectNeighbor(BlockPos a, BlockPos b) {
-        int dx = Math.abs(a.getX() - b.getX());
-        int dy = Math.abs(a.getY() - b.getY());
-        int dz = Math.abs(a.getZ() - b.getZ());
-        return dx + dy + dz == 1;
-    }
-
-    @ModifyVariable(
-        method = {"validateConnection"},
-        at = @At("STORE"),
-        ordinal = 2,
-        remap = false
-    )
+    @ModifyVariable(method = "validateConnection", at = @At("STORE"), ordinal = 2)
     private static boolean bnt$modifyIsAdjacent(boolean original, @Local(argsOnly = true) CogwheelChainType type) {
         return original && !BntChainGeometry.ownGeometry() && !BntCogwheelChainTypes.isOwn(type);
     }

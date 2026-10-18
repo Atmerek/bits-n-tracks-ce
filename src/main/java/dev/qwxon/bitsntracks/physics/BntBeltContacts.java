@@ -135,15 +135,8 @@ public final class BntBeltContacts {
         BntBeltLoads loads, Level level, ServerSubLevel subLevel, Pose3d pose, MassData massData,
         BlockPos controllerPos, List<PathedCogwheelNode> nodes, float speed, double brake
     ) {
-        Level heldLevel = BntRadiusProvider.level();
-        BlockPos heldOrigin = BntRadiusProvider.origin();
-        try {
-            BntRadiusProvider.setLevel(level);
-            BntRadiusProvider.setOrigin(controllerPos);
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             spans(loads, level, subLevel, pose, massData, controllerPos, nodes, speed, brake);
-        } finally {
-            BntRadiusProvider.setLevel(heldLevel);
-            BntRadiusProvider.setOrigin(heldOrigin);
         }
     }
 
