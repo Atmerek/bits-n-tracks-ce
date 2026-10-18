@@ -77,16 +77,8 @@ public final class CogwheelSizeHelper {
         };
     }
 
-    public static double getChainRadius(boolean isLarge, boolean hasSmallCogwheelOffset) {
-        if (isLarge) {
-            return hasSmallCogwheelOffset ? MEDIUM_CHAIN_RADIUS : LARGE_CHAIN_RADIUS;
-        } else {
-            return hasSmallCogwheelOffset ? SMALL_CHAIN_RADIUS : TINY_CHAIN_RADIUS;
-        }
-    }
-
-    public static double getChainRadius(Block block, boolean isLarge, boolean hasSmallCogwheelOffset) {
-        return sizedByBlock(block) ? getChainRadius(block) : getChainRadius(isLarge, hasSmallCogwheelOffset);
+    public static double getChainRadius(Block block, boolean isLarge) {
+        return sizedByBlock(block) ? getChainRadius(block) : isLarge ? LARGE_CHAIN_RADIUS : SMALL_CHAIN_RADIUS;
     }
 
     public static boolean sizedByBlock(Block block) {

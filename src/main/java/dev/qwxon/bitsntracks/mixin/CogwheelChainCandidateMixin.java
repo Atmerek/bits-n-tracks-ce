@@ -5,6 +5,7 @@ import com.kipti.bnb.registry.core.BnbTags.BnbBlockTags;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelBlock;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,6 +45,6 @@ public abstract class CogwheelChainCandidateMixin {
         if (block instanceof BntFlangedCogwheelBlock || block instanceof HiddenCogwheelBlock) {
             return CogwheelSize.of(block);
         }
-        return BnbBlockTags.SMALL_FLANGED_COGWHEEL.matches(state) ? CogwheelSize.SMALL : null;
+        return BntChainGeometry.ownGeometry() && BnbBlockTags.SMALL_FLANGED_COGWHEEL.matches(state) ? CogwheelSize.SMALL : null;
     }
 }

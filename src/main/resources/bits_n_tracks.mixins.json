@@ -19,7 +19,6 @@
         "ResidualChainResultMixin",
         "RotationPropagatorMixin",
         "GeneratingKineticBlockEntityMixin",
-        "PathedCogwheelNodeMixin",
         "RenderedChainPathNodeMixin",
         "BntCreativeModeTabMixin",
         "BntUseItemOnRangeMixin",

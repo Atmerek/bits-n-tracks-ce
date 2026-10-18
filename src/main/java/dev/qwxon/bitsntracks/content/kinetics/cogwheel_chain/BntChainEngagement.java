@@ -349,7 +349,7 @@ public final class BntChainEngagement {
             }
 
             float carried = kinetic.getTheoreticalSpeed()
-                * (float)(sides[i] * CogwheelSizeHelper.getChainRadius(kinetic.getBlockState().getBlock(), node.isLarge(), node.hasSmallCogwheelOffset()));
+                * (float)(sides[i] * CogwheelSizeHelper.getChainRadius(kinetic.getBlockState().getBlock(), node.isLarge()));
             if (!seen) {
                 seen = true;
                 reference = carried;
