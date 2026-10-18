@@ -27,21 +27,24 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import org.joml.Vector3f;
 
 final class BntToolDial extends PonderElementBase implements PonderOverlayElement {
     private static final double TICK_SECONDS = 0.05;
     private static final int RAISE_TICKS = 15;
     private static final int MESSAGE_TICKS = 60;
     private static final int MESSAGE_FADE = 20;
-    private static final float SCALE = 176.0F;
+    private static final float SCALE = 293.0F;
     private static final float RIGHT = 78.0F;
     private static final float HEIGHT = 0.56F;
     private static final float DEPTH = 800.0F;
-    private static final float TURN = -16.0F;
+    private static final float TURN = 16.0F;
     private static final float TILT = 6.0F;
+    private static final Vector3f KEY_LIGHT = new Vector3f(-0.3F, -0.7F, 1.0F).normalize();
+    private static final Vector3f FILL_LIGHT = new Vector3f(0.4F, -0.2F, 1.0F).normalize();
     private static final float MESSAGE_GAP = 54.0F;
-    private static final float DIAL_X = 7.4F / 16.0F;
-    private static final float DIAL_Y = 25.5F / 16.0F;
+    private static final float DIAL_X = 8.8F / 16.0F;
+    private static final float DIAL_Y = 9.75F / 16.0F;
     private static final float DIAL_Z = 0.5F;
 
     private final ItemStack tool = BitsNTracksItems.SUSPENSION_TOOL.asStack();
@@ -137,10 +140,10 @@ final class BntToolDial extends PonderElementBase implements PonderOverlayElemen
         ms.translate(x, y, DEPTH);
         ms.scale(SCALE, -SCALE, SCALE);
         ms.mulPose(Axis.XP.rotationDegrees(TILT));
-        ms.mulPose(Axis.YP.rotationDegrees(90.0F + TURN));
+        ms.mulPose(Axis.YP.rotationDegrees(-90.0F - TURN));
         ms.translate(-DIAL_X, -DIAL_Y, -DIAL_Z);
         RenderSystem.enableDepthTest();
-        Lighting.setupFor3DItems();
+        RenderSystem.setShaderLights(KEY_LIGHT, FILL_LIGHT);
         BntTunerGauge.stage(Mth.lerp(partialTicks, angleBefore, needle.angle()));
         try {
             IClientItemExtensions.of(tool).getCustomRenderer()
@@ -148,6 +151,7 @@ final class BntToolDial extends PonderElementBase implements PonderOverlayElemen
             graphics.flush();
         } finally {
             BntTunerGauge.unstage();
+            Lighting.setupFor3DItems();
         }
         ms.popPose();
 
