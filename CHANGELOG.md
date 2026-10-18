@@ -32,6 +32,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Decorative heads of the mod's creators and contributors.
 - Cogwheels with physics enabled now block players and other entities.
 - Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, Debug Logging, geometry and stress settings for the intermediate size, and client settings for Flywheel rendering, track update rate and animation distance.
+- Polish translation.
 
 ### Changed
 
