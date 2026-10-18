@@ -1,6 +1,9 @@
 package dev.qwxon.bitsntracks.physics;
 
-import net.minecraft.world.level.block.Block;
+import dev.qwxon.bitsntracks.content.CogwheelSize;
+import java.util.EnumMap;
+import java.util.Locale;
+import java.util.Map;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.ModConfigSpec.BooleanValue;
 import net.neoforged.neoforge.common.ModConfigSpec.Builder;
@@ -25,31 +28,11 @@ public final class BntPhysicsTuning {
 
     private static final DoubleValue TRACK_MAX_IMPULSE_MULTIPLIER;
 
-    private static final DoubleValue TINY_COLLISION_RADIUS;
-    private static final DoubleValue INTERMEDIATE_COLLISION_RADIUS;
-    private static final DoubleValue SMALL_COLLISION_RADIUS;
-    private static final DoubleValue MEDIUM_COLLISION_RADIUS;
-    private static final DoubleValue LARGE_COLLISION_RADIUS;
-    private static final DoubleValue TINY_TRACK_RADIUS;
-    private static final DoubleValue INTERMEDIATE_TRACK_RADIUS;
-    private static final DoubleValue SMALL_TRACK_RADIUS;
-    private static final DoubleValue MEDIUM_TRACK_RADIUS;
-    private static final DoubleValue LARGE_TRACK_RADIUS;
-    private static final DoubleValue TINY_VERTICAL_OFFSET;
-    private static final DoubleValue INTERMEDIATE_VERTICAL_OFFSET;
-    private static final DoubleValue SMALL_VERTICAL_OFFSET;
-    private static final DoubleValue MEDIUM_VERTICAL_OFFSET;
-    private static final DoubleValue LARGE_VERTICAL_OFFSET;
-    private static final DoubleValue TINY_VISUAL_VERTICAL_OFFSET;
-    private static final DoubleValue INTERMEDIATE_VISUAL_VERTICAL_OFFSET;
-    private static final DoubleValue SMALL_VISUAL_VERTICAL_OFFSET;
-    private static final DoubleValue MEDIUM_VISUAL_VERTICAL_OFFSET;
-    private static final DoubleValue LARGE_VISUAL_VERTICAL_OFFSET;
-    private static final DoubleValue TINY_TOOL_HIGHLIGHT_RADIUS;
-    private static final DoubleValue INTERMEDIATE_TOOL_HIGHLIGHT_RADIUS;
-    private static final DoubleValue SMALL_TOOL_HIGHLIGHT_RADIUS;
-    private static final DoubleValue MEDIUM_TOOL_HIGHLIGHT_RADIUS;
-    private static final DoubleValue LARGE_TOOL_HIGHLIGHT_RADIUS;
+    private static final Map<CogwheelSize, DoubleValue> COLLISION_RADIUS;
+    private static final Map<CogwheelSize, DoubleValue> TRACK_RADIUS;
+    private static final Map<CogwheelSize, DoubleValue> VERTICAL_OFFSET;
+    private static final Map<CogwheelSize, DoubleValue> VISUAL_VERTICAL_OFFSET;
+    private static final Map<CogwheelSize, DoubleValue> TOOL_HIGHLIGHT_RADIUS;
 
     private static final DoubleValue DRIVE_TRACTION;
     private static final DoubleValue BRAKE_TRACTION;
@@ -79,11 +62,7 @@ public final class BntPhysicsTuning {
     private static final BooleanValue BELT_HOLD_ENABLED;
     private static final DoubleValue BELT_MAX_HOLD;
 
-    private static final DoubleValue TINY_STRESS_IMPACT;
-    private static final DoubleValue INTERMEDIATE_STRESS_IMPACT;
-    private static final DoubleValue SMALL_STRESS_IMPACT;
-    private static final DoubleValue MEDIUM_STRESS_IMPACT;
-    private static final DoubleValue LARGE_STRESS_IMPACT;
+    private static final Map<CogwheelSize, DoubleValue> STRESS_IMPACT;
 
     private static final BooleanValue LANDING_SOUNDS_ENABLED;
     private static final DoubleValue LANDING_SOUND_MIN_FALL_BLOCKS;
@@ -116,35 +95,14 @@ public final class BntPhysicsTuning {
         builder.pop();
 
         builder.comment("Per size geometry. Sizes are tiny, intermediate, small, medium and large.").push("geometry");
-        TINY_COLLISION_RADIUS = builder.defineInRange("tinyCollisionRadius", 0.25, 0.01, 8.0);
-        INTERMEDIATE_COLLISION_RADIUS = builder.defineInRange("intermediateCollisionRadius", 0.375, 0.01, 8.0);
-        SMALL_COLLISION_RADIUS = builder.defineInRange("smallCollisionRadius", 0.5, 0.01, 8.0);
-        MEDIUM_COLLISION_RADIUS = builder.defineInRange("mediumCollisionRadius", 0.75, 0.01, 8.0);
-        LARGE_COLLISION_RADIUS = builder.defineInRange("largeCollisionRadius", 0.8, 0.01, 8.0);
-        TINY_TRACK_RADIUS = builder.defineInRange("tinyTrackRadius", 0.35, 0.01, 8.0);
-        INTERMEDIATE_TRACK_RADIUS = builder.defineInRange("intermediateTrackRadius", 0.425, 0.01, 8.0);
-        SMALL_TRACK_RADIUS = builder.defineInRange("smallTrackRadius", 0.55, 0.01, 8.0);
-        MEDIUM_TRACK_RADIUS = builder.defineInRange("mediumTrackRadius", 0.74, 0.01, 8.0);
-        LARGE_TRACK_RADIUS = builder.defineInRange("largeTrackRadius", 1.1, 0.01, 8.0);
-        TINY_VERTICAL_OFFSET = builder.defineInRange("tinyVerticalOffset", -0.1, -8.0, 8.0);
-        INTERMEDIATE_VERTICAL_OFFSET = builder.defineInRange("intermediateVerticalOffset", -0.09, -8.0, 8.0);
-        SMALL_VERTICAL_OFFSET = builder.defineInRange("smallVerticalOffset", -0.08, -8.0, 8.0);
-        MEDIUM_VERTICAL_OFFSET = builder.defineInRange("mediumVerticalOffset", 0.0, -8.0, 8.0);
-        LARGE_VERTICAL_OFFSET = builder.defineInRange("largeVerticalOffset", 0.1, -8.0, 8.0);
-        TINY_VISUAL_VERTICAL_OFFSET = builder
-            .comment("How much higher than its collision radius a cogwheel rests above the ground, in blocks. Set so the outside of the track rests on the ground: track radius plus half a track link, plus the vertical offset, less the collision radius.")
-            .defineInRange("tinyVisualVerticalOffset", 0.0625, -8.0, 8.0);
-        INTERMEDIATE_VISUAL_VERTICAL_OFFSET = builder.defineInRange("intermediateVisualVerticalOffset", 0.0225, -8.0, 8.0);
-        SMALL_VISUAL_VERTICAL_OFFSET = builder.defineInRange("smallVisualVerticalOffset", 0.0325, -8.0, 8.0);
-        MEDIUM_VISUAL_VERTICAL_OFFSET = builder.defineInRange("mediumVisualVerticalOffset", 0.0525, -8.0, 8.0);
-        LARGE_VISUAL_VERTICAL_OFFSET = builder.defineInRange("largeVisualVerticalOffset", 0.4625, -8.0, 8.0);
-        TINY_TOOL_HIGHLIGHT_RADIUS = builder
-            .comment("Radius of the alignment tool's outline.")
-            .defineInRange("tinyToolHighlightRadius", 0.34, 0.01, 8.0);
-        INTERMEDIATE_TOOL_HIGHLIGHT_RADIUS = builder.defineInRange("intermediateToolHighlightRadius", 0.38, 0.01, 8.0);
-        SMALL_TOOL_HIGHLIGHT_RADIUS = builder.defineInRange("smallToolHighlightRadius", 0.42, 0.01, 8.0);
-        MEDIUM_TOOL_HIGHLIGHT_RADIUS = builder.defineInRange("mediumToolHighlightRadius", 0.56, 0.01, 8.0);
-        LARGE_TOOL_HIGHLIGHT_RADIUS = builder.defineInRange("largeToolHighlightRadius", 0.68, 0.01, 8.0);
+        COLLISION_RADIUS = perSize(builder, "CollisionRadius", null, 0.01, new double[]{0.25, 0.375, 0.5, 0.75, 0.8});
+        TRACK_RADIUS = perSize(builder, "TrackRadius", null, 0.01, new double[]{0.35, 0.425, 0.55, 0.74, 1.1});
+        VERTICAL_OFFSET = perSize(builder, "VerticalOffset", null, -8.0, new double[]{-0.1, -0.09, -0.08, 0.0, 0.1});
+        VISUAL_VERTICAL_OFFSET = perSize(builder, "VisualVerticalOffset",
+            "How much higher than its collision radius a cogwheel rests above the ground, in blocks. Set so the outside of the track rests on the ground: track radius plus half a track link, plus the vertical offset, less the collision radius.",
+            -8.0, new double[]{0.0625, 0.0225, 0.0325, 0.0525, 0.4625});
+        TOOL_HIGHLIGHT_RADIUS = perSize(builder, "ToolHighlightRadius", "Radius of the alignment tool's outline.", 0.01,
+            new double[]{0.34, 0.38, 0.42, 0.56, 0.68});
         builder.pop();
 
         builder.comment("How fast a track carries the vehicle. The speed a track aims for is fixed by its cogwheel sizes and its rotational speed, so a track always travels at the speed its links are moving. These values only decide how hard it may push to get there.")
@@ -231,11 +189,7 @@ public final class BntPhysicsTuning {
         builder.pop();
 
         builder.comment("Create stress consumed by each cogwheel size.").push("stress");
-        TINY_STRESS_IMPACT = builder.defineInRange("tinyStressImpact", 2.0, 0.0, 1024.0);
-        INTERMEDIATE_STRESS_IMPACT = builder.defineInRange("intermediateStressImpact", 3.0, 0.0, 1024.0);
-        SMALL_STRESS_IMPACT = builder.defineInRange("smallStressImpact", 4.0, 0.0, 1024.0);
-        MEDIUM_STRESS_IMPACT = builder.defineInRange("mediumStressImpact", 6.0, 0.0, 1024.0);
-        LARGE_STRESS_IMPACT = builder.defineInRange("largeStressImpact", 8.0, 0.0, 1024.0);
+        STRESS_IMPACT = perSize(builder, "StressImpact", null, 0.0, 1024.0, new double[]{2.0, 3.0, 4.0, 6.0, 8.0});
         builder.pop();
 
         builder.comment("Sounds played by the suspension.").push("feedback");
@@ -338,104 +292,45 @@ public final class BntPhysicsTuning {
         return TRACK_MAX_IMPULSE_MULTIPLIER.get();
     }
 
-    public static double getTinyCollisionRadius() {
-        return TINY_COLLISION_RADIUS.get();
+    private static Map<CogwheelSize, DoubleValue> perSize(Builder builder, String name, String comment, double min, double[] defaults) {
+        return perSize(builder, name, comment, min, 8.0, defaults);
     }
 
-    public static double getIntermediateCollisionRadius() {
-        return INTERMEDIATE_COLLISION_RADIUS.get();
+    private static Map<CogwheelSize, DoubleValue> perSize(
+        Builder builder, String name, String comment, double min, double max, double[] defaults
+    ) {
+        Map<CogwheelSize, DoubleValue> values = new EnumMap<>(CogwheelSize.class);
+        for (CogwheelSize size : CogwheelSize.values()) {
+            if (comment != null && size.ordinal() == 0) {
+                builder.comment(comment);
+            }
+            values.put(size, builder.defineInRange(size.name().toLowerCase(Locale.ROOT) + name, defaults[size.ordinal()], min, max));
+        }
+        return values;
     }
 
-    public static double getSmallCollisionRadius() {
-        return SMALL_COLLISION_RADIUS.get();
+    public static double collisionRadius(CogwheelSize size) {
+        return COLLISION_RADIUS.get(size).get();
     }
 
-    public static double getMediumCollisionRadius() {
-        return MEDIUM_COLLISION_RADIUS.get();
+    public static double trackRadius(CogwheelSize size) {
+        return TRACK_RADIUS.get(size).get();
     }
 
-    public static double getLargeCollisionRadius() {
-        return LARGE_COLLISION_RADIUS.get();
+    public static double verticalOffset(CogwheelSize size) {
+        return VERTICAL_OFFSET.get(size).get();
     }
 
-    public static double getTinyTrackRadius() {
-        return TINY_TRACK_RADIUS.get();
+    public static double visualVerticalOffset(CogwheelSize size) {
+        return VISUAL_VERTICAL_OFFSET.get(size).get();
     }
 
-    public static double getIntermediateTrackRadius() {
-        return INTERMEDIATE_TRACK_RADIUS.get();
+    public static double toolHighlightRadius(CogwheelSize size) {
+        return TOOL_HIGHLIGHT_RADIUS.get(size).get();
     }
 
-    public static double getSmallTrackRadius() {
-        return SMALL_TRACK_RADIUS.get();
-    }
-
-    public static double getMediumTrackRadius() {
-        return MEDIUM_TRACK_RADIUS.get();
-    }
-
-    public static double getLargeTrackRadius() {
-        return LARGE_TRACK_RADIUS.get();
-    }
-
-    public static double getTinyVerticalOffset() {
-        return TINY_VERTICAL_OFFSET.get();
-    }
-
-    public static double getIntermediateVerticalOffset() {
-        return INTERMEDIATE_VERTICAL_OFFSET.get();
-    }
-
-    public static double getSmallVerticalOffset() {
-        return SMALL_VERTICAL_OFFSET.get();
-    }
-
-    public static double getMediumVerticalOffset() {
-        return MEDIUM_VERTICAL_OFFSET.get();
-    }
-
-    public static double getLargeVerticalOffset() {
-        return LARGE_VERTICAL_OFFSET.get();
-    }
-
-    public static double getTinyVisualVerticalOffset() {
-        return TINY_VISUAL_VERTICAL_OFFSET.get();
-    }
-
-    public static double getIntermediateVisualVerticalOffset() {
-        return INTERMEDIATE_VISUAL_VERTICAL_OFFSET.get();
-    }
-
-    public static double getSmallVisualVerticalOffset() {
-        return SMALL_VISUAL_VERTICAL_OFFSET.get();
-    }
-
-    public static double getMediumVisualVerticalOffset() {
-        return MEDIUM_VISUAL_VERTICAL_OFFSET.get();
-    }
-
-    public static double getLargeVisualVerticalOffset() {
-        return LARGE_VISUAL_VERTICAL_OFFSET.get();
-    }
-
-    public static double getTinyToolHighlightRadius() {
-        return TINY_TOOL_HIGHLIGHT_RADIUS.get();
-    }
-
-    public static double getIntermediateToolHighlightRadius() {
-        return INTERMEDIATE_TOOL_HIGHLIGHT_RADIUS.get();
-    }
-
-    public static double getSmallToolHighlightRadius() {
-        return SMALL_TOOL_HIGHLIGHT_RADIUS.get();
-    }
-
-    public static double getMediumToolHighlightRadius() {
-        return MEDIUM_TOOL_HIGHLIGHT_RADIUS.get();
-    }
-
-    public static double getLargeToolHighlightRadius() {
-        return LARGE_TOOL_HIGHLIGHT_RADIUS.get();
+    public static double stressImpact(CogwheelSize size) {
+        return STRESS_IMPACT.get(size).get();
     }
 
     public static double getDriveTraction() {
@@ -482,15 +377,4 @@ public final class BntPhysicsTuning {
         return LANDING_SOUND_MIN_FALL_BLOCKS.get();
     }
 
-    public static double getStressImpact(Block block) {
-        if (CogwheelSizeHelper.isLarge(block)) {
-            return LARGE_STRESS_IMPACT.get();
-        } else if (CogwheelSizeHelper.isMedium(block)) {
-            return MEDIUM_STRESS_IMPACT.get();
-        } else if (CogwheelSizeHelper.isIntermediate(block)) {
-            return INTERMEDIATE_STRESS_IMPACT.get();
-        } else {
-            return CogwheelSizeHelper.isTiny(block) ? TINY_STRESS_IMPACT.get() : SMALL_STRESS_IMPACT.get();
-        }
-    }
 }

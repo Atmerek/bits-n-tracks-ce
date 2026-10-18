@@ -11,6 +11,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.mixin.accessor.RotationPropagatorAccessor;
@@ -461,7 +462,7 @@ public final class BntChainEngagement {
     }
 
     private static boolean roundsRatio(BlockEntity be) {
-        return partOfChain(be) || CogwheelSizeHelper.isMedium(be.getBlockState().getBlock());
+        return partOfChain(be) || CogwheelSize.of(be.getBlockState().getBlock()) == CogwheelSize.MEDIUM;
     }
 
     static List<BlockPos> chainNetwork(KineticBlockEntity kinetic) {

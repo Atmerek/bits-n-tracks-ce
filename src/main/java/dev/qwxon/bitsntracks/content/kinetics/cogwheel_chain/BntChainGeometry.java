@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.ICogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
+import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
@@ -95,9 +96,7 @@ public final class BntChainGeometry {
     }
 
     public static double trackRadius(ICogwheelNode node) {
-        double fallback = node.isLarge()
-            ? (node.hasSmallCogwheelOffset() ? BntPhysicsTuning.getMediumTrackRadius() : BntPhysicsTuning.getLargeTrackRadius())
-            : (node.hasSmallCogwheelOffset() ? BntPhysicsTuning.getSmallTrackRadius() : BntPhysicsTuning.getTinyTrackRadius());
+        double fallback = BntPhysicsTuning.trackRadius(CogwheelSize.ofNode(node.isLarge(), node.hasSmallCogwheelOffset()));
         double radius = BntRadiusProvider.getTrackRadius(node.pos(), fallback);
         return radius > 0.0 ? radius : fallback;
     }
