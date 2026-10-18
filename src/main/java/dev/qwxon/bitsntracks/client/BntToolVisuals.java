@@ -1,6 +1,6 @@
 package dev.qwxon.bitsntracks.client;
 
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import net.createmod.catnip.outliner.Outliner;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -63,6 +63,6 @@ public final class BntToolVisuals {
     }
 
     public static Vec3 drawnCentre(ClientLevel level, BlockPos pos) {
-        return Vec3.atCenterOf(pos).add(HiddenCogwheelCompat.getModelTranslation(level.getBlockEntity(pos), BntClientCompat.getPartialTick()));
+        return Vec3.atCenterOf(pos).add(BntCogwheels.getModelTranslation(level.getBlockEntity(pos), BntClientCompat.getPartialTick()));
     }
 }

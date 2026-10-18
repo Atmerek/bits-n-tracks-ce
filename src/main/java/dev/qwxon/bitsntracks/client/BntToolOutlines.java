@@ -6,12 +6,12 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.BntLeverZone;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceItem;
-import dev.qwxon.bitsntracks.interaction.WrenchPhysicsHandler;
+import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -49,7 +49,7 @@ public final class BntToolOutlines {
         }
         Item item = player.getMainHandItem().getItem();
         if ((item instanceof CogAlignmentLeverItem || item instanceof SuspensionToolItem || item instanceof BntSuspensionPieceItem)
-            && HiddenCogwheelCompat.isOwnCogwheel(level, event.getTarget().getBlockPos())) {
+            && BntCogwheels.isOwnCogwheel(level, event.getTarget().getBlockPos())) {
             event.setCanceled(true);
         }
     }
@@ -98,7 +98,7 @@ public final class BntToolOutlines {
             }
             case PHYSICS -> {
                 BlockPos target = BntToolInput.aimedBlock(level);
-                if (target != null && WrenchPhysicsHandler.canTogglePhysics(level, target)) {
+                if (target != null && BntCogwheelInteraction.canTogglePhysics(level, target)) {
                     hover(level, withPartner(level, target));
                 }
             }

@@ -8,7 +8,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.placement.ChainInteractionFailedException;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSolver;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntLegacyChainPath;
@@ -34,7 +34,7 @@ public class CogwheelChainPathfinderMixin {
     private static void bnt$buildOwnChainPath(PlacingCogwheelChain worldSpaceChain, CallbackInfoReturnable<List<PathedCogwheelNode>> cir)
         throws ChainInteractionFailedException {
         boolean own = BntChainGeometry.ownGeometry()
-            || BntChainGeometry.ownNodes(HiddenCogwheelCompat.getPlacementLevel(), worldSpaceChain.getNodes());
+            || BntChainGeometry.ownNodes(BntCogwheels.getPlacementLevel(), worldSpaceChain.getNodes());
         if (!own) {
             return;
         }

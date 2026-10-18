@@ -9,7 +9,7 @@ import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksDataComponents;
 import dev.qwxon.bitsntracks.interaction.BntToolMessages;
 import dev.qwxon.bitsntracks.interaction.BntToolSounds;
-import dev.qwxon.bitsntracks.interaction.WrenchPhysicsHandler;
+import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -254,7 +254,7 @@ public class CogAlignmentLeverItem extends Item {
 
     private static Component shiftMessage(Level level, BlockPos pos, int wheels) {
         if (wheels == 0) {
-            return WrenchPhysicsHandler.trackStatus(level, pos);
+            return BntCogwheelInteraction.trackStatus(level, pos);
         }
         return Component.translatable(
             wheels == 1 ? "bits_n_tracks.tool_panel.message.moved.single" : "bits_n_tracks.tool_panel.message.moved", wheels);

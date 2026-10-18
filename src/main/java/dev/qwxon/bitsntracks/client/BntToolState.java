@@ -2,7 +2,7 @@ package dev.qwxon.bitsntracks.client;
 
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
@@ -172,7 +172,7 @@ public final class BntToolState {
                 selectLeverCog(null);
             }
             if (mode != BntLeverMode.TENSION || leverChain != null
-                && (!HiddenCogwheelCompat.isOwnChain(level, leverChain) || !BntReach.track(level, player, leverChain))) {
+                && (!BntCogwheels.isOwnChain(level, leverChain) || !BntReach.track(level, player, leverChain))) {
                 selectLeverChain(null);
             }
             if (mode != BntLeverMode.RESET) {
@@ -224,12 +224,12 @@ public final class BntToolState {
     }
 
     private static boolean validCog(ClientLevel level, LocalPlayer player, @Nullable BlockPos pos) {
-        return pos != null && HiddenCogwheelCompat.isOwnCogwheel(level, pos) && BntReach.block(level, player, pos);
+        return pos != null && BntCogwheels.isOwnCogwheel(level, pos) && BntReach.block(level, player, pos);
     }
 
     @Nullable
     static BlockPos chainController(ClientLevel level, BlockPos pos) {
         BlockPos controller = BntBeltTension.controllerPos(level, pos);
-        return HiddenCogwheelCompat.isOwnChain(level, controller) ? controller : null;
+        return BntCogwheels.isOwnChain(level, controller) ? controller : null;
     }
 }

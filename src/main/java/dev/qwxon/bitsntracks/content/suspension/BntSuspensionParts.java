@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -55,7 +55,7 @@ public final class BntSuspensionParts {
             be.getLevel(), be.getBlockPos(), BntSuspension.axis(be.getBlockState()), access.bnt$getSuspensionFacing()).equals(be.getBlockPos())) {
             return;
         }
-        Vec3 cog = CENTRE.add(HiddenCogwheelCompat.getModelTranslation(be, partialTicks));
+        Vec3 cog = CENTRE.add(BntCogwheels.getModelTranslation(be, partialTicks));
         arm(be, cog, access.bnt$getSuspensionSide(), access.bnt$getSuspensionFacing(), sink);
     }
 
@@ -105,10 +105,10 @@ public final class BntSuspensionParts {
             return;
         }
         Vec3 away = BntSuspension.across(axis).scale(-1.0);
-        Vec3 lead = BntSuspension.displacement(be, HiddenCogwheelCompat.getHeldVisualDrop(be, partialTicks));
+        Vec3 lead = BntSuspension.displacement(be, BntCogwheels.getHeldVisualDrop(be, partialTicks));
         KineticBlockEntity partner = BntSuspension.partner(be.getLevel(), be.getBlockPos(), be);
         Vec3 trailing = partner == null ? Vec3.ZERO
-            : BntSuspension.displacement(partner, HiddenCogwheelCompat.getHeldVisualDrop(partner, partialTicks));
+            : BntSuspension.displacement(partner, BntCogwheels.getHeldVisualDrop(partner, partialTicks));
         double drop = Math.max(0.0, -access.bnt$getAlignmentOffsetY());
         double spread = away.x * access.bnt$getAlignmentOffsetX() + away.z * access.bnt$getAlignmentOffsetZ();
         BntBogiePose pose = new BntBogiePose(spread + lead.dot(away), lead.y, trailing.dot(away) - spread, trailing.y, drop);

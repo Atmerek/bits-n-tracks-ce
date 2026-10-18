@@ -14,7 +14,7 @@ public final class BntNetwork {
         registrar.playToServer(
             BntRouteSidePayload.TYPE,
             BntRouteSidePayload.CODEC,
-            (payload, context) -> context.enqueueWork(() -> WrenchPhysicsHandler.routeFromClient(context.player(), payload)));
+            (payload, context) -> context.enqueueWork(() -> BntCogwheelInteraction.routeFromClient(context.player(), payload)));
 
         registrar.playToServer(
             BntBeltTensionPayload.TYPE,
@@ -29,7 +29,7 @@ public final class BntNetwork {
         registrar.playToServer(
             BntAlignmentModePayload.TYPE,
             BntAlignmentModePayload.CODEC,
-            (payload, context) -> context.enqueueWork(() -> WrenchPhysicsHandler.alignmentModeFromClient(context.player(), payload)));
+            (payload, context) -> context.enqueueWork(() -> BntCogwheelInteraction.alignmentModeFromClient(context.player(), payload)));
 
         registrar.playToServer(
             BntSuspensionPayload.TYPE,

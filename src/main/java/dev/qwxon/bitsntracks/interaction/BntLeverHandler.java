@@ -1,7 +1,7 @@
 package dev.qwxon.bitsntracks.interaction;
 
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
@@ -28,10 +28,10 @@ public final class BntLeverHandler {
         }
 
         if (payload.action() == BntLeverPayload.PHYSICS) {
-            WrenchPhysicsHandler.togglePhysics(level, player, pos);
+            BntCogwheelInteraction.togglePhysics(level, player, pos);
             return;
         }
-        if (!HiddenCogwheelCompat.isOwnCogwheel(level, pos) || !level.getBlockState(pos).hasProperty(BlockStateProperties.AXIS)) {
+        if (!BntCogwheels.isOwnCogwheel(level, pos) || !level.getBlockState(pos).hasProperty(BlockStateProperties.AXIS)) {
             return;
         }
 

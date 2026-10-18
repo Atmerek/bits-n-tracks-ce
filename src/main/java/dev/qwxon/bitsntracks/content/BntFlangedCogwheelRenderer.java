@@ -36,7 +36,7 @@ public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFl
     }
 
     public static boolean cutout(BlockState state) {
-        return HiddenCogwheelCompat.isIndustrial(state);
+        return BntCogwheels.isIndustrial(state);
     }
 
     protected void renderSafe(BntFlangedCogwheelBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
@@ -47,7 +47,7 @@ public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFl
             BlockState renderState = modelState(be);
             SuperByteBuffer model = this.getRotatedModel(be, renderState);
             ms.pushPose();
-            Vec3 translation = HiddenCogwheelCompat.getModelTranslation(be, partialTicks);
+            Vec3 translation = BntCogwheels.getModelTranslation(be, partialTicks);
             ms.translate(translation.x, translation.y, translation.z);
             renderRotatingBuffer(be, model, ms, buffer.getBuffer(this.getRenderType(be, renderState)), light);
             ms.popPose();

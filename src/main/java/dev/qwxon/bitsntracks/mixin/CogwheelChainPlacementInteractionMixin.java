@@ -8,7 +8,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.simibubi.create.content.kinetics.simpleRelays.CogWheelBlock;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -68,12 +68,12 @@ public abstract class CogwheelChainPlacementInteractionMixin {
             return;
         }
 
-        HiddenCogwheelCompat.setPlacementLevel(level);
+        BntCogwheels.setPlacementLevel(level);
 
         try {
             original.call(event, level, hitPos, targetedState, targetedCandidate, heldChainType, chainItemInHand, player);
         } finally {
-            HiddenCogwheelCompat.setPlacementLevel(null);
+            BntCogwheels.setPlacementLevel(null);
         }
     }
 }

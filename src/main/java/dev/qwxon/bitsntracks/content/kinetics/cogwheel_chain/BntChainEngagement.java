@@ -12,7 +12,7 @@ import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.mixin.accessor.RotationPropagatorAccessor;
 import dev.qwxon.bitsntracks.physics.BntDebugLog;
@@ -77,7 +77,7 @@ public final class BntChainEngagement {
             return previous;
         }
 
-        double raw = HiddenCogwheelCompat.getVisualDrop(be, 1.0F);
+        double raw = BntCogwheels.getVisualDrop(be, 1.0F);
         double drop = known && Math.abs(raw - previous) <= DROP_STEP ? previous : quantise(raw);
         access.bnt$setGroundDrop(now, drop);
         return drop;
@@ -477,8 +477,8 @@ public final class BntChainEngagement {
     }
 
     public static boolean cutOffFromNeighbour(KineticBlockEntity from, KineticBlockEntity to) {
-        if (!HiddenCogwheelCompat.isOwnOrLegacyCogwheel(from.getBlockState().getBlock())
-            && !HiddenCogwheelCompat.isOwnOrLegacyCogwheel(to.getBlockState().getBlock())) {
+        if (!BntCogwheels.isOwnOrLegacyCogwheel(from.getBlockState().getBlock())
+            && !BntCogwheels.isOwnOrLegacyCogwheel(to.getBlockState().getBlock())) {
             return false;
         }
         return !connectedByShaft(from, to);

@@ -12,7 +12,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
@@ -71,7 +71,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
 
     @Override
     public boolean bnt$claim(Level level, BlockPos controllerPos) {
-        if (!this.bnt$own && (BntCogwheelChainTypes.isOwn(this.type) || HiddenCogwheelCompat.isOwnChain(level, controllerPos))) {
+        if (!this.bnt$own && (BntCogwheelChainTypes.isOwn(this.type) || BntCogwheels.isOwnChain(level, controllerPos))) {
             this.bnt$own = true;
             this.bnt$builtDisplacements = null;
         }

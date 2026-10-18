@@ -4,7 +4,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.ICogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import java.util.ArrayList;
@@ -53,7 +53,7 @@ public final class BntChainGeometry {
         }
         boolean any = false;
         for (BlockPos pos : positions) {
-            if (!HiddenCogwheelCompat.isOwnCogwheel(level, pos)) {
+            if (!BntCogwheels.isOwnCogwheel(level, pos)) {
                 return false;
             }
             any = true;

@@ -6,7 +6,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.content.BntVisualized;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
@@ -45,7 +45,7 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         remap = false
     )
     private void bnt$preventDestroyOnSwap(CallbackInfo ci) {
-        if (HiddenCogwheelCompat.isSuppressingChainDestroy()) {
+        if (BntCogwheels.isSuppressingChainDestroy()) {
             ci.cancel();
         }
     }
@@ -56,7 +56,7 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         cancellable = true
     )
     private void bnt$preventBreakOnSwap(BreakEvent event, CallbackInfo ci) {
-        if (HiddenCogwheelCompat.isSuppressingChainDestroy()) {
+        if (BntCogwheels.isSuppressingChainDestroy()) {
             ci.cancel();
         }
     }
@@ -145,7 +145,7 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
             cir.setReturnValue(!BntVisualized.drawn(be));
             return;
         }
-        if (this.bnt$isTrackModel() || HiddenCogwheelCompat.shouldForceDynamicRenderer((CogwheelChainBehaviour)(Object)this)) {
+        if (this.bnt$isTrackModel() || BntCogwheels.shouldForceDynamicRenderer((CogwheelChainBehaviour)(Object)this)) {
             cir.setReturnValue(true);
         }
     }

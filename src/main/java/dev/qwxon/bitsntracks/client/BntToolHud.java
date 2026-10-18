@@ -10,7 +10,7 @@ import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.interaction.BntToolMessages;
-import dev.qwxon.bitsntracks.interaction.WrenchPhysicsHandler;
+import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,7 +196,7 @@ public final class BntToolHud {
             }
             case PHYSICS -> {
                 BlockPos target = BntToolInput.aimedBlock(level);
-                if (target != null && WrenchPhysicsHandler.canTogglePhysics(level, target)
+                if (target != null && BntCogwheelInteraction.canTogglePhysics(level, target)
                     && level.getBlockEntity(target) instanceof KineticBlockEntityPhysicsAccess access) {
                     boolean enabled = access.bnt$isPhysicsEnabled();
                     rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.physics"),

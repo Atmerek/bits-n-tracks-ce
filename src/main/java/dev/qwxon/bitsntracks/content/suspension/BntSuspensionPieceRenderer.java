@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.client.BntToolVisuals;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -31,7 +31,7 @@ public final class BntSuspensionPieceRenderer {
         if (!BntSuspension.supports(be.getBlockState())) {
             return;
         }
-        Vec3 cog = CENTRE.add(HiddenCogwheelCompat.getModelTranslation(be, partialTicks));
+        Vec3 cog = CENTRE.add(BntCogwheels.getModelTranslation(be, partialTicks));
         BntSuspensionParts.arm(be, cog, side, facing,
             BntSuspensionParts.emitter(ms.last(), buffer, true, GHOST, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY));
     }

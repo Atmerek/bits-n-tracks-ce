@@ -13,7 +13,7 @@ import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntChainShapeContext;
 import dev.qwxon.bitsntracks.client.BntToolVisuals;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.mixin.accessor.CogwheelChainShapeAccessor;
@@ -582,7 +582,7 @@ public final class BntBobScenes {
         BlockState state = level.getBlockState(pos);
         double radius = CogwheelSizeHelper.getToolHighlightRadius(state.getBlock());
         Vec3 hit = zone == null ? Vec3.ZERO : Vec3.atLowerCornerOf(zone.getNormal()).scale(0.75 * radius);
-        Vec3 centre = Vec3.atCenterOf(pos).add(hit).add(HiddenCogwheelCompat.getModelTranslation(level.getBlockEntity(pos), 1.0F));
+        Vec3 centre = Vec3.atCenterOf(pos).add(hit).add(BntCogwheels.getModelTranslation(level.getBlockEntity(pos), 1.0F));
         return BntToolVisuals.marker(centre, state.getValue(BlockStateProperties.AXIS), ZONE_DEPTH);
     }
 

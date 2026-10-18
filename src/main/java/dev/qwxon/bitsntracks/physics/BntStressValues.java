@@ -2,7 +2,7 @@ package dev.qwxon.bitsntracks.physics;
 
 import com.simibubi.create.api.stress.BlockStressValues;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 
 public final class BntStressValues {
     private static boolean registered;
@@ -15,7 +15,7 @@ public final class BntStressValues {
             registered = true;
             BlockStressValues.IMPACTS
                 .registerProvider(
-                    block -> HiddenCogwheelCompat.isOwnOrLegacyCogwheel(block)
+                    block -> BntCogwheels.isOwnOrLegacyCogwheel(block)
                         ? () -> BntPhysicsTuning.stressImpact(CogwheelSize.of(block))
                         : null
                 );

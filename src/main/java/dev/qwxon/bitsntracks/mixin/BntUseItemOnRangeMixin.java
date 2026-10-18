@@ -2,7 +2,7 @@ package dev.qwxon.bitsntracks.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -27,11 +27,11 @@ public class BntUseItemOnRangeMixin {
     private Vec3 bnt$relativeToDrawnCogwheel(Vec3 location, Vec3 center, Operation<Vec3> original) {
         Level level = this.player.level();
         BlockPos pos = BlockPos.containing(center);
-        if (!HiddenCogwheelCompat.isOwnCogwheel(level.getBlockState(pos))) {
+        if (!BntCogwheels.isOwnCogwheel(level.getBlockState(pos))) {
             return original.call(location, center);
         }
 
-        Vec3 translation = HiddenCogwheelCompat.getModelTranslation(level.getBlockEntity(pos), 1.0F);
+        Vec3 translation = BntCogwheels.getModelTranslation(level.getBlockEntity(pos), 1.0F);
         return original.call(location.subtract(translation), center);
     }
 }

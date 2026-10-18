@@ -9,7 +9,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEdit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import net.minecraft.core.BlockPos;
@@ -48,14 +48,14 @@ public abstract class PartialEditCogwheelChainPacketMixin {
         boolean own = level.getBlockEntity(controllerPos) instanceof SmartBlockEntity smart
             && smart.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour behaviour
             && behaviour.getControlledChain() instanceof BntChainGeometryRefresh chain
-            && (chain.bnt$isOwn() || HiddenCogwheelCompat.isOwnChain(level, controllerPos));
-        HiddenCogwheelCompat.setPlacementLevel(level);
+            && (chain.bnt$isOwn() || BntCogwheels.isOwnChain(level, controllerPos));
+        BntCogwheels.setPlacementLevel(level);
         boolean previous = BntChainGeometry.beginOwn(own);
         try {
             original.call(player);
         } finally {
             BntChainGeometry.endOwn(previous);
-            HiddenCogwheelCompat.setPlacementLevel(null);
+            BntCogwheels.setPlacementLevel(null);
         }
     }
 }

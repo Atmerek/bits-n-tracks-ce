@@ -1,6 +1,6 @@
 package dev.qwxon.bitsntracks.client;
 
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
@@ -113,7 +113,7 @@ public final class BntCogwheelPicker {
                             continue;
                         }
                         LevelChunkSection section = chunk.getSection(index);
-                        if (section.hasOnlyAir() || !section.maybeHas(HiddenCogwheelCompat::isOwnCogwheel)) {
+                        if (section.hasOnlyAir() || !section.maybeHas(BntCogwheels::isOwnCogwheel)) {
                             continue;
                         }
 
@@ -121,7 +121,7 @@ public final class BntCogwheelPicker {
                             for (int y = Math.max(minY, sectionY << 4); y <= Math.min(maxY, (sectionY << 4) + 15); y++) {
                                 for (int z = Math.max(minZ, chunkZ << 4); z <= Math.min(maxZ, (chunkZ << 4) + 15); z++) {
                                     BlockState state = section.getBlockState(x & 15, y & 15, z & 15);
-                                    if (HiddenCogwheelCompat.isOwnCogwheel(state)) {
+                                    if (BntCogwheels.isOwnCogwheel(state)) {
                                         this.consider(pos.set(x, y, z), state, from, to);
                                     }
                                 }
@@ -134,7 +134,7 @@ public final class BntCogwheelPicker {
 
         private void consider(BlockPos pos, BlockState state, Vec3 from, Vec3 to) {
             BlockEntity be = this.level.getBlockEntity(pos);
-            if (HiddenCogwheelCompat.getModelTranslation(be, this.partialTick).equals(Vec3.ZERO)) {
+            if (BntCogwheels.getModelTranslation(be, this.partialTick).equals(Vec3.ZERO)) {
                 return;
             }
 

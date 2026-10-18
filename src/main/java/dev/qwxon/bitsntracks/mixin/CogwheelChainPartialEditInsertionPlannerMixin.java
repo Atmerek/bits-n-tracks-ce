@@ -10,7 +10,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEdit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
@@ -88,7 +88,7 @@ public abstract class CogwheelChainPartialEditInsertionPlannerMixin {
         CallbackInfoReturnable<CogwheelChainPartialEditInsertionPlan> cir
     ) {
         if (BntCogwheelChainTypes.refusal(
-            editContext.chainType(), HiddenCogwheelCompat.getPlacementLevel(), proposedPos, proposedState) != null) {
+            editContext.chainType(), BntCogwheels.getPlacementLevel(), proposedPos, proposedState) != null) {
             cir.setReturnValue(null);
         }
     }

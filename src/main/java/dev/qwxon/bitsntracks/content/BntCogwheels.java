@@ -19,12 +19,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public final class HiddenCogwheelCompat {
+public final class BntCogwheels {
     private static final ThreadLocal<Integer> CHAIN_SWAP_DEPTH = ThreadLocal.withInitial(() -> 0);
     private static final ThreadLocal<Level> PLACEMENT_LEVEL = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> RESTING = ThreadLocal.withInitial(() -> false);
 
-    private HiddenCogwheelCompat() {
+    private BntCogwheels() {
     }
 
     public static Level getPlacementLevel() {

@@ -6,7 +6,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
@@ -1123,7 +1123,7 @@ public final class BntPhysicsEvents {
             SoundEvent hitSound;
             float volume;
             float pitch;
-            if (HiddenCogwheelCompat.isIndustrial(state)) {
+            if (BntCogwheels.isIndustrial(state)) {
                 Block industrialIronBlock = AllBlocks.INDUSTRIAL_IRON_BLOCK.get();
                 hitSound = industrialIronBlock.getSoundType(industrialIronBlock.defaultBlockState(), level, soundPos, null).getBreakSound();
                 volume = 0.9F;

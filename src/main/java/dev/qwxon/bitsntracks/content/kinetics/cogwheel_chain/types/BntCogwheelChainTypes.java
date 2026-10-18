@@ -6,7 +6,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import com.kipti.bnb.registry.core.BnbResourceKeys;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.core.BlockPos;
@@ -27,7 +27,7 @@ public class BntCogwheelChainTypes {
             .renderTexture(BitsNTracks.asResource("textures/block/industrial_belt.png"))
             .permitsAxisChange(false)
             .breakEffectsBlock(() -> Blocks.CHAIN)
-            .setCogwheelPredicate(HiddenCogwheelCompat::isOwnOrLegacyCogwheel)
+            .setCogwheelPredicate(BntCogwheels::isOwnOrLegacyCogwheel)
             .build()
     );
 
@@ -39,7 +39,7 @@ public class BntCogwheelChainTypes {
             .renderTexture(BitsNTracks.asResource("textures/block/tank_tread.png"))
             .permitsAxisChange(false)
             .breakEffectsBlock(() -> Blocks.CHAIN)
-            .setCogwheelPredicate(HiddenCogwheelCompat::isOwnOrLegacyCogwheel)
+            .setCogwheelPredicate(BntCogwheels::isOwnOrLegacyCogwheel)
             .build()
     );
 
@@ -51,7 +51,7 @@ public class BntCogwheelChainTypes {
         if (partnerCarriesChain(level, pos)) {
             return "chain_on_wide_partner";
         }
-        boolean own = HiddenCogwheelCompat.isOwnCogwheel(state);
+        boolean own = BntCogwheels.isOwnCogwheel(state);
         if (isOwn(type)) {
             return own ? null : "belt_on_bnb_flanged_cogwheel";
         }

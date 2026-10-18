@@ -6,7 +6,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.render.CogwheelChainRenderG
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
@@ -139,9 +139,9 @@ public class BntClientCompat {
             );
         }
 
-        if (level.isClientSide && HiddenCogwheelCompat.isPhysicsEnabled(nodeBe)) {
+        if (level.isClientSide && BntCogwheels.isPhysicsEnabled(nodeBe)) {
             float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
-            displacement = displacement.add(BntSuspension.displacement(nodeBe, HiddenCogwheelCompat.getHeldVisualDrop(nodeBe, partialTick)));
+            displacement = displacement.add(BntSuspension.displacement(nodeBe, BntCogwheels.getHeldVisualDrop(nodeBe, partialTick)));
         }
 
         return displacement;

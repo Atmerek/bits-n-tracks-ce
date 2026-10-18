@@ -4,7 +4,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelChain;
 import com.kipti.bnb.network.packets.from_client.PlaceCogwheelChainPacket;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -19,13 +19,13 @@ public abstract class PlaceCogwheelChainPacketMixin {
     @WrapMethod(method = "handle")
     private void bnt$placeAsOwn(ServerPlayer player, Operation<Void> original) {
         Level level = player.level();
-        HiddenCogwheelCompat.setPlacementLevel(level);
+        BntCogwheels.setPlacementLevel(level);
         boolean previous = BntChainGeometry.beginOwn(BntChainGeometry.ownNodes(level, this.worldSpacePartialChain().getVisitedNodes()));
         try {
             original.call(player);
         } finally {
             BntChainGeometry.endOwn(previous);
-            HiddenCogwheelCompat.setPlacementLevel(null);
+            BntCogwheels.setPlacementLevel(null);
         }
     }
 }

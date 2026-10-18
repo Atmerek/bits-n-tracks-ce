@@ -24,7 +24,7 @@ import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntTreadView;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.TrackModelRenderContext;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltFaces;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
@@ -81,7 +81,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
     ) {
         TrackModelRenderContext.setRenderingTrack(
             be.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof TrackModelBehaviourAccess access && access.bnt$isTrackModel());
-        TrackModelRenderContext.setRenderingCustomChain(HiddenCogwheelCompat.isOwnCogwheel(be.getBlockState()));
+        TrackModelRenderContext.setRenderingCustomChain(BntCogwheels.isOwnCogwheel(be.getBlockState()));
         TrackModelRenderContext.setRenderingWideChain(BntCogwheelPairing.isWide(be.getBlockState()));
         BntClientCompat.beginChainLight(be);
         BntTreadView.begin(ms.last().pose(), be.getLevel());

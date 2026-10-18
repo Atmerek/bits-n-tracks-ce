@@ -3,7 +3,7 @@ package dev.qwxon.bitsntracks.mixin;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChainCandidate;
 import com.kipti.bnb.registry.core.BnbTags.BnbBlockTags;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -41,7 +41,7 @@ public abstract class CogwheelChainCandidateMixin {
     @Unique
     private static CogwheelSize bnt$size(BlockState state) {
         Block block = state.getBlock();
-        if (HiddenCogwheelCompat.isOwnOrLegacyCogwheel(block)) {
+        if (BntCogwheels.isOwnOrLegacyCogwheel(block)) {
             return CogwheelSize.of(block);
         }
         return BntChainGeometry.ownGeometry() && BnbBlockTags.SMALL_FLANGED_COGWHEEL.matches(state) ? CogwheelSize.SMALL : null;

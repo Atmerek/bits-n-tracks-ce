@@ -18,7 +18,7 @@ import dev.qwxon.bitsntracks.client.BntClientConfig;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelRenderer;
 import dev.qwxon.bitsntracks.content.BntVisualized;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
@@ -127,7 +127,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
             hidden = physics;
             dirty = true;
         }
-        HiddenCogwheelCompat.drawResting(resting);
+        BntCogwheels.drawResting(resting);
         try {
             boolean fresh = dirty || relight;
             if (dirty) {
@@ -150,7 +150,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
             }
             track.frame(partialTick, resting);
         } finally {
-            HiddenCogwheelCompat.drawResting(false);
+            BntCogwheels.drawResting(false);
         }
         if (!drawing) {
             drawing = true;
@@ -178,7 +178,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
         RotatingInstance instance = cog;
         boolean changed = false;
         if (hidden && !resting || Double.isNaN(shiftX)) {
-            Vec3 shift = HiddenCogwheelCompat.getModelTranslation(blockEntity, partialTick);
+            Vec3 shift = BntCogwheels.getModelTranslation(blockEntity, partialTick);
             if (shift.x != shiftX || shift.y != shiftY || shift.z != shiftZ) {
                 shiftX = shift.x;
                 shiftY = shift.y;

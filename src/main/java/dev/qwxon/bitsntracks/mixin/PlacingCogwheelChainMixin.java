@@ -7,7 +7,7 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PlacingCogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.placement.ChainInteractionFailedException;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import com.llamalad7.mixinextras.sugar.Local;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
@@ -52,7 +52,7 @@ public abstract class PlacingCogwheelChainMixin {
     @Inject(method = "tryAddNode", at = @At("HEAD"), cancellable = true)
     private void bnt$addOwnNode(BlockPos pos, BlockState state, CogwheelChainType type, CallbackInfoReturnable<Boolean> cir)
         throws ChainInteractionFailedException {
-        if (BntChainGeometry.ownGeometry() || BntCogwheelChainTypes.isOwn(type) || HiddenCogwheelCompat.isOwnCogwheel(state)) {
+        if (BntChainGeometry.ownGeometry() || BntCogwheelChainTypes.isOwn(type) || BntCogwheels.isOwnCogwheel(state)) {
             boolean previous = BntChainGeometry.beginOwn(true);
             try {
                 cir.setReturnValue(this.bnt$tryAddNode(pos, state, type));
@@ -68,7 +68,7 @@ public abstract class PlacingCogwheelChainMixin {
         if (candidate == null) {
             return false;
         }
-        Level level = HiddenCogwheelCompat.getPlacementLevel();
+        Level level = BntCogwheels.getPlacementLevel();
         List<PlacingCogwheelNode> visited = this.getVisitedNodes();
         try (BntRadiusProvider.Scope ignored = level != null && !visited.isEmpty()
             ? BntRadiusProvider.at(level, visited.get(0).pos())

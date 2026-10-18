@@ -9,7 +9,7 @@ import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
@@ -31,7 +31,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClick
 import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 
 @EventBusSubscriber
-public class WrenchPhysicsHandler {
+public class BntCogwheelInteraction {
     public static final int FLAT_FACE = -2;
 
     public static void alignmentModeFromClient(Player player, BntAlignmentModePayload payload) {
@@ -50,13 +50,13 @@ public class WrenchPhysicsHandler {
         Level level = event.getLevel();
         BlockPos pos = event.getPos();
         if (event.getEntity() != null && event.getItemStack().is(BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
-            && HiddenCogwheelCompat.isOwnCogwheel(level, pos)) {
+            && BntCogwheels.isOwnCogwheel(level, pos)) {
             event.setCanceled(true);
         }
     }
 
     public static boolean canTogglePhysics(Level level, BlockPos pos) {
-        return HiddenCogwheelCompat.isOwnCogwheel(level, pos);
+        return BntCogwheels.isOwnCogwheel(level, pos);
     }
 
     public static void togglePhysics(Level level, Player player, BlockPos pos) {
@@ -85,7 +85,7 @@ public class WrenchPhysicsHandler {
     @SubscribeEvent
     public static void onBlockBreak(BreakEvent event) {
         if (event.getPlayer() != null && event.getPlayer().getMainHandItem().is(BitsNTracksItems.COG_ALIGNMENT_LEVER.get())
-            && HiddenCogwheelCompat.isOwnCogwheel(event.getLevel(), event.getPos())) {
+            && BntCogwheels.isOwnCogwheel(event.getLevel(), event.getPos())) {
             event.setCanceled(true);
         }
     }
@@ -96,7 +96,7 @@ public class WrenchPhysicsHandler {
         BlockPos pos = event.getPos();
         Player player = event.getEntity();
         Block block = level.getBlockState(pos).getBlock();
-        if (!HiddenCogwheelCompat.isOwnOrLegacyCogwheel(block)
+        if (!BntCogwheels.isOwnOrLegacyCogwheel(block)
             || !AllItems.WRENCH.isIn(player.getMainHandItem()) && !AllItems.WRENCH.isIn(player.getOffhandItem())
             || !(BlockEntityBehaviour.get(level, pos, CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour chain)
             || !chain.isPartOfChain()) {
@@ -123,7 +123,7 @@ public class WrenchPhysicsHandler {
         }
 
         BlockState state = level.getBlockState(pos);
-        if (!HiddenCogwheelCompat.isOwnCogwheel(level, pos) || !state.hasProperty(BlockStateProperties.AXIS)
+        if (!BntCogwheels.isOwnCogwheel(level, pos) || !state.hasProperty(BlockStateProperties.AXIS)
             || !(level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access)) {
             return;
         }

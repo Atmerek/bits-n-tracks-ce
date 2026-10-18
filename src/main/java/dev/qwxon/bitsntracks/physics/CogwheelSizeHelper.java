@@ -1,7 +1,7 @@
 package dev.qwxon.bitsntracks.physics;
 
 import dev.qwxon.bitsntracks.content.CogwheelSize;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import net.minecraft.world.level.block.Block;
 
 public final class CogwheelSizeHelper {
@@ -31,7 +31,7 @@ public final class CogwheelSizeHelper {
     }
 
     public static boolean sizedByBlock(Block block) {
-        return HiddenCogwheelCompat.isOwnOrLegacyCogwheel(block);
+        return BntCogwheels.isOwnOrLegacyCogwheel(block);
     }
 
     public static double getToolHighlightRadius(Block block) {

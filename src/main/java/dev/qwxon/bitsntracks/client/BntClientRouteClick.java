@@ -1,9 +1,9 @@
 package dev.qwxon.bitsntracks.client;
 
 import dev.qwxon.bitsntracks.content.BntLeverZone;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.interaction.BntRouteSidePayload;
-import dev.qwxon.bitsntracks.interaction.WrenchPhysicsHandler;
+import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -32,11 +32,11 @@ public final class BntClientRouteClick {
 
         Axis blockAxis = state.getValue(BlockStateProperties.AXIS);
         if (hit.getDirection().getAxis() != blockAxis) {
-            PacketDistributor.sendToServer(new BntRouteSidePayload(pos, WrenchPhysicsHandler.FLAT_FACE));
+            PacketDistributor.sendToServer(new BntRouteSidePayload(pos, BntCogwheelInteraction.FLAT_FACE));
             return;
         }
 
-        Vec3 translation = HiddenCogwheelCompat.getModelTranslation(
+        Vec3 translation = BntCogwheels.getModelTranslation(
             minecraft.level.getBlockEntity(pos), BntClientCompat.getPartialTick());
         Vec3 local = hit.getLocation().subtract(translation).subtract(Vec3.atLowerCornerOf(pos));
         Direction zone = BntLeverZone.of(blockAxis, local.x - 0.5, local.y - 0.5, local.z - 0.5,

@@ -54,7 +54,7 @@ public final class BntLegacyCogwheels {
             .setValue(BntCogwheelPairing.WIDE, BntCogwheelPairing.sideOf(state))
             .setValue(BntFlangedCogwheelBlock.PHYSICS, true);
         CompoundTag tag = (legacy == null ? new CompoundTag() : legacy.copy()).merge(be.saveWithoutMetadata(level.registryAccess()));
-        HiddenCogwheelCompat.replaceBlockForPhysicsSwap(level, pos, next);
+        BntCogwheels.replaceBlockForPhysicsSwap(level, pos, next);
         BlockEntity fresh = level.getBlockEntity(pos);
         if (fresh != null) {
             fresh.loadWithComponents(tag, level.registryAccess());

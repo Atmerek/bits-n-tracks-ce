@@ -4,14 +4,14 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.CogwheelChainInteract
 import com.simibubi.create.AllKeys;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
-import dev.qwxon.bitsntracks.content.HiddenCogwheelCompat;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.interaction.BntAlignmentModePayload;
 import dev.qwxon.bitsntracks.interaction.BntLeverPayload;
 import dev.qwxon.bitsntracks.interaction.BntToolMessages;
 import dev.qwxon.bitsntracks.interaction.BntTuningModePayload;
-import dev.qwxon.bitsntracks.interaction.WrenchPhysicsHandler;
+import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -182,7 +182,7 @@ public final class BntToolInput {
             }
             case PHYSICS -> {
                 BlockPos target = aimedBlock(level);
-                if (target == null || !WrenchPhysicsHandler.canTogglePhysics(level, target)) {
+                if (target == null || !BntCogwheelInteraction.canTogglePhysics(level, target)) {
                     return false;
                 }
                 return sendLever(target, BntLeverPayload.PHYSICS, fresh);
@@ -265,7 +265,7 @@ public final class BntToolInput {
     @Nullable
     static BlockPos aimedCog(ClientLevel level) {
         BlockPos pos = aimedBlock(level);
-        return pos != null && HiddenCogwheelCompat.isOwnCogwheel(level, pos) ? pos : null;
+        return pos != null && BntCogwheels.isOwnCogwheel(level, pos) ? pos : null;
     }
 
     @Nullable
