@@ -52,7 +52,6 @@ public final class BntBeltContacts {
     private BntBeltContacts() {
     }
 
-    /** Where terrain pushes up into a drawn run. */
     public static final class BntBeltContact {
         ServerSubLevel subLevel;
         Vector3d forcePoint;
@@ -69,7 +68,6 @@ public final class BntBeltContacts {
         double brake;
     }
 
-    /** A stretch of track hanging off the wheels, carrying its own weight. */
     public static final class BntBeltWeight {
         private KineticBlockEntityPhysicsAccess carrier;
         private ServerSubLevel subLevel;
@@ -77,7 +75,6 @@ public final class BntBeltContacts {
         private double mass;
     }
 
-    /** What a loop puts on the hull this tick. */
     public record BntBeltLoads(List<BntBeltContact> contacts, List<BntBeltWeight> weights) {
         public boolean isEmpty() {
             return this.contacts.isEmpty() && this.weights.isEmpty();
@@ -131,7 +128,6 @@ public final class BntBeltContacts {
         return loads;
     }
 
-    /** Walks a loop under the radius context the chain lengths are read from. */
     private static void collectSpans(
         BntBeltLoads loads, Level level, ServerSubLevel subLevel, Pose3d pose, MassData massData,
         BlockPos controllerPos, List<PathedCogwheelNode> nodes, float speed, double brake
@@ -309,7 +305,6 @@ public final class BntBeltContacts {
         weight.carrier = carrier;
     }
 
-    /** Hangs a stretch of track off the hull under gravity. */
     public static void applyWeight(BntBeltWeight weight, Level level, double timeStep) {
         if (weight.carrier == null || weight.mass <= 0.0) {
             return;

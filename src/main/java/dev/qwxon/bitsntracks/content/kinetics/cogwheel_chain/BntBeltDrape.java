@@ -49,13 +49,11 @@ public final class BntBeltDrape {
         return BntPhysicsTuning.isBeltDrapeEnabled() || BntPhysicsTuning.getBeltMaxSag() > 0.0;
     }
 
-    /** Point count for a run, from beltNodeSpacing, clamped to 2 up to 64. */
     public static int probeCount(double span) {
         double spacing = BntPhysicsTuning.getBeltNodeSpacing();
         return Mth.clamp((int)Math.round(span / spacing), 2, MAX_PROBES);
     }
 
-    /** Seam shift of a wide cogwheel half, which the renderer adds back. */
     public static Vec3 seamOffset(PathedCogwheelNode node) {
         Level level = BntRadiusProvider.level();
         BlockPos origin = BntRadiusProvider.origin();
@@ -65,7 +63,6 @@ public final class BntBeltDrape {
         return BntCogwheelPairing.seamOffset(level.getBlockState(origin.offset(node.localPos())));
     }
 
-    /** Run height against the straight line between its wheels, per sample. */
     public static double[] profile(
         Vec3 runStart, Vec3 along, int probes, double sag, boolean underside
     ) {
@@ -115,7 +112,6 @@ public final class BntBeltDrape {
         return offsets;
     }
 
-    /** Ground height against the straight line, positive when above it. */
     private static double surfaceOffset(
         Level level, Vec3 base, Pose3dc pose, SubLevel subLevel, Vec3 chord, double sag
     ) {
@@ -140,7 +136,6 @@ public final class BntBeltDrape {
         return top + (bottom - top) * (hit.getLocation().distanceTo(worldTop) / reach);
     }
 
-    /** Same as surfaceOffset, against the ground a ponder scene draws. */
     private static double stagedSurfaceOffset(BntPonderPhysics.Stage stage, Vec3 point, double sag) {
         double top = PROBE_ABOVE;
         double bottom = -(sag + PROBE_BELOW);
@@ -155,7 +150,6 @@ public final class BntBeltDrape {
         return top + (bottom - top) * along;
     }
 
-    /** Upper convex hull of the samples, never below them and never concave. */
     private static double[] upperHull(double[] heights) {
         int count = heights.length;
         int[] stack = new int[count];

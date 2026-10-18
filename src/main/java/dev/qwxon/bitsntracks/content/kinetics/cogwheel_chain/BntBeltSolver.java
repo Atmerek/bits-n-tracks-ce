@@ -12,7 +12,6 @@ public final class BntBeltSolver {
     private static final int MAX_CANDIDATES = 48;
     private static final double CLIP_TOLERANCE = 1.0E-4;
     private static final double GRAZE_TURN = Math.PI / 6.0;
-    /** Past this a bend is a lifted wheel's phantom loop, not an arc the belt really takes. */
     private static final double PHANTOM_ARC = Math.PI * 1.5;
 
     private BntBeltSolver() {
@@ -668,7 +667,6 @@ public final class BntBeltSolver {
         return new double[]{nextSide == outer ? 0.0 : 1.0, angle * radii[current] + outgoing[0]};
     }
 
-    /** Path length once round the order as written, every wrap taken the long way. */
     private static double beltLength(double[] xs, double[] ys, double[] radii, int[] sides) {
         int count = xs.length;
         double total = 0.0;
@@ -688,7 +686,6 @@ public final class BntBeltSolver {
         return total;
     }
 
-    /** Taut loop length, with wheels the belt has fallen past unwound back off the wraps. */
     public static double tautLength(double[] xs, double[] ys, double[] radii, int[] sides) {
         int count = xs.length;
         if (count < 2) {

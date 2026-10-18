@@ -47,7 +47,6 @@ public class BntCogwheelChainTypes {
         return type == INDUSTRIAL_BELT_CHAIN.get() || type == TANK_TREAD_CHAIN.get();
     }
 
-    /** Message key refusing the chain here, or null. */
     public static String refusal(CogwheelChainType type, BlockGetter level, BlockPos pos, BlockState state) {
         if (partnerCarriesChain(level, pos)) {
             return "chain_on_wide_partner";
@@ -59,7 +58,6 @@ public class BntCogwheelChainTypes {
         return own && type.getRenderType() != ChainRenderInfo.BELT ? "chain_on_physical_cogwheel" : null;
     }
 
-    /** One track per wide cogwheel, so its other half may not carry a second. */
     private static boolean partnerCarriesChain(BlockGetter level, BlockPos pos) {
         BlockPos partner = level == null ? null : BntCogwheelPairing.partnerPos(level, pos);
         return partner != null && BntChainEngagement.partOfChain(level.getBlockEntity(partner));

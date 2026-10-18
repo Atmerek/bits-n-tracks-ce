@@ -377,7 +377,6 @@ public final class BntPhysicsEvents {
         );
     }
 
-    /** Drop a wheel is drawn at, eased across the tick so terrain steps do not snap. */
     public static double getHeldRenderExtension(KineticBlockEntity kbe, float partialTick) {
         double staged = BntPonderPhysics.wheelDrop(kbe);
         if (!Double.isNaN(staged)) {
@@ -398,7 +397,6 @@ public final class BntPhysicsEvents {
         return mixin.bnt$getDrawnDrop(partialTick);
     }
 
-    /** Terrain drop less what the belt holds the wheel up by and what the track carries it on. */
     private static double heldDrop(KineticBlockEntity kbe, float partialTick) {
         double raw = getRawRenderExtension(kbe, partialTick);
         Level level = kbe.getLevel();
@@ -407,7 +405,6 @@ public final class BntPhysicsEvents {
             : Math.max(0.0, raw - BntBeltHold.at(level, kbe) - BntTrackFloor.at(level, kbe));
     }
 
-    /** Drop terrain alone puts a wheel at, before the belt has a say. */
     public static double getRawRenderExtension(KineticBlockEntity kbe, float partialTick) {
         if (kbe instanceof KineticBlockEntityPhysicsAccess mixin && mixin.bnt$isPhysicsEnabled()) {
             double staged = BntPonderPhysics.wheelDrop(kbe);
@@ -568,7 +565,6 @@ public final class BntPhysicsEvents {
             * damping * Math.sqrt(stiffness * ARM_SPRING_RATE) * DAMPING_CALIBRATION;
     }
 
-    /** How far a cogwheel has to rise from its seat for its contact circle to rest on the terrain. */
     private record Reach(double rise, BntPhysicsEvents.TerrainCastResult cast, boolean grounded) {
     }
 
@@ -654,7 +650,6 @@ public final class BntPhysicsEvents {
         return contact;
     }
 
-    /** Wheels a body's weight is shared over, kept while some of them leave the ground so the rest do not stiffen. */
     private static double wheelShare(ServerSubLevel subLevel, int wheels, double timeStep) {
         double[] held = SHARES.computeIfAbsent(subLevel, ignored -> new double[1]);
         if (wheels > 0) {
@@ -663,7 +658,6 @@ public final class BntPhysicsEvents {
         return held[0];
     }
 
-    /** Springs and belt supports solved together as soft constraints; true while the springs are still moving the body. */
     private static boolean solveSupport(
         Level level, Pose3dc framePose, @Nullable MassData massData, List<BntPhysicsEvents.WheelContact> contacts,
         double wheelShare, int beltShare, double timeStep
@@ -692,7 +686,6 @@ public final class BntPhysicsEvents {
     ) {
     }
 
-    /** The support solver for a body outside Sable: contacts push along +Y, and each contact's push comes back. */
     public static double[] solveSupport(
         List<SupportContact> supports, double mass, Matrix3dc inverseInertia, Vector3dc centerOfMass, double gravity, double timeStep
     ) {
@@ -1275,7 +1268,6 @@ public final class BntPhysicsEvents {
         return result;
     }
 
-    /** The rays a cast fires all lie in the plane through the wheel along its travel, so three points fix them. */
     private static double[] castKey(Pose3dc pose, Vec3 centre, Vec3 sampleAxis, double radius, double above, double below) {
         Vec3 origin = pose.transformPosition(centre);
         Vec3 along = pose.transformPosition(centre.add(sampleAxis));
@@ -1390,7 +1382,6 @@ public final class BntPhysicsEvents {
         }
     }
 
-    /** Last cast a wheel fired, reused while the tick and the rays are the same. */
     private record TerrainCast(long tick, SubLevel from, double[] key, BntPhysicsEvents.TerrainCastResult result) {
         boolean matches(long now, SubLevel containing, double[] castKey) {
             return this.tick == now && this.from == containing && Arrays.equals(this.key, castKey);

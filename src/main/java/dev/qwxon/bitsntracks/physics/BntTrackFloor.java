@@ -19,7 +19,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
-/** The track surface a wheel stands on, bridging what a taut run crosses. */
 public final class BntTrackFloor {
     private static final double FLAT = 1.0E-6;
     private static final int MAX_PROBES = 24;
@@ -27,7 +26,6 @@ public final class BntTrackFloor {
     private BntTrackFloor() {
     }
 
-    /** Height the track holds this wheel above the ground under it. */
     public static double at(Level level, KineticBlockEntity wheel) {
         if (!BntPhysicsTuning.isBeltDrapeEnabled()
             || !(wheel instanceof KineticBlockEntityPhysicsAccess access)
@@ -168,7 +166,6 @@ public final class BntTrackFloor {
         }
     }
 
-    /** Lift the wheels at either end of a bottom run need for the run to pass over what stands under it. */
     private static void riseOver(
         Vec3 start, Vec3 end, boolean startFree, boolean endFree, double surplus, double path, double[] lifts, int first, int second
     ) {
@@ -205,7 +202,6 @@ public final class BntTrackFloor {
         return arm == null ? 0.0 : Math.max(0.0, arm.upTravel(BntSuspension.travel(wheel)) + BntPhysicsEvents.getRawRenderExtension(wheel, 1.0F));
     }
 
-    /** How far a parked wheel already presses the run below its neighbours, which the loop was fitted around. */
     private static double wrapped(Vec3 previous, Vec3 seat, Vec3 next) {
         Vec3 along = next.subtract(previous);
         double span = along.lengthSqr();

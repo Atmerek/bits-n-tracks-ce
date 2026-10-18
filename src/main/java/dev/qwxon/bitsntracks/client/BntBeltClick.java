@@ -23,7 +23,6 @@ public final class BntBeltClick {
     private BntBeltClick() {
     }
 
-    /** True when a click retensions a run instead of reaching the cogwheel. */
     public static boolean wouldRetension() {
         Minecraft minecraft = Minecraft.getInstance();
         Level level = minecraft.level;
@@ -38,7 +37,6 @@ public final class BntBeltClick {
             && !onAimedCogwheel(level, controllerPos, baked, minecraft.hitResult);
     }
 
-    /** Compares the chain hit and the aimed block in the chain's own space. */
     private static boolean onAimedCogwheel(Level level, BlockPos controllerPos, Vec3 baked, HitResult hitResult) {
         if (!(hitResult instanceof BlockHitResult blockHit) || hitResult.getType() != HitResult.Type.BLOCK) {
             return false;

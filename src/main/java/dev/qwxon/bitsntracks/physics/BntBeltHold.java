@@ -19,11 +19,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * The belt is a loop of fixed length, and it pulls back when the wheels ask for more path than it has.
- * The length it is fitted to is measured where the wheels are drawn, so a machine standing still asks for
- * exactly what it was fitted with, and only terrain that lengthens the path makes the belt carry anything.
- */
 public final class BntBeltHold {
     private static final double FLAT = 1.0E-6;
     private static final double GRIP_SLOPE = 0.05;
@@ -36,7 +31,6 @@ public final class BntBeltHold {
     private BntBeltHold() {
     }
 
-    /** Lift the belt puts on one wheel, solved once per tick for the whole loop. */
     public static double at(Level level, KineticBlockEntity wheel) {
         if (!BntPhysicsTuning.isBeltHoldEnabled()
             || !(wheel instanceof KineticBlockEntityPhysicsAccess access)
@@ -64,7 +58,6 @@ public final class BntBeltHold {
         return access.bnt$getBeltHold();
     }
 
-    /** Lift a wheel may relax from, which is nothing unless it was solved in the last few ticks; the client's clock can skip one. */
     private static double carried(KineticBlockEntityPhysicsAccess access, long now) {
         long tick = access.bnt$getBeltHoldTick();
         return tick >= now - CARRY_TICKS && tick <= now + CARRY_TICKS ? access.bnt$getBeltHold() : 0.0;
@@ -180,7 +173,6 @@ public final class BntBeltHold {
         return BntBeltPath.fromPlanar(across, along, 0.0, axis).y / run[0];
     }
 
-    /** Path the runs gain climbing the ground under them. */
     private static double climb(
         BlockPos controllerPos, List<PathedCogwheelNode> nodes, Axis axis,
         Vec3[] centres, double[] xs, double[] ys, double[] radii, int[] sides

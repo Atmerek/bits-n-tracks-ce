@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.At;
     remap = false
 )
 public abstract class GeneratingKineticBlockEntityMixin {
-    /** Stops the chain instead of letting an overpowered source break itself. */
     @WrapOperation(
         method = {"applyNewSpeed(FF)V"},
         at = @At(

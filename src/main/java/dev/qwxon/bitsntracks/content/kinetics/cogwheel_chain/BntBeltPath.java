@@ -7,12 +7,10 @@ public final class BntBeltPath {
     private BntBeltPath() {
     }
 
-    /** Tangent between two wheels, as offsets from each centre. */
     public static double[] tangent(double xi, double yi, double ai, double xj, double yj, double aj) {
         return BntBeltSolver.tangent(xi, yi, ai, xj, yj, aj);
     }
 
-    /** Inverse of BntChainGeometry.planarX and planarY, w along the axis. */
     public static Vec3 fromPlanar(double u, double v, double w, Axis axis) {
         return switch (axis) {
             case X -> new Vec3(w, u, v);

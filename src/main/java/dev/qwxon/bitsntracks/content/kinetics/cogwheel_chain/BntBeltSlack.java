@@ -10,14 +10,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
-/** Splits the loop's surplus length between its runs. */
 public final class BntBeltSlack {
     private static final double TIGHT_FLOOR = 1.0E-3;
 
     private BntBeltSlack() {
     }
 
-    /** Chain speed at the level and origin set by the caller. */
     public static float contextSpeed() {
         Level level = BntRadiusProvider.level();
         BlockPos origin = BntRadiusProvider.origin();
@@ -26,7 +24,6 @@ public final class BntBeltSlack {
             : 0.0F;
     }
 
-    /** Index of the run the sprocket pulls into itself, or -1 when nothing is driving. */
     public static int tightRun(List<PathedCogwheelNode> nodes, float speed) {
         int count = nodes == null ? 0 : nodes.size();
         if (count < 2 || speed == 0.0F) {
@@ -43,7 +40,6 @@ public final class BntBeltSlack {
         return speed > 0.0F ? (driver - 1 + count) % count : driver;
     }
 
-    /** Surplus each run carries, shared by length less what the tight side gives up. */
     public static double[] distribute(double[] runLengths, double surplus, int tightRun, float speed) {
         int count = runLengths.length;
         double[] share = new double[count];

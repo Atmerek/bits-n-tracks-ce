@@ -220,7 +220,6 @@ public class CogwheelChainGeometryBuilderMixin {
         return count;
     }
 
-    /** Surplus length each run carries, once the tight side has given up its share. */
     private static double[] bnt$slackPerRun(List<PathedCogwheelNode> nodes, List<Pair<Vec3, Vec3>> offsetsAtNodes) {
         int n = nodes.size();
         double[] runLengths = new double[n];
@@ -238,7 +237,6 @@ public class CogwheelChainGeometryBuilderMixin {
         return BntBeltSlack.distribute(runLengths, surplus, BntBeltSlack.tightRun(nodes, speed), speed);
     }
 
-    /** Adds the points that shape a run. */
     private static void bnt$emitSag(
         List<RenderedChainPathNode> resultNodes, PathedCogwheelNode owner, PathedCogwheelNode next,
         Vec3 runStart, Vec3 runEnd, double surplus, double travelled
@@ -282,7 +280,6 @@ public class CogwheelChainGeometryBuilderMixin {
         }
     }
 
-    /** Nearest link joint to an evenly spaced point, or the even point when that would not fit. */
     private static double bnt$onLinkBoundary(double travelled, double span, double even, double pitch, double reached) {
         if (pitch <= 0.0 || span <= 1.0E-6) {
             return even;

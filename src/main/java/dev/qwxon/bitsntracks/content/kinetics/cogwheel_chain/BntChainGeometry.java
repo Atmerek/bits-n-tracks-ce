@@ -18,7 +18,6 @@ import net.minecraft.world.phys.Vec3;
 
 public final class BntChainGeometry {
     private static final double ORIENTATION_TOLERANCE = 1.0E-6;
-    /** Below this a lined-up wheel's arc can round to a full turn. */
     private static final double GRAZE_TOLERANCE = 1.0E-4;
     private static final double LEAVE_SLACK = 0.25;
     private static final double LOOPED_WRAP = Math.PI * 1.5;
@@ -193,7 +192,6 @@ public final class BntChainGeometry {
         return resolve(pathNodes, null);
     }
 
-    /** Wheels terrain has pushed inside the loop stay on the belt while it still passes cleanly through them. */
     public static Layout resolve(List<PathedCogwheelNode> pathNodes, Layout previous) {
         int count = pathNodes.size();
         Axis axis = sharedAxis(pathNodes);
@@ -283,7 +281,6 @@ public final class BntChainGeometry {
         int[] pinned = routes == null ? null : pins(xs, ys, radii, axis, routes, free, requested);
         int[] sides = BntBeltSolver.sides(xs, ys, radii, free, pinned);
         if (sides == null) {
-            // Keep which way the chain turns, but drop any single wheel the belt cannot reach round.
             int chirality = 0;
             for (PathedCogwheelNode node : pathNodes) {
                 chirality += node.side();
@@ -521,7 +518,6 @@ public final class BntChainGeometry {
         return BntBeltSolver.tangled(xs, ys, radii, layout.sides(), layout.sequence());
     }
 
-    /** How far a node reaches past its neighbours' run, or NaN when it does not sit along that run. */
     private static double clearance(double[] xs, double[] ys, double[] radii, int[] sides,
                                     int from, int to, int node) {
         double[] run = BntBeltSolver.tangent(xs[from], ys[from], sides[from] * radii[from],

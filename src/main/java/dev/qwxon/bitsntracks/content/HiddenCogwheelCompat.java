@@ -79,7 +79,6 @@ public final class HiddenCogwheelCompat {
             : 0.0;
     }
 
-    /** Drop a wheel is drawn at, with the belt holding it up. */
     public static double getHeldVisualDrop(BlockEntity be, float partialTick) {
         if (!(be instanceof KineticBlockEntity kinetic) || !isPhysicsEnabled(be)) {
             return 0.0;

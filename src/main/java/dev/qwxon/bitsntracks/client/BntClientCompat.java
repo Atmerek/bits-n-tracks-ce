@@ -35,19 +35,16 @@ public class BntClientCompat {
     private static final int LIGHT_REACH = 1 << 20;
     private static final ThreadLocal<ChainLights> CHAIN_LIGHTS = ThreadLocal.withInitial(ChainLights::new);
 
-    /** The pose the cogwheels are drawn against, which their suspension drop is measured in. */
     public static Pose3dc drawnPose(SubLevel subLevel) {
         return subLevel instanceof ClientSubLevel client
             ? client.renderPose(getPartialTick())
             : subLevel.logicalPose();
     }
 
-    /** Tracks are drawn by a block entity renderer, so they need the sublevel's reach rather than the default 64. */
     public static int trackViewDistance() {
         return Math.max(Minecraft.getInstance().options.getEffectiveRenderDistance() * 16, 64);
     }
 
-    /** Lights for a chain are kept for the rest of the tick, so the frames drawn within it share them. */
     public static void beginChainLight(BlockEntity be) {
         ChainLights lights = CHAIN_LIGHTS.get();
         ChainLight cache = lights.byChain.computeIfAbsent(be, ignored -> new ChainLight());
@@ -64,7 +61,6 @@ public class BntClientCompat {
         CHAIN_LIGHTS.get().current = null;
     }
 
-    /** Struts lights a point from its block plus any face it sits within 0.3 of, so points sharing both share a light. */
     public static int chainLight(Function<Vector3f, Integer> lighter, Vector3f point) {
         ChainLights lights = CHAIN_LIGHTS.get();
         ChainLight cache = lights.current;
@@ -193,7 +189,6 @@ public class BntClientCompat {
         }
     }
 
-    /** What getTransformedPosition adds for each path node, worked out once per cogwheel rather than per point. */
     private static Vec3[] nodeShifts(KineticBlockEntity be, List<RenderedChainPathNode> pathNodes) {
         int size = pathNodes.size();
         Vec3[] shifts = new Vec3[size];

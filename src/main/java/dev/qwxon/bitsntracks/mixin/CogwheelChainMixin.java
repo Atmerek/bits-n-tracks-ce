@@ -121,7 +121,6 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     @Unique
     private BntChainGeometry.Layout bnt$latched;
 
-    /** Set while one fault is still standing, so a repair runs once for it and not every lazy tick. */
     @Unique
     private boolean bnt$repairAttempted;
 
@@ -207,7 +206,6 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$holdsCheckedAt = Long.MIN_VALUE;
     }
 
-    /** Every input to the check is held for the tick, so it only has to run once per tick. */
     @Unique
     private boolean bnt$latchedStillHolds(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
         long now = level.getGameTime();
@@ -225,10 +223,6 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
             && level.getGameTime() - this.bnt$latchedAt < BntChainEngagement.LATCH_DWELL_TICKS;
     }
 
-    /**
-     * A side is the direction Create drives that cogwheel in, so on the server it may only change while
-     * the chain is stopped. The client has no network to damage and takes it straight away.
-     */
     @Unique
     private void bnt$applySides(Level level, List<PathedCogwheelNode> nodes, int[] sides) {
         if (!bnt$sidesDiffer(nodes, sides)) {
@@ -341,7 +335,6 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         }
     }
 
-    /** The engagement the kinetic network was actually built with, which is what a stale speed belongs to. */
     @Unique
     private boolean[] bnt$appliedEngagement(int count) {
         BntChainGeometry.Layout applied = this.bnt$appliedLayout;
@@ -408,7 +401,6 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         return true;
     }
 
-    /** Bits 'n' Bobs saves its small flanged cogwheel as tiny. */
     @Inject(
         method = {"checkIntegrity"},
         at = {@At("HEAD")}

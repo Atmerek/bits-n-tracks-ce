@@ -10,7 +10,6 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-/** Tread plates joined by links, one plate and its links per link pitch. */
 public final class BntTankTread {
     private static final double PX = 1.0 / 16.0;
     private static final double SHEET_U = 32.0;
@@ -22,10 +21,8 @@ public final class BntTankTread {
     private static final double CENTRE_Y = 1.0;
     private static final int WHITE = -1;
 
-    /** A face is still drawn while the eye sits this close behind its plane, which covers view bobbing. */
     private static final double EDGE_ON = 0.25;
 
-    /** up, down, north, south, east, west. Each entry is u0, v0, u1, v1, rotation. */
     private static final double[][] TREAD_UV = {
         {0, 0, 14, 3, 0},
         {14, 0, 28, 3, 180},
@@ -53,7 +50,6 @@ public final class BntTankTread {
         {2, 6, 3, 7, 0}
     };
 
-    /** Corners of each face, as bits of w, t and l, in the order the faces were first wound. */
     private static final int[][] FACE_CORNERS = {
         {2, 3, 7, 6},
         {1, 0, 4, 5},
@@ -81,17 +77,12 @@ public final class BntTankTread {
     private BntTankTread() {
     }
 
-    /**
-     * Where one segment's boxes are written and how they are lit. The eye is relative to the segment's start and null
-     * when every face has to be drawn, and links are left out where they would be under a pixel.
-     */
     public record Target(
         VertexConsumer consumer, Matrix4f pose, Matrix3f normal, int lightFrom, int lightTo, Vec3 relTo, Vec3 eye,
         boolean links, BntTrackSink sink
     ) {
     }
 
-    /** Emits every box whose middle falls inside this segment, given where it starts and runs on the belt. */
     public static void emitSegment(
         Target target, List<Vec3> source, List<Vec3> destination, double start, double span, boolean wide,
         boolean frameTopOutward
@@ -200,7 +191,6 @@ public final class BntTankTread {
         }
     }
 
-    /** Bit per face that looks toward the eye: up, down, north, south, east, west. */
     private static int visibleFaces(Vec3 eye, Vec3 c, Vec3 w, Vec3 t, Vec3 l) {
         if (eye == null) {
             return 0b111111;
@@ -232,18 +222,15 @@ public final class BntTankTread {
         return visible;
     }
 
-    /** A plate on a bend is sheared, so a face looks along the cross of its edges rather than along its offset. */
     private static Vec3 outward(Vec3 normal, Vec3 offset) {
         return normal.dot(offset) < 0.0 ? normal.scale(-1.0) : normal;
     }
 
-    /** Whether the eye is in front of the face whose middle sits at offset from the box's. */
     private static boolean facesEye(Vec3 toEye, Vec3 offset, Vec3 normal) {
         double length = normal.length();
         return length < 1.0E-12 || toEye.subtract(offset).dot(normal) > -EDGE_ON * length;
     }
 
-    /** One face, wound so it looks away from the middle of the box. */
     private static void face(
         Target target, Vec3 middle, double[] cx, double[] cy, double[] cz, float[] px, float[] py, float[] pz,
         int[] corners, float[] uv, int light, Vector3f normal
@@ -371,7 +358,6 @@ public final class BntTankTread {
             this.drift = run.scale(alongRate);
         }
 
-        /** Light blended along the segment at the box's middle, as the vertices each were before. */
         private int lightAt(Vec3 middle) {
             float t = this.lengthSqr > 1.0E-8
                 ? Mth.clamp((float)(middle.dot(this.target.relTo()) / this.lengthSqr), 0.0F, 1.0F)

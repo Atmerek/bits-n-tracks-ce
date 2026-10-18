@@ -98,7 +98,6 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         }
     }
 
-    /** Reproduces the scroll BnB folds into every segment offset. */
     @Unique
     private static double bnt$chainScroll(KineticBlockEntity be) {
         if (!(be.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour chain)) {
@@ -144,7 +143,6 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         }
     }
 
-    /** Bits 'n' Bobs drops the chain to its cheap form past 24 blocks, measured against sublevel-local coordinates. */
     @Redirect(
         method = {"renderChain"},
         at = @At(
@@ -310,7 +308,6 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         ci.cancel();
     }
 
-    /** Bits 'n' Bobs' getEndPointsForChainJoint, the same sums without building a stream for four points. */
     @Unique
     private static List<Vec3> bnt$endPoints(
         Vec3 before, Vec3 point, Vec3 after, ChainRenderInfo chainRenderInfo, Vec3 cogwheelAxis, Matrix3f accumulatedOrientation

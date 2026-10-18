@@ -19,7 +19,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-/** The loop as a whole number of links of fixed pitch. */
 public final class BntBeltLinks {
     public static final int UNSET = 0;
     private static final int MAX_LINKS = 8192;
@@ -39,7 +38,6 @@ public final class BntBeltLinks {
         return BntPhysicsTuning.getBeltLinkPitch();
     }
 
-    /** Path length one pass of the texture covers. */
     public static double repeatLength() {
         return pitch() * BntPhysicsTuning.getBeltLinksPerTexture();
     }
@@ -48,12 +46,10 @@ public final class BntBeltLinks {
         return links * pitch();
     }
 
-    /** Taut path round the wheels where they rest. */
     public static double tautLength(List<PathedCogwheelNode> nodes) {
         return pathLength(nodes, false);
     }
 
-    /** Taut path round the wheels where they are now. */
     public static double liveTautLength(List<PathedCogwheelNode> nodes) {
         return pathLength(nodes, true);
     }
@@ -85,7 +81,6 @@ public final class BntBeltLinks {
         return Double.isFinite(length) && length < Double.MAX_VALUE ? length : 0.0;
     }
 
-    /** Whole links a loop is built from, before any slack the tensioner lets out. */
     public static int linksFor(double tautLength) {
         double pitch = pitch();
         if (tautLength <= 0.0 || pitch <= 0.0) {
@@ -94,7 +89,6 @@ public final class BntBeltLinks {
         return Mth.clamp((int)Math.ceil(tautLength / pitch - 1.0E-9), 2, MAX_LINKS);
     }
 
-    /** Slack from the dial, squared so hang moves evenly with the lever, less the pull a taut loop keeps. */
     public static double slackLength(float tension) {
         double taut = BntBeltTension.clamp(tension);
         double slack = 1.0 - taut;
@@ -102,7 +96,6 @@ public final class BntBeltLinks {
             - BntPhysicsTuning.getBeltPreTension() * taut;
     }
 
-    /** Length the loop carries over the path it has to clear, never negative. */
     public static double surplus(int links, float tension, double clearing) {
         if (links <= UNSET || clearing <= 0.0) {
             return 0.0;
@@ -110,7 +103,6 @@ public final class BntBeltLinks {
         return Math.max(0.0, length(links) + slackLength(tension) - clearing);
     }
 
-    /** Belt length and scroll for the chain being rendered. */
     public static void setLoop(double belt, double scroll) {
         LOOP_BELT.set(belt);
         LOOP_SCROLL.set(scroll);
@@ -123,7 +115,6 @@ public final class BntBeltLinks {
         LOOP_SPANS.get().clear();
     }
 
-    /** Where each segment of the drawn loop starts, keyed by the point it ends on, and how long the loop is. */
     public static void beginSpans() {
         LOOP_DRAWN.remove();
         LOOP_SPANS.get().clear();
@@ -137,10 +128,6 @@ public final class BntBeltLinks {
         LOOP_DRAWN.set(drawn);
     }
 
-    /**
-     * Start and length of a drawn segment in belt units. The loop is scaled to a whole number of periods, so the
-     * pattern closes on itself rather than leaving a partial one where the path begins.
-     */
     public static double[] onLoop(Vec3 to, double offset, double length, double period) {
         double[] span = LOOP_SPANS.get().get(to);
         Double drawn = LOOP_DRAWN.get();
@@ -162,7 +149,6 @@ public final class BntBeltLinks {
         return Math.max(1L, (long)Math.floor(beltLength() / period)) * period;
     }
 
-    /** The latched belt, unless the drawn loop has drifted too far from it to stretch over. */
     private static double closingRun(double drawn, double period) {
         double latched = latchedRun(period);
         double stretch = latched / drawn;
@@ -171,18 +157,15 @@ public final class BntBeltLinks {
             : Math.max(1L, Math.round(drawn / period)) * period;
     }
 
-    /** Length of belt in the loop, which only moves when the lever does. */
     public static double beltLength() {
         Double belt = LOOP_BELT.get();
         return belt == null ? 0.0 : belt;
     }
 
-    /** Folds the render time scroll into a whole number of texture passes. */
     public static double wrapScroll(double offset) {
         return wrapScroll(offset, beltRun());
     }
 
-    /** Folds against a period the caller repeats over. */
     public static double wrapScroll(double offset, double period) {
         Double scroll = LOOP_SCROLL.get();
         if (scroll == null || period <= 1.0E-6) {
@@ -195,25 +178,21 @@ public final class BntBeltLinks {
         return offset - scroll + folded;
     }
 
-    /** Whole texture passes the loop is built from, rounded down off the belt length. */
     private static long loopRepeats() {
         double belt = beltLength();
         double repeat = repeatLength();
         return repeat <= 0.0 || belt <= repeat ? 1L : Math.max(1L, (long)Math.floor(belt / repeat));
     }
 
-    /** Length those passes take up. */
     public static double beltRun() {
         return loopRepeats() * repeatLength();
     }
 
-    /** Texture scale, one sheet pass per repeatLength of belt. */
     public static float squish() {
         double repeat = repeatLength();
         return repeat <= 0.0 ? 1.0F : (float)(1.0 / repeat);
     }
 
-    /** Taut path the loop is fitted to, measured with the suspension parked at its ride height. */
     public static double fitLength(Level level, BlockPos controllerPos) {
         List<PathedCogwheelNode> nodes = BntChains.beltOrder(level, controllerPos);
         if (nodes.size() < 2) {
@@ -224,7 +203,6 @@ public final class BntBeltLinks {
         }
     }
 
-    /** Rebuilds the loop for a tension and returns its link count. */
     public static int relatch(Level level, BlockPos controllerPos, float tension) {
         List<PathedCogwheelNode> nodes = BntChains.beltOrder(level, controllerPos);
         if (nodes.size() < 2) {
@@ -235,12 +213,10 @@ public final class BntBeltLinks {
         }
     }
 
-    /** Where a wheel is drawn, its visual seat moved by the drop terrain puts it at. */
     public static Vec3 drawnCentre(Level level, BlockPos controllerPos, PathedCogwheelNode node) {
         return centre(level, controllerPos, node, false);
     }
 
-    /** Where a wheel sits with its suspension parked at ride height. */
     public static Vec3 parkedCentre(Level level, BlockPos controllerPos, PathedCogwheelNode node) {
         return centre(level, controllerPos, node, true);
     }
@@ -263,7 +239,6 @@ public final class BntBeltLinks {
         return centre;
     }
 
-    /** Taut path round the wheels where they are drawn. */
     public static double drawnTautLength(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
         return tautLength(level, controllerPos, nodes, false);
     }
@@ -291,13 +266,11 @@ public final class BntBeltLinks {
         return Double.isFinite(length) && length < Double.MAX_VALUE ? length : 0.0;
     }
 
-    /** Links the loop settles at, worked out fresh when none is latched. */
     public static int resolve(Level level, BlockPos controllerPos, float tension) {
         int latched = at(level, controllerPos);
         return latched > UNSET ? latched : relatch(level, controllerPos, tension);
     }
 
-    /** Writes a link count onto a chain that has none, from the lazy tick only. */
     public static void latchIfUnset(Level level, BlockPos controllerPos) {
         if (at(level, controllerPos) > UNSET) {
             return;
@@ -324,14 +297,12 @@ public final class BntBeltLinks {
             : 0.0;
     }
 
-    /** Link count of the chain at the level and origin set by the caller. */
     public static int context() {
         Level level = BntRadiusProvider.level();
         BlockPos origin = BntRadiusProvider.origin();
         return level == null || origin == null ? UNSET : at(level, origin);
     }
 
-    /** Link count for the loop being drawn, worked out fresh when none has been latched. */
     public static int contextOrEstimate(List<PathedCogwheelNode> nodes) {
         int latched = context();
         return latched > UNSET ? latched : linksFor(tautLength(nodes));

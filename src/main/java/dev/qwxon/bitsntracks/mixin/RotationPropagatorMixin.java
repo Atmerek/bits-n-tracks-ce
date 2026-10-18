@@ -43,7 +43,6 @@ public class RotationPropagatorMixin {
         }
     }
 
-    /** Stops the chain at the end of the tick instead of breaking the driving block, until that keeps failing. */
     @WrapOperation(
         method = {"propagateNewSource(Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;)V"},
         at = @At(
@@ -73,7 +72,6 @@ public class RotationPropagatorMixin {
         return BntChainEngagement.settleConveyed(from, to, original.call(from, to));
     }
 
-    /** A block handed back and forth between two sources re-enters itself until the stack runs out. */
     @WrapOperation(
         method = {"propagateNewSource(Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;)V"},
         at = @At(

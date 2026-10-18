@@ -44,7 +44,6 @@ public final class BntChainEngagement {
     private static final float ROUNDING_SPAN = 256.0F * 256.0F;
     private static final double DROP_STEP = 1.0 / 16.0;
 
-    /** How long a settled belt layout is held before suspension travel is allowed to redraw it. */
     public static final long LATCH_DWELL_TICKS = 20L;
 
     private BntChainEngagement() {
@@ -66,7 +65,6 @@ public final class BntChainEngagement {
         return displacement;
     }
 
-    /** The drop a wheel is drawn at, held steady for a tick and sticky across ticks. */
     private static double groundDrop(Level level, BlockEntity be, KineticBlockEntityPhysicsAccess access) {
         if (BntPonderPhysics.stage(level) != null) {
             return 0.0;
@@ -255,13 +253,6 @@ public final class BntChainEngagement {
         return positions;
     }
 
-    /**
-     * Parks a cogwheel the belt has left at a standstill.
-     * A disengaged node is unreachable from Create's propagation, so nothing else ever clears the speed it
-     * was left holding, and the moment it engages again that stale speed meets the live one; if the two
-     * disagree in sign, which is what reversing does, Create destroys the block.
-     * Only a node the chain itself was driving is parked, so a cogwheel fed from a shaft keeps its own drive.
-     */
     public static void parkDisengaged(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes,
                                       boolean[] engaged) {
         Set<BlockPos> chain = null;
@@ -284,12 +275,6 @@ public final class BntChainEngagement {
         }
     }
 
-    /**
-     * True when a cogwheel is still being driven through one the belt has left.
-     * Create only asks whether a source still exists and still turns, never whether it is still connected, so
-     * such a node keeps its speed for good: the track spins on with nothing driving it, and the next time the
-     * input is reversed that phantom rotation meets the real drive and destroys whatever sits between them.
-     */
     public static boolean hasSeveredDrive(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes,
                                           boolean[] engaged) {
         Map<BlockPos, Boolean> state = new HashMap<>();
@@ -328,7 +313,6 @@ public final class BntChainEngagement {
         return false;
     }
 
-    /** Whether the live speeds are the ones these sides ask for; a node's own side would agree with itself. */
     public static boolean drivesTogether(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes,
                                          boolean[] engaged, int[] sides) {
         if (sides == null || sides.length != nodes.size()) {
@@ -358,19 +342,16 @@ public final class BntChainEngagement {
         return true;
     }
 
-    /** Whether the sides these nodes carry describe a belt that can be drawn at all. */
     public static boolean beltFits(List<PathedCogwheelNode> nodes) {
         return BntBeltLinks.tautLength(nodes) > 0.0;
     }
 
-    /** The same for a layout; wheels closer than their radii add up have no crossed run between them. */
     public static boolean layoutFits(List<PathedCogwheelNode> nodes, BntChainGeometry.Layout layout) {
         return layout == null
             || layout.sides().length != nodes.size()
             || beltFits(BntChainGeometry.applyLayout(nodes, layout));
     }
 
-    /** Stops a loop of cogwheels driving each other with nothing generating. */
     public static boolean clearPhantomDrive(Level level, KineticBlockEntity start) {
         if (level == null || level.isClientSide || start.getTheoreticalSpeed() == 0.0F
             || start.source == null || !start.hasNetwork()) {
@@ -407,7 +388,6 @@ public final class BntChainEngagement {
         restore(level, detach(level, nodes));
     }
 
-    /** Stops these cogwheels and everything they drive. */
     public static Set<BlockPos> detach(Level level, Collection<BlockPos> nodes) {
         Set<BlockPos> stopped = new HashSet<>(nodes);
         ArrayDeque<BlockPos> frontier = new ArrayDeque<>(nodes);
@@ -441,7 +421,6 @@ public final class BntChainEngagement {
         return level.isLoaded(pos) ? level.getBlockEntity(pos) : null;
     }
 
-    /** Asks Create to work the chain's speeds out again from scratch. */
     public static void restore(Level level, Collection<BlockPos> nodes) {
         for (BlockPos nodePos : nodes) {
             if (level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic) {
@@ -452,7 +431,6 @@ public final class BntChainEngagement {
         }
     }
 
-    /** Medium ratios have no exact float, so a loop hands speed back a hair fast; within Create's loop tolerance that is no change. */
     public static float settleConveyed(KineticBlockEntity from, KineticBlockEntity to, float conveyed) {
         float held = to.getTheoreticalSpeed();
         if (held == 0.0F || conveyed == held || Math.abs(conveyed - held) > Math.abs(held) / ROUNDING_SPAN) {
