@@ -16,7 +16,11 @@ import net.minecraft.world.item.ItemStack;
 
 public class SuspensionToolItemRenderer extends CustomRenderedItemModelRenderer {
     private static final PartialModel NEEDLE = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/needle"));
-    private static final PartialModel TICK = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/tick"));
+    private static final PartialModel TICK_GREEN = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/tick_green"));
+    private static final PartialModel TICK_YELLOW = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/tick_yellow"));
+    private static final PartialModel TICK_GRAY = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/tick_gray"));
+    private static final PartialModel TICK_ORANGE = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/tick_orange"));
+    private static final PartialModel TICK_RED = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/tick"));
     private static final PartialModel SCREEN = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/screen"));
     private static final PartialModel GEAR = PartialModel.of(BitsNTracks.asResource("item/suspension_tool/gear"));
     private static final float PIVOT_X = (8.8F - 8.0F) / 16.0F;
@@ -56,13 +60,18 @@ public class SuspensionToolItemRenderer extends CustomRenderedItemModelRenderer 
 
         for (int level = BntTuning.MIN; level <= BntTuning.MAX; level++) {
             aroundDial(ms, BntTunerGauge.levelAngle(level));
-            renderer.render(TICK.get(), cutout, light);
+            renderer.render(tick(level).get(), cutout, light);
             ms.popPose();
         }
 
         aroundDial(ms, BntTunerGauge.needleAngle(stack));
         renderer.render(NEEDLE.get(), cutout, light);
         ms.popPose();
+    }
+
+    private static PartialModel tick(int level) {
+        int distance = Math.abs(level - BntTuning.DEFAULT);
+        return distance == 0 ? TICK_GRAY : distance == 1 ? TICK_GREEN : distance <= 3 ? TICK_YELLOW : distance <= 5 ? TICK_ORANGE : TICK_RED;
     }
 
     private static void aroundDial(PoseStack ms, float degrees) {
