@@ -7,13 +7,14 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record BntSuspensionPayload(BlockPos pos, int side) implements CustomPacketPayload {
+public record BntSuspensionPayload(BlockPos pos, int side, int facing) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<BntSuspensionPayload> TYPE =
         new CustomPacketPayload.Type<>(BitsNTracks.asResource("suspension_piece"));
 
     public static final StreamCodec<FriendlyByteBuf, BntSuspensionPayload> CODEC = StreamCodec.composite(
         BlockPos.STREAM_CODEC, BntSuspensionPayload::pos,
         ByteBufCodecs.VAR_INT, BntSuspensionPayload::side,
+        ByteBufCodecs.VAR_INT, BntSuspensionPayload::facing,
         BntSuspensionPayload::new);
 
     @Override

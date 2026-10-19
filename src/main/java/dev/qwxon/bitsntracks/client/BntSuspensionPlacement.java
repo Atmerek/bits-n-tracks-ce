@@ -33,6 +33,7 @@ public final class BntSuspensionPlacement {
     private static BlockPos selected;
     private static int side;
     private static int facing;
+    private static int preferred;
     private static BlockPos first;
     private static BlockPos lead;
     private static int toward;
@@ -127,11 +128,12 @@ public final class BntSuspensionPlacement {
         }
 
         boolean chosen = selected.equals(first);
+        preferred = (int)Math.signum(facingRay);
         side = !chosen ? 0 : across > SIDE_DEAD_ZONE ? 1 : across < -SIDE_DEAD_ZONE ? -1 : 0;
-        facing = side == 0 ? 0 : BntSuspension.facingFor(level, selected, state, side);
+        facing = side == 0 ? 0 : BntSuspension.facingFor(level, selected, state, side, preferred);
         toward = first == null || chosen ? 0 : BntSuspension.towards(level, first, selected);
         lead = toward > 0 ? first : toward < 0 ? selected : null;
-        bogieFacing = toward == 0 || !enough(player) ? 0 : BntSuspension.bogieFacing(level, first, toward);
+        bogieFacing = toward == 0 || !enough(player) ? 0 : BntSuspension.bogieFacing(level, first, toward, preferred);
         bogieDrop = toward == 0 ? 0.0F : BntSuspension.bogieDrop(level.getBlockEntity(first), be);
         if (!chosen && level instanceof ClientLevel clientLevel) {
             BntToolVisuals.cog("bnt_suspension_target", clientLevel, selected,
@@ -156,7 +158,7 @@ public final class BntSuspensionPlacement {
             if (fresh) {
                 useHandled = true;
                 if (bogieFacing != 0) {
-                    PacketDistributor.sendToServer(new BntSuspensionPayload(first, toward * BntSuspension.BOGIE));
+                    PacketDistributor.sendToServer(new BntSuspensionPayload(first, toward * BntSuspension.BOGIE, preferred));
                     first = null;
                 } else if (!enough(player)) {
                     player.displayClientMessage(Component.translatable("chat.bits_n_tracks.suspension.bogie.pieces"), true);
@@ -169,7 +171,7 @@ public final class BntSuspensionPlacement {
             event.setSwingHand(facing != 0);
             if (facing != 0 && fresh) {
                 useHandled = true;
-                PacketDistributor.sendToServer(new BntSuspensionPayload(selected, side));
+                PacketDistributor.sendToServer(new BntSuspensionPayload(selected, side, preferred));
                 first = null;
             }
             return;
@@ -206,6 +208,7 @@ public final class BntSuspensionPlacement {
         selected = null;
         side = 0;
         facing = 0;
+        preferred = 0;
         lead = null;
         toward = 0;
         bogieFacing = 0;

@@ -40,11 +40,11 @@ public final class BntSuspensionHandler {
             return;
         }
         if (Math.abs(payload.side()) == BntSuspension.BOGIE) {
-            placeBogie(player, level, pos, kinetic, Integer.signum(payload.side()), hand);
+            placeBogie(player, level, pos, kinetic, Integer.signum(payload.side()), Integer.signum(payload.facing()), hand);
             return;
         }
         int side = Integer.signum(payload.side());
-        int facing = BntSuspension.facingFor(level, pos, be.getBlockState(), side);
+        int facing = BntSuspension.facingFor(level, pos, be.getBlockState(), side, Integer.signum(payload.facing()));
         if (facing == 0) {
             return;
         }
@@ -59,8 +59,10 @@ public final class BntSuspensionHandler {
         BntToolSounds.mount(level, pos, true);
     }
 
-    private static void placeBogie(Player player, Level level, BlockPos pos, KineticBlockEntity kinetic, int toward, InteractionHand hand) {
-        int facing = BntSuspension.bogieFacing(level, pos, toward);
+    private static void placeBogie(
+        Player player, Level level, BlockPos pos, KineticBlockEntity kinetic, int toward, int preferred, InteractionHand hand
+    ) {
+        int facing = BntSuspension.bogieFacing(level, pos, toward, preferred);
         if (facing == 0) {
             return;
         }

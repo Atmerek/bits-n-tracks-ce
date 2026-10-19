@@ -90,7 +90,7 @@ public final class BntSuspension {
         return cell.relative(Direction.get(facing > 0 ? Direction.AxisDirection.POSITIVE : Direction.AxisDirection.NEGATIVE, axis));
     }
 
-    public static int facingFor(Level level, BlockPos pos, BlockState state, int side) {
+    public static int facingFor(Level level, BlockPos pos, BlockState state, int side, int preferred) {
         if (side == 0 || !supports(state)) {
             return 0;
         }
@@ -100,12 +100,16 @@ public final class BntSuspension {
             || partnerPos != null && isBogie(level.getBlockEntity(partnerPos.offset(step(axis, side))))) {
             return 0;
         }
-        for (int facing : new int[]{1, -1}) {
+        for (int facing : facingOrder(preferred)) {
             if (mounted(level, armEnd(level, pos, axis, facing), axis, side, facing)) {
                 return facing;
             }
         }
         return 0;
+    }
+
+    private static int[] facingOrder(int preferred) {
+        return preferred < 0 ? new int[]{-1, 1} : new int[]{1, -1};
     }
 
     public static BlockPos armEnd(Level level, BlockPos pos, Axis axis, int facing) {
@@ -146,7 +150,7 @@ public final class BntSuspension {
         return toward;
     }
 
-    public static int bogieFacing(Level level, BlockPos pos, int toward) {
+    public static int bogieFacing(Level level, BlockPos pos, int toward, int preferred) {
         BlockEntity be = level.getBlockEntity(pos);
         if (toward == 0 || !canPair(be)) {
             return 0;
@@ -168,7 +172,7 @@ public final class BntSuspension {
                 return 0;
             }
         }
-        for (int facing : new int[]{1, -1}) {
+        for (int facing : facingOrder(preferred)) {
             if (heldAtEnd(level, pos, partnerPos, axis, facing)) {
                 return facing;
             }
