@@ -440,7 +440,8 @@ public final class BntChainEngagement {
     }
 
     private static boolean roundsRatio(BlockEntity be) {
-        return partOfChain(be) || CogwheelSize.of(be.getBlockState().getBlock()) == CogwheelSize.MEDIUM;
+        CogwheelSize size = CogwheelSize.of(be.getBlockState().getBlock());
+        return partOfChain(be) || size == CogwheelSize.MEDIUM || size == CogwheelSize.MEDIUM_LARGE;
     }
 
     static List<BlockPos> chainNetwork(KineticBlockEntity kinetic) {

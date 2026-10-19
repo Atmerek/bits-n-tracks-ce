@@ -1,0 +1,14 @@
+{
+	"loader": "neoforge:obj",
+	"parent": "create:block/large_wheels",
+	"model": "bits_n_tracks:models/block/medium_large_industrial_flanged_cogwheel.obj",
+	"flip_v": true,
+	"render_type": "minecraft:cutout",
+	"textures": {
+		"glat": "bits_n_tracks:block/medium_large_industrial_cogwheel_glat",
+		"axis_top": "create:block/axis_top",
+		"cogwheel_axis": "create:block/cogwheel_axis",
+		"gear": "bits_n_tracks:block/medium_large_industrial_cogwheel",
+		"particle": "bits_n_tracks:block/medium_large_industrial_cogwheel_glat"
+	}
+}

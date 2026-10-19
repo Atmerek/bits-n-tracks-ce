@@ -94,15 +94,15 @@ public final class BntPhysicsTuning {
         TRACK_MAX_IMPULSE_MULTIPLIER = builder.defineInRange("trackMaxImpulseMultiplier", 1.0, 0.0, 100.0);
         builder.pop();
 
-        builder.comment("Per size geometry. Sizes are tiny, intermediate, small, medium and large.").push("geometry");
-        COLLISION_RADIUS = perSize(builder, "CollisionRadius", null, 0.01, new double[]{0.25, 0.375, 0.5, 0.75, 0.8});
-        TRACK_RADIUS = perSize(builder, "TrackRadius", null, 0.01, new double[]{0.35, 0.425, 0.55, 0.74, 1.1});
-        VERTICAL_OFFSET = perSize(builder, "VerticalOffset", null, -8.0, new double[]{-0.1, -0.09, -0.08, 0.0, 0.1});
+        builder.comment("Per size geometry. Sizes are tiny, intermediate, small, medium, medium-large and large.").push("geometry");
+        COLLISION_RADIUS = perSize(builder, "CollisionRadius", null, 0.01, new double[]{0.25, 0.375, 0.5, 0.75, 0.875, 0.8});
+        TRACK_RADIUS = perSize(builder, "TrackRadius", null, 0.01, new double[]{0.35, 0.425, 0.55, 0.74, 0.925, 1.1});
+        VERTICAL_OFFSET = perSize(builder, "VerticalOffset", null, -8.0, new double[]{-0.1, -0.09, -0.08, 0.0, 0.05, 0.1});
         VISUAL_VERTICAL_OFFSET = perSize(builder, "VisualVerticalOffset",
             "How much higher than its collision radius a cogwheel rests above the ground, in blocks. Set so the outside of the track rests on the ground: track radius plus half a track link, plus the vertical offset, less the collision radius.",
-            -8.0, new double[]{0.0625, 0.0225, 0.0325, 0.0525, 0.4625});
+            -8.0, new double[]{0.0625, 0.0225, 0.0325, 0.0525, 0.1625, 0.4625});
         TOOL_HIGHLIGHT_RADIUS = perSize(builder, "ToolHighlightRadius", "Radius of the alignment tool's outline.", 0.01,
-            new double[]{0.34, 0.38, 0.42, 0.56, 0.68});
+            new double[]{0.34, 0.38, 0.42, 0.56, 0.62, 0.68});
         builder.pop();
 
         builder.comment("How fast a track carries the vehicle. The speed a track aims for is fixed by its cogwheel sizes and its rotational speed, so a track always travels at the speed its links are moving. These values only decide how hard it may push to get there.")
@@ -189,7 +189,7 @@ public final class BntPhysicsTuning {
         builder.pop();
 
         builder.comment("Create stress consumed by each cogwheel size.").push("stress");
-        STRESS_IMPACT = perSize(builder, "StressImpact", null, 0.0, 1024.0, new double[]{2.0, 3.0, 4.0, 6.0, 8.0});
+        STRESS_IMPACT = perSize(builder, "StressImpact", null, 0.0, 1024.0, new double[]{2.0, 3.0, 4.0, 6.0, 7.0, 8.0});
         builder.pop();
 
         builder.comment("Sounds played by the suspension.").push("feedback");
@@ -304,9 +304,18 @@ public final class BntPhysicsTuning {
             if (comment != null && size.ordinal() == 0) {
                 builder.comment(comment);
             }
-            values.put(size, builder.defineInRange(size.name().toLowerCase(Locale.ROOT) + name, defaults[size.ordinal()], min, max));
+            values.put(size, builder.defineInRange(configName(size) + name, defaults[size.ordinal()], min, max));
         }
         return values;
+    }
+
+    private static String configName(CogwheelSize size) {
+        String[] words = size.name().toLowerCase(Locale.ROOT).split("_");
+        StringBuilder name = new StringBuilder(words[0]);
+        for (int i = 1; i < words.length; i++) {
+            name.append(Character.toUpperCase(words[i].charAt(0))).append(words[i].substring(1));
+        }
+        return name.toString();
     }
 
     public static double collisionRadius(CogwheelSize size) {

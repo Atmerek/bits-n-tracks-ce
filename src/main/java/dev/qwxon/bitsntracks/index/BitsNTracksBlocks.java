@@ -39,6 +39,10 @@ public class BitsNTracksBlocks {
         flanged("medium_industrial_flanged_cogwheel", CogwheelSize.MEDIUM, CogwheelMaterial.INDUSTRIAL);
     public static final BlockEntry<BntFlangedCogwheelBlock> MEDIUM_FLANGED_COGWHEEL =
         flanged("medium_flanged_cogwheel", CogwheelSize.MEDIUM, CogwheelMaterial.WOODEN);
+    public static final BlockEntry<BntFlangedCogwheelBlock> MEDIUM_LARGE_FLANGED_COGWHEEL =
+        flanged("medium_large_flanged_cogwheel", CogwheelSize.MEDIUM_LARGE, CogwheelMaterial.WOODEN);
+    public static final BlockEntry<BntFlangedCogwheelBlock> MEDIUM_LARGE_INDUSTRIAL_FLANGED_COGWHEEL =
+        flanged("medium_large_industrial_flanged_cogwheel", CogwheelSize.MEDIUM_LARGE, CogwheelMaterial.INDUSTRIAL);
     public static final BlockEntry<HiddenCogwheelBlock> MEDIUM_HIDDEN_FLANGED_COGWHEEL = hidden("medium_hidden_flanged_cogwheel", CogwheelSize.MEDIUM);
     public static final BlockEntry<BntHeadBlock> QWXONN_HEAD = head("qwxonn_head");
     public static final BlockEntry<BntHeadBlock> ATMEREK_HEAD = head("atmerek_head");

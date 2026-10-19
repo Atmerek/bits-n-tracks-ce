@@ -1,0 +1,15 @@
+{
+	"loader": "neoforge:obj",
+	"parent": "create:block/large_wheels",
+	"model": "bits_n_tracks:models/block/medium_large_flanged_cogwheel.obj",
+	"flip_v": true,
+	"render_type": "minecraft:cutout",
+	"textures": {
+		"planks": "minecraft:block/spruce_planks",
+		"log": "minecraft:block/stripped_spruce_log_top",
+		"axis_top": "create:block/axis_top",
+		"axis": "create:block/axis",
+		"belt": "bits_n_tracks:block/belt_face",
+		"particle": "minecraft:block/stripped_spruce_log_top"
+	}
+}

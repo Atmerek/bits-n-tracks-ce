@@ -22,6 +22,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Track tension. In the Cog Alignment Lever's Tension mode, right-click a track to select it and scroll to tighten or slacken it.
 - Tank Tread, a plated track made in a Mechanical Crafter and strung between cogwheels like the Industrial Belt.
 - Intermediate Physical Flanged Cogwheel and Intermediate Industrial Flanged Cogwheel, a size between tiny and small.
+- Medium-Large Physical Flanged Cogwheel and Medium-Large Industrial Flanged Cogwheel, a size between medium and large.
 - Suspension Piece, which mounts a swinging arm on a physics cogwheel, or a bogie across two small, intermediate or tiny cogwheels of the same size, two-wide ones included. It is crafted with the spring from Create Aeronautics.
 - Suspension Tool, which reads and tunes a suspended cogwheel's stiffness, damping, travel and spring strength over 11 levels, for one cogwheel or a whole track at once.
 - Ctrl + left-click with the Cog Alignment Lever switches its Offset mode between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
@@ -31,7 +32,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Ponder scenes for the flanged cogwheels, tracks, the Cog Alignment Lever, the Suspension Piece and the Suspension Tool.
 - Decorative heads of the mod's creators and contributors.
 - Cogwheels with physics enabled now block players and other entities.
-- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, Debug Logging, geometry and stress settings for the intermediate size, and client settings for Flywheel rendering, track update rate and animation distance.
+- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, Debug Logging, geometry and stress settings for the intermediate and medium-large sizes, and client settings for Flywheel rendering, track update rate and animation distance.
 - Polish translation.
 
 ### Changed
@@ -42,8 +43,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - The Cog Alignment Lever works in six modes: Offset, Route, Tension, Visibility, Physics and Reset. In Offset mode, right-click a cogwheel to select it, scroll to move it one pixel at a time and Shift + scroll to pick the axis, instead of clicking parts of its face. Visibility and physics are switched by right-clicking in their own modes, instead of right-clicking the centre and left-clicking.
 - Resetting with the Cog Alignment Lever is done by right-clicking a cogwheel twice in Reset mode, and also resets suspension tuning.
 - The Cog Alignment Lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
-- The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.
-- Tracks and Suspension Pieces add to a vehicle's mass: 0.25 for an Industrial Belt and 0.5 for a Tank Tread whatever their length, and 0.25 for each Suspension Piece.
+- The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.- Tracks and Suspension Pieces add to a vehicle's mass: 0.25 for an Industrial Belt and 0.5 for a Tank Tread whatever their length, and 0.25 for each Suspension Piece.
 - Updated the Russian translation, by Hanahaki.
 
 ### Removed

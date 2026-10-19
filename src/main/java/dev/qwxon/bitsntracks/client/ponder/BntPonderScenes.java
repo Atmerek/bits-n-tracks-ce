@@ -15,11 +15,13 @@ public final class BntPonderScenes {
                 BitsNTracksBlocks.INTERMEDIATE_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.getId(),
+                BitsNTracksBlocks.MEDIUM_LARGE_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.getId(),
+                BitsNTracksBlocks.MEDIUM_LARGE_INDUSTRIAL_FLANGED_COGWHEEL.getId(),
                 BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.getId())
             .addStoryBoard("flanged_cogwheel/introduction", BntFlangedCogwheelScenes::introduction)
             .addStoryBoard("flanged_cogwheel/powering", BntFlangedCogwheelScenes::powering);

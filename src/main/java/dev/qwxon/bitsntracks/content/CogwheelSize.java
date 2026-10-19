@@ -8,6 +8,7 @@ public enum CogwheelSize {
     INTERMEDIATE(0.375, 0.55, 5.0, Math.hypot(6.0, 3.0) / 16.0),
     SMALL(0.5, 0.65, 6.0, 9.0 / 16.0),
     MEDIUM(0.75, 1.0, 7.0, 9.0 * Math.sqrt(2.0) / 16.0),
+    MEDIUM_LARGE(0.875, 1.15, 7.5, 14.0 / Math.cos(Math.PI / 8.0) / 16.0),
     LARGE(1.0, 1.3, 8.0, Math.hypot(16.0, 6.6) / 16.0);
 
     private final double chainRadius;

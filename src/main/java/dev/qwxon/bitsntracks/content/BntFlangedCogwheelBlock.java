@@ -166,7 +166,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     public boolean isLargeCog() {
-        return this.size == CogwheelSize.LARGE || this.size == CogwheelSize.MEDIUM;
+        return this.size == CogwheelSize.LARGE || this.size == CogwheelSize.MEDIUM_LARGE || this.size == CogwheelSize.MEDIUM;
     }
 
     protected ItemInteractionResult useItemOn(

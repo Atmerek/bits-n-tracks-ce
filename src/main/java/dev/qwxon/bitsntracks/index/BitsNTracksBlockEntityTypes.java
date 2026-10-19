@@ -29,8 +29,10 @@ public class BitsNTracksBlockEntityTypes {
             BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL,
             BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL,
             BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL,
+            BitsNTracksBlocks.MEDIUM_LARGE_FLANGED_COGWHEEL,
             BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL,
             BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL,
+            BitsNTracksBlocks.MEDIUM_LARGE_INDUSTRIAL_FLANGED_COGWHEEL,
             BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL,
             BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL
         )

@@ -88,6 +88,7 @@ public final class BntLegacyCogwheels {
             case INTERMEDIATE -> BitsNTracksBlocks.INTERMEDIATE_FLANGED_COGWHEEL.get();
             case SMALL -> BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get();
             case MEDIUM -> BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get();
+            case MEDIUM_LARGE -> BitsNTracksBlocks.MEDIUM_LARGE_FLANGED_COGWHEEL.get();
             case LARGE -> BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.get();
         };
     }

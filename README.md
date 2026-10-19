@@ -22,7 +22,7 @@ This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/m
 
 ## Features
 
-* **Flanged cogwheels** in tiny, intermediate, small, medium and large, each in a plain and an industrial style, the industrial models based on the Industrial Cogwheels from Create: Gears n' Kinetics.
+* **Flanged cogwheels** in tiny, intermediate, small, medium, medium-large and large, each in a plain and an industrial style, the industrial models based on the Industrial Cogwheels from Create: Gears n' Kinetics.
 * **Two kinds of track**: the Industrial Belt and the plated Tank Tread, strung between cogwheels like a Bits 'n' Bobs chain.
 * **Two-wide wheels**: place a cogwheel beside another of the same size and style along its axle and they join into one wide wheel, with the track widening to match. Sneak while placing to keep them apart.
 * **Taut track routing**: the track wraps around its cogwheels the way a real track sits on its road wheels. A cogwheel inside the loop that the track cannot reach is enclosed by it, and turns freely until the track touches it.
