@@ -51,7 +51,7 @@
     "item.bits_n_tracks.suspension_piece.tooltip.condition5": "Shift + ПКМ по катку пустой рукой",
     "item.bits_n_tracks.suspension_piece.tooltip.behaviour5": "Снимает балансир или тележку.",
     "item.bits_n_tracks.suspension_tool": "Инструмент подвески",
-    "item.bits_n_tracks.suspension_tool.tooltip.summary": "Считывает и регулирует подвеску по четырем параметрам для катков, оснащенных балансиром. Доступно 11 уровней каждого параметра, по умолчанию — 4. На катках без балансира — 0",
+    "item.bits_n_tracks.suspension_tool.tooltip.summary": "Считывает и регулирует подвеску по четырем параметрам для катков, оснащенных балансиром. Каждый параметр имеет уровни от 1 до 15, как сигнал редстоуна, по умолчанию — 8. На катках без балансира — 0",
     "item.bits_n_tracks.suspension_tool.tooltip.condition1": "Осмотр катка с балансиром",
     "item.bits_n_tracks.suspension_tool.tooltip.behaviour1": "На его панели и шкале отображаются настройки этого катка.",
     "item.bits_n_tracks.suspension_tool.tooltip.condition2": "Удерживайте Alt и прокручивайте",

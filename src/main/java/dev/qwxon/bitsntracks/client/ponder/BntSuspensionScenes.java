@@ -46,7 +46,7 @@ public final class BntSuspensionScenes {
     private static final float WEST_TURN = -55.0F;
     private static final float ACROSS_TURN = 180.0F;
     private static final int MODE_TICKS = 30;
-    private static final int TUNE_TICKS = 8;
+    private static final int TUNE_TICKS = 6;
 
     private BntSuspensionScenes() {
     }

@@ -51,7 +51,7 @@
     "item.bits_n_tracks.suspension_piece.tooltip.condition5": "Shift + prawy przycisk na kole zębatym pustą ręką",
     "item.bits_n_tracks.suspension_piece.tooltip.behaviour5": "Zdejmuje element lub wózek.",
     "item.bits_n_tracks.suspension_tool": "Narzędzie do zawieszenia",
-    "item.bits_n_tracks.suspension_tool.tooltip.summary": "Odczytuje i stroi zawieszenie kół zębatych z _elementem zawieszenia_. Oferuje _11 poziomów_ regulacji. Domyślny to _4_. Każde inne koło zębate pokazuje _0_.",
+    "item.bits_n_tracks.suspension_tool.tooltip.summary": "Odczytuje i stroi zawieszenie kół zębatych z _elementem zawieszenia_. Każde ustawienie ma poziomy od _1_ do _15_, jak sygnał redstone. Domyślny to _8_. Każde inne koło zębate pokazuje _0_.",
     "item.bits_n_tracks.suspension_tool.tooltip.condition1": "Patrząc na koło zębate z elementem zawieszenia",
     "item.bits_n_tracks.suspension_tool.tooltip.behaviour1": "Jego panel i tarcza pokazują ustawienia tego koła zębatego.",
     "item.bits_n_tracks.suspension_tool.tooltip.condition2": "Przytrzymaj Alt i przewiń",

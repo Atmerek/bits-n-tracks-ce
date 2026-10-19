@@ -66,7 +66,7 @@ Shift + right-click the cogwheel with an empty hand to take a piece or bogie bac
 A mount whose supporting block is removed drops its pieces.
 
 The **Suspension Tool** reads and tunes cogwheels that carry a Suspension Piece.
-It has four settings, stiffness, damping, travel and spring strength, each on levels 1 to 11 with 4 as the default.
+It has four settings, stiffness, damping, travel and spring strength, each on levels 1 to 15 like a redstone signal, with 8 as the default.
 It uses the same panel as the lever, with one mode per setting.
 
 * **Look at a suspended cogwheel**: the panel and the dial show its levels.

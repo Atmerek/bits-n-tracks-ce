@@ -51,7 +51,7 @@
     "item.bits_n_tracks.suspension_piece.tooltip.condition5": "Shift + Right-click the cogwheel with an empty hand",
     "item.bits_n_tracks.suspension_piece.tooltip.behaviour5": "Takes the piece or bogie back off.",
     "item.bits_n_tracks.suspension_tool": "Suspension Tool",
-    "item.bits_n_tracks.suspension_tool.tooltip.summary": "Reads and tunes the suspension of cogwheels carrying a _Suspension Piece_. Offers _11 settings_ of customizability. Default is _4_. Any other cogwheel reads _0_.",
+    "item.bits_n_tracks.suspension_tool.tooltip.summary": "Reads and tunes the suspension of cogwheels carrying a _Suspension Piece_. Each setting goes from _1_ to _15_, like a redstone signal. Default is _8_. Any other cogwheel reads _0_.",
     "item.bits_n_tracks.suspension_tool.tooltip.condition1": "Looking at a cogwheel with a Suspension Piece",
     "item.bits_n_tracks.suspension_tool.tooltip.behaviour1": "Its panel and dial read that cogwheel's settings.",
     "item.bits_n_tracks.suspension_tool.tooltip.condition2": "Hold Alt and scroll",

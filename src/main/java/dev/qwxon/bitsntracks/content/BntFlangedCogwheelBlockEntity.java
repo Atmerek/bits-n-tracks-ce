@@ -157,9 +157,12 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         this.beltLinks = tag.getInt("BntBeltLinks");
         this.beltFit = tag.getDouble("BntBeltFit");
         this.bnt$setSuspension(tag.getInt("BntSuspensionSide"), tag.getInt("BntSuspensionFacing"));
-        CompoundTag levels = tag.getCompound("BntTuning");
+        boolean current = tag.contains("BntTuningLevels");
+        CompoundTag levels = tag.getCompound(current ? "BntTuningLevels" : "BntTuning");
         for (BntTuning setting : BntTuning.values()) {
-            this.tuning[setting.ordinal()] = levels.contains(setting.key()) ? BntTuning.clamp(levels.getInt(setting.key())) : BntTuning.DEFAULT;
+            int level = levels.getInt(setting.key());
+            this.tuning[setting.ordinal()] = !levels.contains(setting.key()) ? BntTuning.DEFAULT
+                : current ? BntTuning.clamp(level) : BntTuning.fromOldScale(level);
         }
         if (this.bnt$isPhysicsEnabled()) {
             this.extension = tag.contains("BntExtension", Tag.TAG_DOUBLE) ? tag.getDouble("BntExtension") : this.restExtension(this.getBlockState());
@@ -202,7 +205,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
             }
         }
         if (!levels.isEmpty()) {
-            tag.put("BntTuning", levels);
+            tag.put("BntTuningLevels", levels);
         }
     }
 

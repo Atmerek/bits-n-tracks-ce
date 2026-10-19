@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 @OnlyIn(Dist.CLIENT)
 public final class BntTunerGauge {
     public static final float REST_ANGLE = -180.0F;
-    public static final float STEP_ANGLE = 30.0F;
+    public static final float STEP_ANGLE = 22.5F;
     private static final float TURN_KICK = 8.0F;
     private static final float PITCH_KICK = 8.0F;
     private static final float LIFT_KICK = 260.0F;

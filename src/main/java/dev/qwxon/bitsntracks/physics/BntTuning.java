@@ -11,8 +11,10 @@ public enum BntTuning {
     SUPPORT("support", 0.1, 5.0);
 
     public static final int MIN = 1;
-    public static final int MAX = 11;
-    public static final int DEFAULT = 4;
+    public static final int MAX = 15;
+    public static final int DEFAULT = 8;
+    private static final int OLD_MAX = 11;
+    private static final int OLD_DEFAULT = 4;
     private static final BntTuning[] VALUES = values();
 
     private final String key;
@@ -35,6 +37,14 @@ public enum BntTuning {
 
     public static int clamp(int level) {
         return Mth.clamp(level, MIN, MAX);
+    }
+
+    public static int fromOldScale(int level) {
+        int old = Mth.clamp(level, MIN, OLD_MAX);
+        double position = old <= OLD_DEFAULT
+            ? DEFAULT - (DEFAULT - MIN) * (OLD_DEFAULT - old) / (double)(OLD_DEFAULT - MIN)
+            : DEFAULT + (MAX - DEFAULT) * (old - OLD_DEFAULT) / (double)(OLD_MAX - OLD_DEFAULT);
+        return clamp((int)Math.round(position));
     }
 
     public double scale(int level) {
