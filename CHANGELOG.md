@@ -44,7 +44,8 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Resetting with the Cog Alignment Lever is done by right-clicking a cogwheel twice in Reset mode, and also resets suspension tuning.
 - The Cog Alignment Lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
 - The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.
-- Flanged cogwheel recipes scale with size: two cogwheels and an Industrial Belt make two small ones, a cogwheel and two belts make a medium one, and a large cogwheel and three belts make a large one. The industrial versions take Industrial Iron Blocks in place of the belts.- Tracks and Suspension Pieces add to a vehicle's mass: 0.25 for an Industrial Belt and 0.5 for a Tank Tread whatever their length, and 0.25 for each Suspension Piece.
+- Flanged cogwheel recipes scale with size: two cogwheels and an Industrial Belt make two small ones, a cogwheel and two belts make a medium one, and a large cogwheel and three belts make a large one. The industrial versions take Industrial Iron Blocks in place of the belts.
+- Tracks and Suspension Pieces add to a vehicle's mass: 0.25 for an Industrial Belt and 0.5 for a Tank Tread whatever their length, and 0.25 for each Suspension Piece.
 - Updated the Russian translation, by Hanahaki.
 
 ### Removed
