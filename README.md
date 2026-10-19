@@ -1,11 +1,11 @@
 # Create: Bits 'n' Tracks Community Edition
 
-![Minecraft 1.21.1](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=for-the-badge)
-![Loader NeoForge](https://img.shields.io/badge/Loader-NeoForge-F16436?style=for-the-badge)
-[![Latest release](https://img.shields.io/github/v/release/Atmerek/bits-n-tracks-ce?label=release&style=for-the-badge)](https://github.com/Atmerek/bits-n-tracks-ce/releases/latest)
-[![Dev build](https://img.shields.io/github/actions/workflow/status/Atmerek/bits-n-tracks-ce/dev.yml?branch=main&label=dev%20build&style=for-the-badge)](https://github.com/Atmerek/bits-n-tracks-ce/releases/tag/dev)
-[![License GPL-3.0](https://img.shields.io/github/license/Atmerek/bits-n-tracks-ce?style=for-the-badge)](LICENSE)
-[![Discord](https://img.shields.io/discord/1553509655064354848?style=for-the-badge)](https://discord.gg/CxTmpvp6gs)
+[![Available on Modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.3.1/assets/cozy/available/modrinth_vector.svg)](https://modrinth.com/mod/bits-n-tracks-ce)
+[![Available on CurseForge](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.3.1/assets/cozy/available/curseforge_vector.svg)](https://www.curseforge.com/minecraft/mc-mods/bits-n-tracks-ce)
+[![Source on GitHub](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.3.1/assets/cozy/available/github_vector.svg)](https://github.com/Atmerek/bits-n-tracks-ce)
+[![Supports NeoForge](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.3.1/assets/cozy/supported/neoforge_vector.svg)](https://neoforged.net)
+[![Requires Create](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.3.1/assets/cozy/requires/create_vector.svg)](https://modrinth.com/mod/create)
+[![Join the Discord](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.3.1/assets/cozy/social/discord-plural_vector.svg)](https://discord.gg/CxTmpvp6gs)
 
 Build working tank tracks in Create.
 Flanged cogwheels carry a belt or tread around them, and on a Sable vehicle the track grips the ground, drives it along and rides over what it crosses.
@@ -22,7 +22,7 @@ This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/m
 
 ## Features
 
-* **Flanged cogwheels** in tiny, intermediate, small, medium, medium-large and large, each in a plain and an industrial style, the industrial models based on the Industrial Cogwheels from Create: Gears n' Kinetics.
+* **Flanged cogwheels in six sizes**: tiny, intermediate, small, medium, medium-large and large, each in a plain and an industrial style. The industrial models are based on the Industrial Cogwheels from Create: Gears n' Kinetics.
 * **Two kinds of track**: the Industrial Belt and the plated Tank Tread, strung between cogwheels like a Bits 'n' Bobs chain.
 * **Two-wide wheels**: place a cogwheel beside another of the same size and style along its axle and they join into one wide wheel, with the track widening to match. Sneak while placing to keep them apart.
 * **Taut track routing**: the track wraps around its cogwheels the way a real track sits on its road wheels. A cogwheel inside the loop that the track cannot reach is enclosed by it, and turns freely until the track touches it.
@@ -31,26 +31,26 @@ This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/m
 * **Suspension**: Suspension Pieces mount swinging arms, bogies and wide bogies on physics cogwheels, and the Suspension Tool tunes each one.
 * **Configurable** physics, track and rendering settings.
 
-## Learning the mod
+## Getting started
 
-Every part of the mod has a Ponder scene: hold the Ponder key (W by default) over a flanged cogwheel, a track, the Cog Alignment Lever, a Suspension Piece or the Suspension Tool.
+Every part of the mod has a Ponder scene.
+Hold the Ponder key (W by default) over a flanged cogwheel, a track, the Cog Alignment Lever, a Suspension Piece or the Suspension Tool.
 The scenes walk through building a tracked vehicle, from placing and powering the cogwheels to tuning its suspension.
 
 ## The Cog Alignment Lever
 
-The main tool of the mod. It adjusts cogwheels after they are placed, hides them, routes and tensions the track, and switches physics on or off.
+The main tool of the mod.
+It adjusts cogwheels after they are placed, hides them, routes and tensions the track, and switches physics on or off.
 It only acts on Bits 'n' Tracks cogwheels and the tracks running on them, and breaks other blocks as normal.
 While you hold it, a panel beside the hotbar shows the current mode, the values of what you are working on, and what to click or scroll.
 Hold Alt (Create's tool menu key) and scroll to switch modes.
 
-| Mode | |
-|---|---|
-| Offset | Right-click a cogwheel to select it, then scroll to move it one pixel at a time. Shift + scroll picks the axis: along the axle, across, or up and down |
-| Route | Right-click a face to bring the far run of track around the cogwheel, so clicking the top wraps the bottom track over it, and reverses its spin. The centre puts its routing back to automatic |
-| Tension | Right-click a track to select it, then scroll to tighten it, so it holds its line, or slacken it, so it sags and follows the ground |
-| Visibility | Right-click a cogwheel to show or hide it |
-| Physics | Right-click a cogwheel to switch its physics on or off |
-| Reset | Right-click a cogwheel twice to reset alignment, visibility, track routing and suspension tuning on the whole track |
+* **Offset**: right-click a cogwheel to select it, then scroll to move it one pixel at a time. Shift + scroll picks the axis: along the axle, across, or up and down.
+* **Route**: right-click a face to bring the far run of track around the cogwheel, so clicking the top wraps the bottom track over it, and reverses its spin. The centre puts its routing back to automatic.
+* **Tension**: right-click a track to select it, then scroll to tighten it, so it holds its line, or slacken it, so it sags and follows the ground.
+* **Visibility**: right-click a cogwheel to show or hide it.
+* **Physics**: right-click a cogwheel to switch its physics on or off.
+* **Reset**: right-click a cogwheel twice to reset alignment, visibility, track routing and suspension tuning on the whole track.
 
 Ctrl + left-click switches Offset between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
 
@@ -58,7 +58,7 @@ Ctrl + left-click switches Offset between moving one cogwheel and moving every c
 
 A **Suspension Piece** gives a physics cogwheel a sprung mount.
 
-* **Arm**: right-click a physics cogwheel of any size to select it, then look beside it and right-click where the green preview fits. The arm pivots on the cogwheel's top corner, which needs a block touching it along the axle. Uses one piece.
+* **Arm**: right-click a physics cogwheel of any size to select it, then look beside it and right-click where the green preview fits. The arm pivots on the cogwheel's top corner, which needs a block touching it along the axle. If blocks on both sides could hold it, it mounts on the side you are looking toward. Uses one piece.
 * **Bogie**: select a small, intermediate or tiny physics cogwheel, then right-click the one of the same size next to it. The bogie hangs from a block right above either cogwheel, or one next to that spot along the axle, and blocks can sit on top of it. Uses two pieces.
 * **Wide bogie**: the same between two two-wide small, intermediate or tiny cogwheels, each pair turning into two separate wheels with the bogie between them. Uses two pieces.
 
@@ -67,16 +67,13 @@ A mount whose supporting block is removed drops its pieces.
 
 The **Suspension Tool** reads and tunes cogwheels that carry a Suspension Piece.
 It has four settings, stiffness, damping, travel and spring strength, each on levels 1 to 11 with 4 as the default.
-
 It uses the same panel as the lever, with one mode per setting.
 
-| | |
-|---|---|
-| Look at a suspended cogwheel | The panel and the dial show its levels |
-| Hold Alt and scroll | Switches setting |
-| Right-click a suspended cogwheel | Selects it |
-| Scroll | Raises or lowers the selected setting on the selected cogwheel by one level |
-| Ctrl + left-click | Switches between tuning one cogwheel and every suspended cogwheel on the track |
+* **Look at a suspended cogwheel**: the panel and the dial show its levels.
+* **Hold Alt and scroll**: switches setting.
+* **Right-click a suspended cogwheel**: selects it.
+* **Scroll**: raises or lowers the selected setting on the selected cogwheel by one level.
+* **Ctrl + left-click**: switches between tuning one cogwheel and every suspended cogwheel on the track.
 
 ## Configuration
 
@@ -84,9 +81,15 @@ Physics settings are per world: suspension, cogwheel geometry, drive, friction, 
 Open a world and use the Config button in the mod list to edit them, and drop a `bits_n_tracks-server.toml` into `defaultconfigs/` to give every new world the same values.
 Client settings cover Flywheel rendering, how often tracks recompute their shape, and the distance past which they stop animating.
 
-Shader packs work through Iris, with or without [Colorwheel](https://modrinth.com/mod/colorwheel) keeping Flywheel on.
+Shader packs just work.
+[Colorwheel](https://modrinth.com/mod/colorwheel) is recommended alongside Iris, since it keeps Flywheel rendering on with shaders.
 
-## Building
+## Help and feedback
+
+Report bugs on the [issue tracker](https://github.com/Atmerek/bits-n-tracks-ce/issues), and ask questions or share builds on [Discord](https://discord.gg/CxTmpvp6gs).
+Development builds of the latest changes are on the [dev release](https://github.com/Atmerek/bits-n-tracks-ce/releases/tag/dev) page.
+
+## Building from source
 
 Gradle needs JDK 21.
 
@@ -95,9 +98,9 @@ Gradle needs JDK 21.
 ./gradlew runClient       # launch a dev client
 ```
 
-## License
+## License and credits
 
-**GPL-3.0-only.** See [LICENSE](LICENSE).
+**GPL-3.0-only.** See [LICENSE](https://github.com/Atmerek/bits-n-tracks-ce/blob/main/LICENSE).
 
 Original mod and all original code by **qwxon**.
 Community Edition by **Atmerek** and **Alesrr**, with contributions from **Cubester** and art by **CloverKeep**.
