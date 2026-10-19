@@ -34,7 +34,11 @@ import net.minecraft.world.phys.Vec3;
 public final class BntFlangedCogwheelScenes {
     private static final float MEDIUM_SPEED = 30.0F;
     private static final float FAST_SPEED = 100.0F;
-    private static final float INTRODUCTION_YAW = 325.0F;
+    private static final float INTRODUCTION_YAW = 235.0F;
+    private static final int INTRODUCTION_PLATE = 13;
+    private static final int[] INTRODUCTION_COLUMNS = {1, 4, 6, 8, 10, 12};
+    private static final int WOODEN_ROW = 8;
+    private static final int INDUSTRIAL_ROW = 4;
 
     private BntFlangedCogwheelScenes() {
     }
@@ -42,51 +46,53 @@ public final class BntFlangedCogwheelScenes {
     public static void introduction(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         scene.title("flanged_cogwheel_introduction", "Introduction to Physical Flanged Cogwheels");
-        scene.configureBasePlate(0, 0, 10);
-        scene.scaleSceneView(0.8F);
+        scene.configureBasePlate(0, 0, INTRODUCTION_PLATE);
+        scene.scaleSceneView(0.65F);
         scene.addInstruction(startFacing(INTRODUCTION_YAW));
 
-        List<BlockPos> beltStarts = List.of(
-            util.grid().at(2, 1, 6), util.grid().at(6, 1, 6), util.grid().at(2, 1, 3), util.grid().at(6, 1, 3));
-        for (BlockPos start : beltStarts) {
-            hideTread(scene, util.select().position(start));
+        for (int pair = 0; pair < INTRODUCTION_COLUMNS.length; pair += 2) {
+            hideTread(scene, util.select().position(INTRODUCTION_COLUMNS[pair], 1, WOODEN_ROW));
+            hideTread(scene, util.select().position(INTRODUCTION_COLUMNS[pair], 1, INDUSTRIAL_ROW));
         }
-        scene.world().modifyBlocks(util.select().fromTo(2, 1, 3, 8, 1, 3), state -> withWideSide(state, BntWideSide.NONE), false);
+        scene.world().modifyBlocks(util.select().fromTo(0, 1, INDUSTRIAL_ROW, INTRODUCTION_PLATE - 1, 1, INDUSTRIAL_ROW),
+            state -> withWideSide(state, BntWideSide.NONE), false);
 
         scene.showBasePlate();
         scene.idle(20);
         caption(scene, "Physical Flanged Cogwheels are the heart of Bits 'n' Tracks");
         scene.addKeyframe();
 
-        for (int x = 8; x >= 2; x -= 2) {
-            scene.world().showSection(util.select().position(x, 1, 6), Direction.DOWN);
+        for (int i = INTRODUCTION_COLUMNS.length - 1; i >= 0; i--) {
+            scene.world().showSection(util.select().position(INTRODUCTION_COLUMNS[i], 1, WOODEN_ROW), Direction.DOWN);
             scene.idle(5);
         }
         scene.idle(10);
-        caption(scene, "They come in 4 sizes...");
+        caption(scene, "They come in 6 sizes...");
 
-        label(scene, "Large", util.vector().topOf(2, 1, 6));
-        label(scene, "Medium", util.vector().topOf(4, 1, 6));
-        label(scene, "Small", util.vector().topOf(6, 1, 6));
-        label(scene, "Tiny", util.vector().topOf(8, 1, 6));
+        List<String> sizes = List.of("Large", "Medium-Large", "Medium", "Small", "Intermediate", "Tiny");
+        for (int i = 0; i < sizes.size(); i++) {
+            label(scene, sizes.get(i), util.vector().topOf(INTRODUCTION_COLUMNS[i], 1, WOODEN_ROW));
+        }
         scene.idle(70);
 
         caption(scene, "... and 2 variants.");
         scene.addKeyframe();
 
-        for (int x = 8; x >= 2; x -= 2) {
-            scene.world().showSection(util.select().position(x, 1, 3), Direction.DOWN);
+        for (int i = INTRODUCTION_COLUMNS.length - 1; i >= 0; i--) {
+            scene.world().showSection(util.select().position(INTRODUCTION_COLUMNS[i], 1, INDUSTRIAL_ROW), Direction.DOWN);
             scene.idle(5);
         }
         scene.idle(10);
 
         List<ItemStack> industrial = List.of(
-            BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.asStack(),
-            BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.asStack(),
+            BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.asStack(),
+            BitsNTracksBlocks.MEDIUM_LARGE_INDUSTRIAL_FLANGED_COGWHEEL.asStack(),
             BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL.asStack(),
-            BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL.asStack());
-        for (int i = 0; i < industrial.size(); i++) {
-            BlockPos lower = util.grid().at(8 - i * 2, 1, 3);
+            BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL.asStack(),
+            BitsNTracksBlocks.INTERMEDIATE_INDUSTRIAL_FLANGED_COGWHEEL.asStack(),
+            BitsNTracksBlocks.INDUSTRIAL_TINY_FLANGED_COGWHEEL.asStack());
+        for (int i = industrial.size() - 1; i >= 0; i--) {
+            BlockPos lower = util.grid().at(INTRODUCTION_COLUMNS[i], 1, INDUSTRIAL_ROW);
             BlockPos upper = lower.above();
             scene.overlay().showControls(util.vector().topOf(lower), Pointing.DOWN, 20).rightClick().withItem(industrial.get(i));
             scene.idle(15);
@@ -96,20 +102,24 @@ public final class BntFlangedCogwheelScenes {
             scene.idle(10);
         }
         caption(scene, "Two cogwheels of the same size, placed end-to-end, create their wide version",
-            util.vector().topOf(2, 2, 3));
+            util.vector().topOf(INTRODUCTION_COLUMNS[0], 2, INDUSTRIAL_ROW));
         scene.addKeyframe();
 
         ItemStack mechanicalBelt = AllItems.BELT_CONNECTOR.asStack();
         ItemStack industrialBelt = BitsNTracksItems.INDUSTRIAL_BELT.asStack();
-        beltHints(scene, util.vector().topOf(2, 1, 6), util.vector().topOf(4, 1, 6), mechanicalBelt);
-        beltHints(scene, util.vector().topOf(6, 1, 6), util.vector().topOf(8, 1, 6), mechanicalBelt);
-        beltHints(scene, util.vector().topOf(2, 2, 3), util.vector().topOf(4, 2, 3), industrialBelt);
-        beltHints(scene, util.vector().topOf(6, 2, 3), util.vector().topOf(8, 2, 3), industrialBelt);
+        for (int pair = 0; pair < INTRODUCTION_COLUMNS.length; pair += 2) {
+            int first = INTRODUCTION_COLUMNS[pair];
+            int second = INTRODUCTION_COLUMNS[pair + 1];
+            beltHints(scene, util.vector().topOf(first, 1, WOODEN_ROW), util.vector().topOf(second, 1, WOODEN_ROW), mechanicalBelt);
+            beltHints(scene, util.vector().topOf(first, 2, INDUSTRIAL_ROW), util.vector().topOf(second, 2, INDUSTRIAL_ROW), industrialBelt);
+        }
         caption(scene, "By right-clicking on a set number of cogwheels...");
 
-        for (BlockPos start : beltStarts) {
-            scene.world().restoreBlocks(util.select().fromTo(start, start.east(2)));
-            scene.idle(10);
+        for (int row : new int[]{WOODEN_ROW, INDUSTRIAL_ROW}) {
+            for (int pair = 0; pair < INTRODUCTION_COLUMNS.length; pair += 2) {
+                scene.world().restoreBlocks(util.select().fromTo(INTRODUCTION_COLUMNS[pair], 1, row, INTRODUCTION_COLUMNS[pair + 1], 1, row));
+                scene.idle(10);
+            }
         }
         scene.idle(10);
         caption(scene, "You can create a track!");
