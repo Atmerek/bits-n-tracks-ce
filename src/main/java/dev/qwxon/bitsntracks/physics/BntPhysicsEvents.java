@@ -82,10 +82,13 @@ public final class BntPhysicsEvents {
     private static final double SHARE_MEMORY = 3.0;
     private static final double WAKE_SHARE = 0.05;
     private static final double GRIP_LOAD = 0.5;
+    private static final double CLIMB_CREEP = 0.25;
     private static final Map<ServerSubLevel, Long> REPORTED = new WeakHashMap<>();
     private static final Map<ServerSubLevel, double[]> SHARES = new WeakHashMap<>();
     private static final Map<ServerSubLevel, Parked> PARKED = new WeakHashMap<>();
     private static final Map<KineticBlockEntity, double[]> HELD = new WeakHashMap<>();
+    private static final Map<KineticBlockEntity, double[]> CLIMB = new WeakHashMap<>();
+    private static final Map<ServerLevel, long[]> STEPS = new WeakHashMap<>();
     private static final long PARKED_REFRESH = 20L;
     private static final double PARKED_DRIFT = 1.0E-4;
     private static final double PARKED_TURN = 1.0E-5;
@@ -99,6 +102,7 @@ public final class BntPhysicsEvents {
 
     public static void onPhysicsTick(SubLevelPhysicsSystem physicsSystem, double timeStep) {
         ServerLevel level = physicsSystem.getLevel();
+        long step = ++STEPS.computeIfAbsent(level, ignored -> new long[1])[0];
         Map<ServerSubLevel, List<KineticBlockEntity>> wheelsByBody = new Reference2ObjectOpenHashMap<>();
 
         Iterator<KineticBlockEntity> iterator = BntPhysicsRegistry.getEnabled(level).iterator();
@@ -149,6 +153,9 @@ public final class BntPhysicsEvents {
                     HELD.remove(wheel);
                     BntPhysicsEvents.WheelContact contact = resolveContact(wheel, (KineticBlockEntityPhysicsAccess)wheel, subLevel);
                     if (contact != null) {
+                        if (contact.arm) {
+                            contact.climbRate = climbRate(wheel, contact, step, timeStep);
+                        }
                         nearGround.add(contact);
                     }
                 }
@@ -208,6 +215,24 @@ public final class BntPhysicsEvents {
         }
 
         applyAllBatchedForces(level);
+    }
+
+    private static double climbRate(KineticBlockEntity wheel, BntPhysicsEvents.WheelContact contact, long step, double timeStep) {
+        double[] last = CLIMB.get(wheel);
+        double owed = 0.0;
+        if (last != null && (long)last[0] == step - 1L) {
+            double climb = contact.rise - last[1] + contact.localVelocity.dot(contact.normal) * timeStep;
+            owed = Math.max(0.0, last[2] + (Math.abs(climb) < CONTACT_GAP ? 0.0 : climb));
+        }
+        double approach = contact.localVelocity.dot(contact.normal);
+        double crossing = contact.localVelocity.sub(contact.normal.x * approach, contact.normal.y * approach,
+            contact.normal.z * approach, new Vector3d()).length();
+        if (crossing < CLIMB_CREEP) {
+            owed = 0.0;
+        }
+        double rate = Math.min(owed / timeStep, crossing);
+        CLIMB.put(wheel, new double[]{step, contact.rise, owed - rate * timeStep});
+        return rate;
     }
 
     private record BodyLoads(
@@ -547,10 +572,13 @@ public final class BntPhysicsEvents {
             double hold = BntBeltHold.at(kbe.getLevel(), kbe);
             double sprung = reach.rise() - hold;
             contact.arm = true;
+            contact.rise = reach.rise();
             contact.hold = hold;
             contact.compression = sprung;
             contact.overTravel = Math.max(0.0, sprung - up);
             contact.armRise = Mth.clamp(sprung, -down, up) - arm.ride();
+            double room = up - arm.ride();
+            contact.travelUsed = room > 1.0E-6 ? Mth.clamp(contact.armRise / room, 0.0, 1.0) : 1.0;
         }
         return contact;
     }
@@ -800,7 +828,8 @@ public final class BntPhysicsEvents {
             double compliance = timeStep * (dampingStrength + timeStep * springStrength);
             if (compliance > 0.0) {
                 softness[i] = 1.0 / compliance;
-                bias[i] = -(springStrength / (dampingStrength + timeStep * springStrength)) * compression;
+                bias[i] = -(springStrength * compression + dampingStrength * contact.climbRate * contact.travelUsed)
+                    / (dampingStrength + timeStep * springStrength);
             }
             double bump = bottomed ? BntPhysicsTuning.getBumpStopScale() : 1.0;
             double headroom = impulseMultiplier * gain * BntPhysicsTuning.getImpulseScale() * timeStep * bump * headroomScale;
@@ -1332,6 +1361,9 @@ public final class BntPhysicsEvents {
         double compression;
         double overTravel;
         double armRise;
+        double rise;
+        double climbRate;
+        double travelUsed;
         double surfaceSpeed;
         double targetSpeed;
         double penetration;
