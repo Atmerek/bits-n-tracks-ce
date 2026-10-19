@@ -5,6 +5,7 @@ plugins {
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.144'
     id 'com.modrinth.minotaur' version '2.9.0'
+    id 'net.darkhax.curseforgegradle' version '1.1.28'
 }
 
 version = "${mod_version}"
@@ -205,6 +206,28 @@ modrinth {
 }
 
 tasks.named('modrinth') {
+    doFirst {
+        if (!changelogSection(mod_version)) {
+            throw new GradleException("CHANGELOG.md has no '## ${mod_version}' section")
+        }
+    }
+}
+
+tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+    apiToken = System.getenv('CURSEFORGE_TOKEN')
+    debugMode = providers.gradleProperty('curseforgeDryRun').isPresent()
+    disableVersionDetection()
+    def mainFile = upload(curseforge_project_id, tasks.jar)
+    mainFile.displayName = "${mod_version}"
+    mainFile.releaseType = mod_version.contains('-') ? 'beta' : 'release'
+    mainFile.changelogType = 'markdown'
+    mainFile.changelog = provider { changelogSection(mod_version) }
+    mainFile.addGameVersion("${minecraft_version}")
+    mainFile.addModLoader('NeoForge')
+    mainFile.addJavaVersion('Java 21')
+    mainFile.addEnvironment('Client', 'Server')
+    mainFile.addRequirement('create', 'sable', 'create-bits-n-bobs', 'create-aeronautics')
+    mainFile.withAdditionalFile(tasks.sourcesJar)
     doFirst {
         if (!changelogSection(mod_version)) {
             throw new GradleException("CHANGELOG.md has no '## ${mod_version}' section")
