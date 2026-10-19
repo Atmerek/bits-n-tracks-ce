@@ -6,11 +6,14 @@
       "item": "create:cogwheel"
     },
     {
+      "item": "create:cogwheel"
+    },
+    {
       "item": "create:industrial_iron_block"
     }
   ],
   "result": {
-    "count": 1,
+    "count": 2,
     "id": "bits_n_tracks:industrial_flanged_cogwheel"
   }
 }

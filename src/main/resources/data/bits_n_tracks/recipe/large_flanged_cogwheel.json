@@ -6,7 +6,13 @@
       "item": "create:large_cogwheel"
     },
     {
-      "item": "minecraft:iron_ingot"
+      "item": "bits_n_tracks:industrial_belt"
+    },
+    {
+      "item": "bits_n_tracks:industrial_belt"
+    },
+    {
+      "item": "bits_n_tracks:industrial_belt"
     }
   ],
   "result": {
