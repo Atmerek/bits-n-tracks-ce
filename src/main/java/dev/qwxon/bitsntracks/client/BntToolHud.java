@@ -6,20 +6,22 @@ import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
-import dev.qwxon.bitsntracks.content.BntToolScope;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
-import dev.qwxon.bitsntracks.interaction.BntToolMessages;
 import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
+import dev.qwxon.bitsntracks.interaction.BntToolMessages;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import net.createmod.ponder.enums.PonderGuiTextures;
 import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -27,6 +29,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -43,16 +46,22 @@ public final class BntToolHud {
     private static final int INDICATOR = 24;
     private static final int GAP = 6;
     private static final int BORDER = 4;
-    private static final int MIN_WIDTH = 96;
+    private static final int MIN_WIDTH = 90;
     private static final int HEADER = 12;
     private static final int LINE = 10;
-    private static final int INDENT = 6;
-    private static final int COLUMN = 8;
-    private static final int BAR = 30;
-    private static final int STEP_WIDTH = 2;
-    private static final int STEP_SPACING = 3;
+    private static final int CONTROL_LINE = 12;
+    private static final int CONTROL_GAP = 8;
+    private static final int PACK_WIDTH = 136;
+    private static final int INDENT = 4;
+    private static final int COLUMN = 6;
+    private static final int BAR = 24;
     private static final int DOT = 3;
-    private static final int DOT_SPACING = 5;
+    private static final int DOT_SPACING = 4;
+    private static final int ICON = 12;
+    private static final int KEY_HEIGHT = 11;
+    private static final int KEY_PADDING = 2;
+    private static final int GLYPH_GAP = 1;
+    private static final int LABEL_GAP = 4;
     private static final int ABOVE_STATUS_BARS = 62;
 
     private static final int BACKGROUND_TOP = 0xE0151719;
@@ -63,6 +72,9 @@ public final class BntToolHud {
     private static final int BORDER_FOCUSED_BOTTOM = 0xC0868C92;
     private static final int RULE = 0x30FFFFFF;
     private static final int TRACK = 0x50000000;
+    private static final int KEY_EDGE = 0xFF5C6166;
+    private static final int KEY_FACE = 0xFF2A2D31;
+    private static final int KEY_PRESSED_TEXT = 0xFF1A1C1E;
 
     private static final int ACCENT = BntToolVisuals.opaque(BntToolVisuals.SELECTED);
     private static final int TEXT = 0xFFC8CCD0;
@@ -73,43 +85,69 @@ public final class BntToolHud {
     private static final int GOOD = BntToolVisuals.opaque(BntToolVisuals.GOOD);
     private static final int WARNING = BntToolVisuals.opaque(BntToolVisuals.WARNING);
 
+    private static final Glyph RMB = new Mouse(PonderGuiTextures.ICON_RMB);
+    private static final Glyph SCROLL = new Mouse(PonderGuiTextures.ICON_SCROLL);
+    private static final Glyph SHIFT = new Key(Component.translatable("bits_n_tracks.tool_panel.key.shift"), Screen::hasShiftDown);
 
     private BntToolHud() {
     }
 
-    private enum Meter {
-        NONE,
-        BAR,
-        STEPS
+    private sealed interface Glyph permits Mouse, Key {
+        int width(Font font);
     }
 
-    private record Row(Component label, @Nullable Component value, int colour, Meter meter, float fill, int steps, boolean marked) {
+    private record Mouse(PonderGuiTextures icon) implements Glyph {
+        @Override
+        public int width(Font font) {
+            return ICON;
+        }
+    }
+
+    private record Key(Component name, BooleanSupplier held) implements Glyph {
+        @Override
+        public int width(Font font) {
+            return font.width(name) + 2 * KEY_PADDING;
+        }
+    }
+
+    private record Control(List<Glyph> glyphs, Component label, int colour) {
+        int width(Font font) {
+            return glyphsWidth(font, glyphs) + LABEL_GAP + font.width(label);
+        }
+
+        boolean held() {
+            boolean keyed = false;
+            for (Glyph glyph : glyphs) {
+                if (glyph instanceof Key key) {
+                    if (!key.held().getAsBoolean()) {
+                        return false;
+                    }
+                    keyed = true;
+                }
+            }
+            return keyed;
+        }
+    }
+
+    private record Row(Component label, @Nullable Component value, int colour, float fill, boolean marked) {
         static Row text(Component label, int colour) {
-            return new Row(label, null, colour, Meter.NONE, 0.0F, 0, false);
+            return new Row(label, null, colour, -1.0F, false);
         }
 
         static Row value(Component label, Component value, int colour, boolean marked) {
-            return new Row(label, value, colour, Meter.NONE, 0.0F, 0, marked);
+            return new Row(label, value, colour, -1.0F, marked);
         }
 
         Row bar(float fill) {
-            return new Row(label, value, colour, Meter.BAR, fill, 0, marked);
+            return new Row(label, value, colour, fill, marked);
         }
 
-        Row steps(int filled, int total) {
-            return new Row(label, value, colour, Meter.STEPS, filled, total, marked);
-        }
-
-        int meterWidth() {
-            return switch (meter) {
-                case NONE -> 0;
-                case BAR -> BAR;
-                case STEPS -> steps * STEP_SPACING - (STEP_SPACING - STEP_WIDTH);
-            };
+        boolean metered() {
+            return fill >= 0.0F;
         }
     }
 
-    private record Panel(Component mode, int index, int count, @Nullable Component scope, List<Row> rows, Component hint, int hintColour) {
+    private record Panel(Component mode, int index, int count, List<Row> rows, List<Control> controls, @Nullable Component message) {
     }
 
     public static void registerLayers(RegisterGuiLayersEvent event) {
@@ -136,16 +174,15 @@ public final class BntToolHud {
     private static Panel leverPanel(ClientLevel level, ItemStack stack, boolean focused) {
         BntLeverMode mode = CogAlignmentLeverItem.mode(stack);
         List<Row> rows = new ArrayList<>();
+        List<Control> actions = new ArrayList<>();
         BlockPos aimed = BntToolInput.aimedCog(level);
-        String hint = null;
-        int hintColour = HINT;
         switch (mode) {
             case OFFSET -> {
                 BlockPos selected = BntToolState.leverCog;
                 BlockPos shown = selected != null ? selected : aimed;
                 Axis blockAxis = shown == null ? null : BntToolState.blockAxis(level, shown);
                 if (blockAxis == null || !(level.getBlockEntity(shown) instanceof KineticBlockEntityPhysicsAccess access)) {
-                    rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.cogwheel"), DIM));
+                    rows.add(none("cogwheel"));
                 } else {
                     Axis[] axes = BntToolState.axes(blockAxis);
                     int current = selected == null ? -1 : BntToolState.axisRow(level, selected);
@@ -154,7 +191,12 @@ public final class BntToolHud {
                         int colour = !allowed ? DIM : i == current ? ACCENT : selected == null ? LABEL : TEXT;
                         rows.add(Row.value(Component.translatable(BntToolState.axisKey(blockAxis, axes[i])), pixels(offset(access, axes[i])), colour, i == current));
                     }
-                    hint = selected != null ? "bits_n_tracks.tool_panel.hint.offset" : "bits_n_tracks.tool_panel.hint.select";
+                    if (selected != null) {
+                        actions.add(action("move", SCROLL));
+                        actions.add(action("axis", SHIFT, SCROLL));
+                    } else {
+                        actions.add(action("select", RMB));
+                    }
                 }
             }
             case ROUTE -> {
@@ -162,12 +204,12 @@ public final class BntToolHud {
                     int side = access.bnt$getTrackRouteSide();
                     Component route = side < 0 || side >= Direction.values().length
                         ? Component.translatable("bits_n_tracks.tool_panel.route.automatic")
-                        : Component.translatable("bits_n_tracks.tool_panel.route.wrapped",
-                            Component.translatable("bits_n_tracks.tool_panel.side." + Direction.values()[side].getOpposite().getName()));
+                        : Component.translatable("bits_n_tracks.tool_panel.side." + Direction.values()[side].getOpposite().getName());
                     rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.routing"), route, TEXT, false));
-                    hint = "bits_n_tracks.tool_panel.hint.route";
+                    actions.add(action("wrap", RMB));
+                    actions.add(action("unwrap", RMB));
                 } else {
-                    rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.cogwheel"), DIM));
+                    rows.add(none("cogwheel"));
                 }
             }
             case TENSION -> {
@@ -181,9 +223,9 @@ public final class BntToolHud {
                             : Component.literal(Math.round(tension * 100.0F) + "%");
                     boolean selected = chain.equals(BntToolState.leverChain);
                     rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.tension"), value, selected ? ACCENT : TEXT, selected).bar(tension));
-                    hint = selected ? "bits_n_tracks.tool_panel.hint.tension" : "bits_n_tracks.tool_panel.hint.select";
+                    actions.add(selected ? action("tension", SCROLL) : action("select", RMB));
                 } else {
-                    rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.track"), DIM));
+                    rows.add(none("track"));
                 }
             }
             case VISIBILITY -> {
@@ -191,9 +233,9 @@ public final class BntToolHud {
                     rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.model"), Component.translatable(access.bnt$isHiddenByLever()
                         ? "bits_n_tracks.tool_panel.model.hidden"
                         : "bits_n_tracks.tool_panel.model.shown"), TEXT, false));
-                    hint = "bits_n_tracks.tool_panel.hint.visibility";
+                    actions.add(action("visibility", RMB));
                 } else {
-                    rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.cogwheel"), DIM));
+                    rows.add(none("cogwheel"));
                 }
             }
             case WIDTH -> {
@@ -204,9 +246,10 @@ public final class BntToolHud {
                     Component value = Component.translatable("bits_n_tracks.tool_panel.pixels", pixels);
                     rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.width"), value, TEXT, false)
                         .bar(pixels / (float)full));
-                    hint = "bits_n_tracks.tool_panel.hint.width";
+                    actions.add(action("narrow", RMB));
+                    actions.add(action("widen", SHIFT, RMB));
                 } else {
-                    rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.cogwheel"), DIM));
+                    rows.add(none("cogwheel"));
                 }
             }
             case PHYSICS -> {
@@ -216,92 +259,109 @@ public final class BntToolHud {
                     boolean enabled = access.bnt$isPhysicsEnabled();
                     rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.physics"),
                         Component.translatable(enabled ? "bits_n_tracks.tool_panel.on" : "bits_n_tracks.tool_panel.off"), enabled ? GOOD : TEXT, false));
-                    hint = "bits_n_tracks.tool_panel.hint.physics";
+                    actions.add(action("physics", RMB));
                 } else {
-                    rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.cogwheel"), DIM));
+                    rows.add(none("cogwheel"));
                 }
             }
             case RESET -> {
-                rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.row.reset"), aimed == null ? DIM : TEXT));
+                rows.add(Row.text(Component.translatable(CogAlignmentLeverItem.wholeTrack(stack)
+                    ? "bits_n_tracks.tool_panel.row.reset"
+                    : "bits_n_tracks.tool_panel.row.reset.single"), aimed == null ? DIM : TEXT));
                 if (aimed != null && BntToolState.resetArmedFor(aimed)) {
-                    hint = "bits_n_tracks.tool_panel.hint.reset.confirm";
-                    hintColour = WARNING;
+                    actions.add(new Control(List.of(RMB), Component.translatable("bits_n_tracks.tool_panel.action.confirm"), WARNING));
                 } else if (aimed != null) {
-                    hint = "bits_n_tracks.tool_panel.hint.reset";
+                    actions.add(action("reset", RMB, RMB));
                 }
             }
         }
-        Component scope = mode == BntLeverMode.OFFSET || mode == BntLeverMode.WIDTH ? BntToolScope.name(CogAlignmentLeverItem.wholeTrack(stack)) : null;
-        return panel(Component.translatable(mode.translationKey()), mode.ordinal(), BntLeverMode.values().length, scope, rows, hint, hintColour, focused);
+        return panel(Component.translatable(mode.translationKey()), mode.ordinal(), BntLeverMode.values().length, rows, actions, focused);
     }
 
     private static Panel tunerPanel(ClientLevel level, ItemStack stack, boolean focused) {
         BntTuning setting = SuspensionToolItem.setting(stack);
         List<Row> rows = new ArrayList<>();
+        List<Control> actions = new ArrayList<>();
         BlockPos selected = BntToolState.tunerCog;
         BlockPos shown = selected;
         if (shown == null) {
             BlockPos aimed = BntToolInput.aimedBlock(level);
             shown = aimed != null && BntSuspension.hasPiece(level.getBlockEntity(aimed)) ? aimed : null;
         }
-        String hint = null;
         if (shown == null) {
-            rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.piece"), DIM));
+            rows.add(none("piece"));
         } else {
             for (BntTuning each : BntTuning.values()) {
-                int value = each.levelOf(level.getBlockEntity(shown));
                 boolean current = each == setting;
                 int colour = current ? selected != null ? ACCENT : TEXT : LABEL;
                 rows.add(Row.value(Component.translatable(each.translationKey()),
-                    Component.translatable("bits_n_tracks.tool_panel.level", value, BntTuning.MAX), colour, current && selected != null)
-                    .steps(value, BntTuning.MAX));
+                    Component.literal(String.valueOf(each.levelOf(level.getBlockEntity(shown)))), colour, current && selected != null));
             }
-            hint = selected != null ? "bits_n_tracks.tool_panel.hint.tuning" : "bits_n_tracks.tool_panel.hint.select";
+            actions.add(selected != null ? action("tune", SCROLL) : action("select", RMB));
         }
-        Component scope = BntToolScope.name(SuspensionToolItem.wholeTrack(stack));
-        return panel(Component.translatable(setting.translationKey()), setting.ordinal(), BntTuning.values().length, scope, rows, hint, HINT, focused);
+        return panel(Component.translatable(setting.translationKey()), setting.ordinal(), BntTuning.values().length, rows, actions, focused);
     }
 
-    private static Panel panel(Component mode, int index, int count, @Nullable Component scope, List<Row> rows, @Nullable String hint, int hintColour, boolean focused) {
-        Component message = BntToolMessages.current();
-        Component footer;
-        int colour = hintColour;
-        if (message != null) {
-            footer = message;
-            colour = TEXT;
-        } else if (focused) {
-            footer = Component.translatable("bits_n_tracks.tool_panel.modes.focused");
-            colour = ACCENT;
-        } else if (hint != null) {
-            footer = Component.translatable(hint);
-        } else {
-            footer = Component.translatable("bits_n_tracks.tool_panel.modes", AllKeys.TOOL_MENU.getBoundKey());
-            colour = DIM;
+    private static Panel panel(Component mode, int index, int count, List<Row> rows, List<Control> actions, boolean focused) {
+        Component message = focused ? null : BntToolMessages.current();
+        List<Control> controls = new ArrayList<>();
+        if (focused) {
+            controls.add(new Control(List.of(SCROLL), Component.translatable("bits_n_tracks.tool_panel.action.mode"), ACCENT));
+        } else if (message == null) {
+            controls.addAll(actions);
+            if (actions.isEmpty()) {
+                controls.add(new Control(List.of(new Key(Component.literal(AllKeys.TOOL_MENU.getBoundKey()), AllKeys.TOOL_MENU::isPressed), SCROLL),
+                    Component.translatable("bits_n_tracks.tool_panel.action.modes"), DIM));
+            }
         }
-        return new Panel(mode, index, count, scope, rows, footer, colour);
+        return new Panel(mode, index, count, rows, controls, message);
     }
+
+    private static Row none(String target) {
+        return Row.text(Component.translatable("bits_n_tracks.tool_panel.none." + target), DIM);
+    }
+
+    private static Control action(String action, Glyph... glyphs) {
+        return new Control(List.of(glyphs), Component.translatable("bits_n_tracks.tool_panel.action." + action), HINT);
+    }
+
 
     private static void draw(GuiGraphics graphics, Minecraft minecraft, LocalPlayer player, Panel panel, boolean focused) {
         Font font = minecraft.font;
         Component mode = focused ? Component.literal("< ").append(panel.mode()).append(" >") : panel.mode();
         int dots = panel.count() * DOT_SPACING - (DOT_SPACING - DOT);
-        int header = font.width(mode) + GAP + dots + (panel.scope() == null ? 0 : COLUMN + font.width(panel.scope()));
         int labels = 0;
         int values = 0;
-        int meters = 0;
-        int text = 0;
+        boolean metered = false;
         for (Row row : panel.rows()) {
-            if (row.value() == null) {
-                text = Math.max(text, INDENT + font.width(row.label()));
-                continue;
+            if (row.value() != null) {
+                labels = Math.max(labels, font.width(row.label()));
+                values = Math.max(values, font.width(row.value()));
+                metered |= row.metered();
             }
-            labels = Math.max(labels, font.width(row.label()));
-            values = Math.max(values, font.width(row.value()));
-            meters = Math.max(meters, row.meterWidth());
         }
-        int body = Math.max(text, INDENT + labels + (values > 0 ? COLUMN + values : 0) + (meters > 0 ? GAP + meters : 0));
-        int width = Math.max(MIN_WIDTH, Math.max(header, Math.max(body, font.width(panel.hint()))));
-        int height = HEADER + 3 + LINE * panel.rows().size() + 3 + LINE - 1;
+        int width = Math.max(MIN_WIDTH, font.width(mode) + GAP + dots);
+        if (labels > 0) {
+            width = Math.max(width, INDENT + labels + COLUMN + values + (metered ? GAP + BAR : 0));
+        }
+        for (Control control : panel.controls()) {
+            width = Math.max(width, control.width(font));
+        }
+        List<List<Control>> controlLines = pack(font, panel.controls(), Math.max(width, PACK_WIDTH));
+        for (List<Control> controlLine : controlLines) {
+            width = Math.max(width, lineWidth(font, controlLine));
+        }
+
+        List<List<FormattedCharSequence>> wrapped = new ArrayList<>();
+        int rowLines = 0;
+        for (Row row : panel.rows()) {
+            List<FormattedCharSequence> lines = row.value() == null ? font.split(row.label(), width - INDENT) : List.of();
+            wrapped.add(lines);
+            rowLines += Math.max(1, lines.size());
+        }
+        List<FormattedCharSequence> message = panel.message() == null ? List.of() : font.split(panel.message(), width);
+        int footer = panel.message() != null ? LINE * message.size() : CONTROL_LINE * controlLines.size();
+        int height = HEADER + 3 + LINE * rowLines + 3 + footer - 1;
 
         int centre = graphics.guiWidth() / 2;
         boolean leftHanded = player.getMainArm() == HumanoidArm.LEFT;
@@ -327,38 +387,35 @@ public final class BntToolHud {
         graphics.pose().translate(0.0F, 0.0F, 400.0F);
 
         graphics.drawString(font, mode, x, y + 1, ACCENT, false);
-        int dotX = x + font.width(mode) + GAP;
+        int dotX = x + width - dots;
         for (int i = 0; i < panel.count(); i++) {
             int dx = dotX + i * DOT_SPACING;
             graphics.fill(dx, y + 3, dx + DOT, y + 3 + DOT, i == panel.index() ? ACCENT : DIM);
-        }
-        if (panel.scope() != null) {
-            graphics.drawString(font, panel.scope(), x + width - font.width(panel.scope()), y + 1, LABEL, false);
         }
         int line = y + HEADER;
         graphics.fill(x, line, x + width, line + 1, RULE);
         line += 3;
 
         int valueX = x + INDENT + labels + COLUMN;
-        int meterX = x + width - meters;
-        for (Row row : panel.rows()) {
+        int valueRight = metered ? x + width - BAR - GAP : x + width;
+        for (int r = 0; r < panel.rows().size(); r++) {
+            Row row = panel.rows().get(r);
+            if (row.value() == null) {
+                for (FormattedCharSequence text : wrapped.get(r)) {
+                    graphics.drawString(font, text, x + INDENT, line, row.colour(), false);
+                    line += LINE;
+                }
+                continue;
+            }
             if (row.marked()) {
                 graphics.fill(x, line - 1, x + 2, line + 8, ACCENT);
             }
-            graphics.drawString(font, row.label(), x + INDENT, line, row.value() == null ? row.colour() : row.marked() ? ACCENT : LABEL, false);
-            if (row.value() != null) {
-                int valueRight = meters > 0 ? meterX - GAP : x + width;
-                graphics.drawString(font, row.value(), Math.max(valueX, valueRight - font.width(row.value())), line, row.colour(), false);
-            }
-            int fillColour = row.marked() ? ACCENT : METER;
-            if (row.meter() == Meter.BAR) {
+            graphics.drawString(font, row.label(), x + INDENT, line, row.marked() ? ACCENT : LABEL, false);            graphics.drawString(font, row.value(), Math.max(valueX, valueRight - font.width(row.value())), line, row.colour(), false);
+            if (row.metered()) {
+                int meterX = x + width - BAR;
                 graphics.fill(meterX, line + 2, meterX + BAR, line + 6, TRACK);
-                graphics.fill(meterX, line + 2, meterX + Math.round(BAR * Math.max(0.0F, Math.min(1.0F, row.fill()))), line + 6, fillColour);
-            } else if (row.meter() == Meter.STEPS) {
-                for (int i = 0; i < row.steps(); i++) {
-                    int sx = meterX + i * STEP_SPACING;
-                    graphics.fill(sx, line + 1, sx + STEP_WIDTH, line + 7, i < row.fill() ? fillColour : TRACK);
-                }
+                graphics.fill(meterX, line + 2, meterX + Math.round(BAR * Math.max(0.0F, Math.min(1.0F, row.fill()))), line + 6,
+                    row.marked() ? ACCENT : METER);
             }
             line += LINE;
         }
@@ -366,10 +423,86 @@ public final class BntToolHud {
         line += 1;
         graphics.fill(x, line, x + width, line + 1, RULE);
         line += 3;
-        graphics.drawString(font, panel.hint(), x, line, panel.hintColour(), false);
+        if (panel.message() != null) {
+            for (FormattedCharSequence text : message) {
+                graphics.drawString(font, text, x, line, TEXT, false);
+                line += LINE;
+            }
+        } else {
+            for (List<Control> controlLine : controlLines) {
+                int cursor = x;
+                for (Control control : controlLine) {
+                    drawControl(graphics, font, control, cursor, line);
+                    cursor += control.width(font) + CONTROL_GAP;
+                }
+                line += CONTROL_LINE;
+            }
+        }
         graphics.pose().popPose();
     }
 
+    private static List<List<Control>> pack(Font font, List<Control> controls, int width) {
+        List<List<Control>> lines = new ArrayList<>();
+        List<Control> current = new ArrayList<>();
+        int used = 0;
+        for (Control control : controls) {
+            int needed = control.width(font) + (current.isEmpty() ? 0 : CONTROL_GAP);
+            if (!current.isEmpty() && used + needed > width) {
+                lines.add(current);
+                current = new ArrayList<>();
+                used = 0;
+                needed = control.width(font);
+            }
+            current.add(control);
+            used += needed;
+        }
+        if (!current.isEmpty()) {
+            lines.add(current);
+        }
+        return lines;
+    }
+
+    private static int lineWidth(Font font, List<Control> controls) {
+        int width = 0;
+        for (Control control : controls) {
+            width += control.width(font) + CONTROL_GAP;
+        }
+        return width - CONTROL_GAP;
+    }
+
+    private static void drawControl(GuiGraphics graphics, Font font, Control control, int x, int y) {
+        int end = drawGlyphs(graphics, font, control.glyphs(), x, y);
+        graphics.drawString(font, control.label(), end + LABEL_GAP, y + 1, control.held() ? ACCENT : control.colour(), false);
+    }
+
+    private static int drawGlyphs(GuiGraphics graphics, Font font, List<Glyph> glyphs, int x, int y) {
+        int cursor = x;
+        for (Glyph glyph : glyphs) {
+            if (glyph instanceof Mouse mouse) {
+                graphics.pose().pushPose();
+                graphics.pose().translate(cursor, y - 1, 0.0F);
+                graphics.pose().scale(ICON / (float)mouse.icon().getWidth(), ICON / (float)mouse.icon().getHeight(), 1.0F);
+                mouse.icon().render(graphics, 0, 0);
+                graphics.pose().popPose();
+            } else if (glyph instanceof Key key) {
+                boolean held = key.held().getAsBoolean();
+                int keyWidth = key.width(font);
+                graphics.fill(cursor, y - 1, cursor + keyWidth, y - 1 + KEY_HEIGHT, held ? ACCENT : KEY_EDGE);
+                graphics.fill(cursor + 1, y, cursor + keyWidth - 1, y - 2 + KEY_HEIGHT, held ? ACCENT : KEY_FACE);
+                graphics.drawString(font, key.name(), cursor + KEY_PADDING, y + 1, held ? KEY_PRESSED_TEXT : TEXT, false);
+            }
+            cursor += glyph.width(font) + GLYPH_GAP;
+        }
+        return cursor - GLYPH_GAP;
+    }
+
+    private static int glyphsWidth(Font font, List<Glyph> glyphs) {
+        int width = 0;
+        for (Glyph glyph : glyphs) {
+            width += glyph.width(font) + GLYPH_GAP;
+        }
+        return width - GLYPH_GAP;
+    }
 
     private static float offset(KineticBlockEntityPhysicsAccess access, Axis axis) {
         return switch (axis) {

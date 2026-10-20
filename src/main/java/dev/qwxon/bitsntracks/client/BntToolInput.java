@@ -203,7 +203,7 @@ public final class BntToolInput {
                 }
                 if (fresh) {
                     if (BntToolState.armReset(cog)) {
-                        PacketDistributor.sendToServer(new BntLeverPayload(cog, BntLeverPayload.RESET, 0, 0, true));
+                        PacketDistributor.sendToServer(new BntLeverPayload(cog, BntLeverPayload.RESET, 0, 0, CogAlignmentLeverItem.wholeTrack(stack)));
                     } else {
                         BntToolMessages.clear();
                         BntToolCues.arm();

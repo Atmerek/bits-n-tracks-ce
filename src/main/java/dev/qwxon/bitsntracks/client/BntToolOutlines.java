@@ -104,10 +104,12 @@ public final class BntToolOutlines {
             }
             case RESET -> {
                 BlockPos armed = BntToolState.resetArmed;
-                Set<BlockPos> warned = armed != null && BntToolState.resetArmedFor(armed) ? trackWithPartners(level, armed) : Set.of();
+                Set<BlockPos> warned = armed != null && BntToolState.resetArmedFor(armed)
+                    ? wholeTrack ? trackWithPartners(level, armed) : withFollowers(level, armed)
+                    : Set.of();
                 selected(level, warned, BntToolVisuals.WARNING);
                 if (aimed != null && !warned.contains(aimed)) {
-                    hover(level, trackWithPartners(level, aimed));
+                    hover(level, wholeTrack ? trackWithPartners(level, aimed) : withFollowers(level, aimed));
                 }
             }
             case VISIBILITY -> {

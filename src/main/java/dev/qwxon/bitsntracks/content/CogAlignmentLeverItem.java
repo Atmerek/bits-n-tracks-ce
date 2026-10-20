@@ -204,9 +204,9 @@ public class CogAlignmentLeverItem extends Item {
         BntToolSounds.adjust(level, pos, BntCogwheelWidth.quarters(state) / (float)BntCogwheelWidth.full(state));
     }
 
-    public static void reset(Level level, Player player, BlockPos pos) {
+    public static void reset(Level level, Player player, BlockPos pos, boolean wholeTrack) {
         Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
-        for (BlockPos nodePos : collectChainPositions(level, pos)) {
+        for (BlockPos nodePos : wholeTrack ? collectChainPositions(level, pos) : withWidePartners(level, Set.of(pos))) {
             BlockEntity nodeBe = level.getBlockEntity(nodePos);
             if (nodeBe instanceof KineticBlockEntity kinetic && nodeBe instanceof KineticBlockEntityPhysicsAccess nodeAccess) {
                 nodeAccess.bnt$setAlignmentOffsetX(0.0F);
@@ -225,7 +225,9 @@ public class CogAlignmentLeverItem extends Item {
         BntChainEngagement.refresh(level, pos, engagementBefore);
         BntBeltRefit.queue(level, pos);
         BntToolSounds.reset(level, pos);
-        BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.reset"));
+        BntToolMessages.send(player, Component.translatable(wholeTrack
+            ? "bits_n_tracks.tool_panel.message.reset"
+            : "bits_n_tracks.tool_panel.message.reset.single"));
     }
 
     private static boolean shiftAxis(KineticBlockEntityPhysicsAccess access, Axis axis, float delta, float limit, boolean bogie) {

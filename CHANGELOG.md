@@ -26,7 +26,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Medium-Large Physical Flanged Cogwheel and Medium-Large Industrial Flanged Cogwheel, a size between medium and large.
 - Suspension Piece, which mounts a swinging arm on a physics cogwheel, or a bogie across two small, intermediate or tiny cogwheels of the same size, two-wide ones included. It is crafted with the spring from Create Aeronautics.
 - Suspension Tool, which reads and tunes a suspended cogwheel's stiffness, damping, travel and spring strength over 15 levels, for one cogwheel or a whole track at once.
-- Ctrl + left-click with the Cog Alignment Lever switches its Offset mode between moving one cogwheel and moving every cogwheel on the track that shares its physics setting, and its Width mode between resizing one cogwheel and every cogwheel on the track.
+- Ctrl + left-click with the Cog Alignment Lever switches its Offset, Width and Reset modes between one cogwheel and the whole track. On the whole track, Offset only moves the cogwheels that share the clicked one's physics setting.
 - A panel for the Cog Alignment Lever and the Suspension Tool, shown while holding either. It shows the current mode, the values of the cogwheel or track being worked on, and what to click or scroll.
 - Sounds for the Cog Alignment Lever and the Suspension Tool when switching modes, adjusting values, toggling settings and when an action is refused.
 - Physics cogwheels and tracks kick up dust from the ground they roll over, throw more when they spin in place or skid, and raise a burst of it when they land.
@@ -41,7 +41,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - New models for every flanged cogwheel, by qwxon.
 - Cogwheels and tracks are drawn through Flywheel when it is active, and tracks stay visible out to the render distance instead of 64 blocks.
 - Bits 'n' Bobs chains on Bits 'n' Bobs cogwheels are left entirely to Bits 'n' Bobs, so they route, look and drive the same as without Bits 'n' Tracks.
-- The Cog Alignment Lever works in six modes: Offset, Route, Tension, Visibility, Physics and Reset. In Offset mode, right-click a cogwheel to select it, scroll to move it one pixel at a time and Shift + scroll to pick the axis, instead of clicking parts of its face. Visibility and physics are switched by right-clicking in their own modes, instead of right-clicking the centre and left-clicking.
+- The Cog Alignment Lever works in seven modes: Offset, Route, Tension, Visibility, Physics, Width and Reset. In Offset mode, right-click a cogwheel to select it, scroll to move it one pixel at a time and Shift + scroll to pick the axis, instead of clicking parts of its face. Visibility and physics are switched by right-clicking in their own modes, instead of right-clicking the centre and left-clicking.
 - Resetting with the Cog Alignment Lever is done by right-clicking a cogwheel twice in Reset mode, and also resets suspension tuning.
 - The Cog Alignment Lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
 - The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.

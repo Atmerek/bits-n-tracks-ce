@@ -40,7 +40,7 @@ The scenes walk through building a tracked vehicle, from placing and powering th
 ## The Cog Alignment Lever
 
 The main tool of the mod.
-It adjusts cogwheels after they are placed, hides them, routes and tensions the track, and switches physics on or off.
+It adjusts cogwheels after they are placed, narrows or hides them, routes and tensions the track, and switches physics on or off.
 It only acts on Bits 'n' Tracks cogwheels and the tracks running on them, and breaks other blocks as normal.
 While you hold it, a panel beside the hotbar shows the current mode, the values of what you are working on, and what to click or scroll.
 Hold Alt (Create's tool menu key) and scroll to switch modes.
@@ -50,9 +50,10 @@ Hold Alt (Create's tool menu key) and scroll to switch modes.
 * **Tension**: right-click a track to select it, then scroll to tighten it, so it holds its line, or slacken it, so it sags and follows the ground.
 * **Visibility**: right-click a cogwheel to show or hide it.
 * **Physics**: right-click a cogwheel to switch its physics on or off.
-* **Reset**: right-click a cogwheel twice to reset alignment, visibility, track routing and suspension tuning on the whole track.
+* **Width**: right-click a cogwheel to narrow it a quarter at a time, and Shift + right-click to widen it. A track is as wide as its widest cogwheel.
+* **Reset**: right-click a cogwheel twice to reset alignment, visibility, track routing and suspension tuning.
 
-Ctrl + left-click switches Offset between moving one cogwheel and moving every cogwheel on the track that shares its physics setting.
+Ctrl + left-click switches Offset, Width and Reset between one cogwheel and the whole track. On the whole track, Offset only moves the cogwheels that share the clicked one's physics setting.
 
 ## Suspension
 
