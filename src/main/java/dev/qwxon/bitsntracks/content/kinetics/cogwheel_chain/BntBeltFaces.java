@@ -1,16 +1,25 @@
 package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.render.ChainQuadBuilder.VertexEmitter;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import java.util.List;
 import net.minecraft.world.phys.Vec3;
 
 public final class BntBeltFaces {
+    private static final double CHAIN_PIXELS = 3.0;
+
     private BntBeltFaces() {
     }
 
+    public static double widthScale(int quarters) {
+        return BntCogwheelWidth.trackPixels(quarters) / CHAIN_PIXELS;
+    }
+
     public static void emit(
-        VertexEmitter emitter, List<Vec3> source, List<Vec3> destination, boolean flipInsideOutside, boolean wide, float minV, float maxV
+        VertexEmitter emitter, List<Vec3> source, List<Vec3> destination, boolean flipInsideOutside, int quarters, float minV, float maxV
     ) {
+        boolean wide = quarters > BntCogwheelWidth.SINGLE;
+        float shown = BntCogwheelWidth.trackPixels(quarters) / (float)BntCogwheelWidth.trackPixels(wide ? BntCogwheelWidth.PAIR : BntCogwheelWidth.SINGLE);
         float u0Top = 0.875F;
         float u1Top = 0.4375F;
         float u0Bot = 0.4375F;
@@ -38,10 +47,22 @@ public final class BntBeltFaces {
             uRightFace1 = temp;
         }
 
-        quad(emitter, destination.get(1), source.get(1), source.get(0), destination.get(0), u0Top, u1Top, maxV, minV);
+        face(emitter, destination.get(1), source.get(1), source.get(0), destination.get(0), u0Top, u1Top, shown, maxV, minV);
         quad(emitter, destination.get(2), source.get(2), source.get(1), destination.get(1), uLeftFace1, uLeftFace0, maxV, minV);
-        quad(emitter, destination.get(3), source.get(3), source.get(2), destination.get(2), u0Bot, u1Bot, maxV, minV);
+        face(emitter, destination.get(3), source.get(3), source.get(2), destination.get(2), u0Bot, u1Bot, shown, maxV, minV);
         quad(emitter, destination.get(0), source.get(0), source.get(3), destination.get(3), uRightFace0, uRightFace1, maxV, minV);
+    }
+
+    private static void face(VertexEmitter emitter, Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4, float u0, float u1, float shown, float v0, float v1) {
+        if (shown >= 1.0F) {
+            quad(emitter, p1, p2, p3, p4, u0, u1, v0, v1);
+            return;
+        }
+        Vec3 middle2 = p2.add(p3).scale(0.5);
+        Vec3 middle1 = p1.add(p4).scale(0.5);
+        float centre = (u0 + u1) * 0.5F;
+        quad(emitter, p1, p2, middle2, middle1, u0, u0 + (centre - u0) * shown, v0, v1);
+        quad(emitter, middle1, middle2, p3, p4, u1 + (centre - u1) * shown, u1, v0, v1);
     }
 
     private static void quad(VertexEmitter emitter, Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4, float u0, float u1, float v0, float v1) {

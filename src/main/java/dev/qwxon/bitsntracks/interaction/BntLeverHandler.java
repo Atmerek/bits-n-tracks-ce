@@ -44,6 +44,7 @@ public final class BntLeverHandler {
             }
             case BntLeverPayload.VISIBILITY -> CogAlignmentLeverItem.toggleVisibility(level, player, pos);
             case BntLeverPayload.RESET -> CogAlignmentLeverItem.reset(level, player, pos);
+            case BntLeverPayload.WIDTH -> CogAlignmentLeverItem.resize(level, player, pos, payload.steps(), payload.wholeTrack());
             default -> {
             }
         }

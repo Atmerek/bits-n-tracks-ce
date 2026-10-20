@@ -10,6 +10,7 @@ import dev.engine_room.flywheel.api.model.Model;
 import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntClientConfig;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackSink;
@@ -23,6 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
@@ -161,8 +163,10 @@ final class BntTrackVisual implements BntTrackSink {
             hash = 31 * hash + Double.hashCode(shift.x);
             hash = 31 * hash + Double.hashCode(shift.y);
             hash = 31 * hash + Double.hashCode(shift.z);
-            Direction route = BntChainEngagement.routeSide(level, be.getBlockPos().offset(node.localPos()));
+            BlockPos nodePos = be.getBlockPos().offset(node.localPos());
+            Direction route = BntChainEngagement.routeSide(level, nodePos);
             hash = 31 * hash + (route == null ? -1 : route.ordinal());
+            hash = 31 * hash + BntCogwheelWidth.quarters(level.getBlockState(nodePos));
         }
         return 31 * hash + Arrays.hashCode(BntBeltDrape.surfaceKey(level, be.getBlockPos()));
     }

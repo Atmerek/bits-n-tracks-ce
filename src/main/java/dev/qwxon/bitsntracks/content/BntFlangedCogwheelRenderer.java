@@ -5,6 +5,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
+import dev.qwxon.bitsntracks.client.BntSqueezedModel;
 import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
 import dev.qwxon.bitsntracks.content.suspension.BntBogieRenderer;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
@@ -45,7 +46,8 @@ public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFl
         }
         if (!BntVisualized.drawn(be)) {
             BlockState renderState = modelState(be);
-            SuperByteBuffer model = this.getRotatedModel(be, renderState);
+            int trim = BntCogwheelWidth.trim(be.getLevel() == null ? be.getBlockState() : be.getLevel().getBlockState(be.getBlockPos()));
+            SuperByteBuffer model = trim > 0 ? BntSqueezedModel.buffer(renderState, trim) : this.getRotatedModel(be, renderState);
             ms.pushPose();
             Vec3 translation = BntCogwheels.getModelTranslation(be, partialTicks);
             ms.translate(translation.x, translation.y, translation.z);

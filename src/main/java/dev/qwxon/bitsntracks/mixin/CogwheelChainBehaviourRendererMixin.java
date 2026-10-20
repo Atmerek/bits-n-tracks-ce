@@ -23,7 +23,7 @@ import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
 import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntTreadView;
-import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.TrackModelRenderContext;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltFaces;
@@ -82,7 +82,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         TrackModelRenderContext.setRenderingTrack(
             be.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof TrackModelBehaviourAccess access && access.bnt$isTrackModel());
         TrackModelRenderContext.setRenderingCustomChain(BntCogwheels.isOwnCogwheel(be.getBlockState()));
-        TrackModelRenderContext.setRenderingWideChain(BntCogwheelPairing.isWide(be.getBlockState()));
+        TrackModelRenderContext.setChainQuarters(BntCogwheelWidth.chainQuarters(be));
         BntClientCompat.beginChainLight(be);
         BntTreadView.begin(ms.last().pose(), be.getLevel());
 
@@ -91,7 +91,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         } finally {
             TrackModelRenderContext.setRenderingTrack(false);
             TrackModelRenderContext.setRenderingCustomChain(false);
-            TrackModelRenderContext.setRenderingWideChain(false);
+            TrackModelRenderContext.setChainQuarters(BntCogwheelWidth.SINGLE);
             BntBeltLinks.clearLoop();
             BntClientCompat.endChainLight();
             BntTreadView.end();
@@ -222,7 +222,8 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             && (isCustomBeltItem || TrackModelRenderContext.isRenderingCustomChain());
 
         boolean tankTread = type == BntCogwheelChainTypes.TANK_TREAD_CHAIN.get();
-        boolean wideBelt = isCustomBeltPlacement && TrackModelRenderContext.isRenderingWideChain();
+        int quarters = isCustomBeltPlacement ? TrackModelRenderContext.chainQuarters() : BntCogwheelWidth.SINGLE;
+        boolean wideBelt = quarters > BntCogwheelWidth.SINGLE;
         ResourceLocation renderTexture = type.getRenderTexture();
         boolean ownTexture = isCustomBeltItem;
         if (tankTread) {
@@ -251,7 +252,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         List<Vec3> scaledSourcePoints = sourcePoints;
         List<Vec3> scaledDestinationPoints = destinationPoints;
         if (isCustomBeltPlacement) {
-            double widthScale = wideBelt ? 9.333333333333334 : 4.666666666666667;
+            double widthScale = BntBeltFaces.widthScale(quarters);
             scaledSourcePoints = bnt$scaleChainWidth(sourcePoints, widthScale);
             scaledDestinationPoints = bnt$scaleChainWidth(destinationPoints, widthScale);
         }
@@ -263,10 +264,10 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             if (tankTread) {
                 double[] tread = BntBeltLinks.onLoop(to, offset, length, BntTankTread.CELL);
                 BntTankTread.Target target = new BntTankTread.Target(null, null, null, lightAtSource, lightAtDest, relTo, null, sink.links(), sink);
-                BntTankTread.emitSegment(target, sourcePoints, destinationPoints, tread[0], tread[1], wideBelt, flipInsideOutside);
+                BntTankTread.emitSegment(target, sourcePoints, destinationPoints, tread[0], tread[1], quarters, flipInsideOutside);
             } else {
                 Object shape = bntBelt
-                    ? new BntTrackSink.Belt(flipInsideOutside, wideBelt)
+                    ? new BntTrackSink.Belt(flipInsideOutside, quarters)
                     : new BntTrackSink.Generic(chainRenderInfo, flipInsideOutside);
                 float scrollV = (float)((invertScroll ? linkSquish : -linkSquish) * sink.scrollRate());
                 sink.span(shape, scaledSourcePoints, scaledDestinationPoints, minV, maxV, scrollV, lightAtSource, lightAtDest);
@@ -297,9 +298,9 @@ public abstract class CogwheelChainBehaviourRendererMixin {
                 vc, poseMatrix, pose.normal(), lightAtSource, lightAtDest, relTo,
                 BntTreadView.eyeFrom(from), BntTreadView.links(from), null
             );
-            BntTankTread.emitSegment(target, sourcePoints, destinationPoints, tread[0], tread[1], wideBelt, flipInsideOutside);
+            BntTankTread.emitSegment(target, sourcePoints, destinationPoints, tread[0], tread[1], quarters, flipInsideOutside);
         } else if (bntBelt) {
-            BntBeltFaces.emit(emitter, scaledSourcePoints, scaledDestinationPoints, flipInsideOutside, wideBelt, minV, maxV);
+            BntBeltFaces.emit(emitter, scaledSourcePoints, scaledDestinationPoints, flipInsideOutside, quarters, minV, maxV);
         } else {
             ChainQuadBuilder.buildSegmentFaces(scaledDestinationPoints, scaledSourcePoints, chainRenderInfo, minV, maxV, flipInsideOutside, emitter, true);
         }

@@ -46,7 +46,7 @@ final class BntSpanModels {
     private static Model build(Key key) {
         Captured mesh = new Captured();
         if (key.shape() instanceof BntTrackSink.Belt belt) {
-            BntBeltFaces.emit(mesh, SOURCE, DESTINATION, belt.flip(), belt.wide(), 0.0F, 1.0F);
+            BntBeltFaces.emit(mesh, SOURCE, DESTINATION, belt.flip(), belt.quarters(), 0.0F, 1.0F);
         } else if (key.shape() instanceof BntTrackSink.Generic generic) {
             ChainQuadBuilder.buildSegmentFaces(DESTINATION, SOURCE, generic.info(), 0.0F, 1.0F, generic.flip(), mesh, true);
         } else if (key.shape() instanceof Box box) {

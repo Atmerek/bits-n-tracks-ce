@@ -15,6 +15,8 @@ import dev.engine_room.flywheel.lib.model.baked.SinglePosVirtualBlockGetter;
 import dev.engine_room.flywheel.lib.util.RendererReloadCache;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntClientConfig;
+import dev.qwxon.bitsntracks.client.BntSqueezedModel;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelRenderer;
 import dev.qwxon.bitsntracks.content.BntVisualized;
@@ -24,6 +26,7 @@ import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -39,6 +42,7 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
     private final BntTrackVisual track;
     private final BntPieceVisual pieces;
     private boolean hidden;
+    private int trim;
     @Nullable
     private RotatingInstance cog;
     @Nullable
@@ -127,6 +131,11 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
             hidden = physics;
             dirty = true;
         }
+        int trim = BntCogwheelWidth.trim(blockEntity.getBlockState());
+        if (trim != this.trim) {
+            this.trim = trim;
+            dirty = true;
+        }
         BntCogwheels.drawResting(resting);
         try {
             boolean fresh = dirty || relight;
@@ -164,7 +173,8 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
             clearCog();
             modelState = state;
             if (state != null) {
-                cog = instancerProvider().instancer(AllInstanceTypes.ROTATING, MODELS.get(new CogModel(state, cutout(state)))).createInstance();
+                CogModel key = new CogModel(state, cutout(state), BntCogwheelWidth.trim(blockEntity.getBlockState()));
+                cog = instancerProvider().instancer(AllInstanceTypes.ROTATING, MODELS.get(key)).createInstance();
                 relight = true;
             }
         }
@@ -243,7 +253,8 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
     }
 
     private static Model bake(CogModel key) {
-        BakedModelBuilder builder = new BakedModelBuilder(Minecraft.getInstance().getBlockRenderer().getBlockModel(key.state()))
+        BakedModel model = BntSqueezedModel.of(Minecraft.getInstance().getBlockRenderer().getBlockModel(key.state()), key.state(), key.trim());
+        BakedModelBuilder builder = new BakedModelBuilder(model)
             .level(SinglePosVirtualBlockGetter.createFullDark().blockState(key.state()));
         if (key.cutout()) {
             builder.materialFunc(CUTOUT);
@@ -251,6 +262,6 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
         return builder.build();
     }
 
-    private record CogModel(BlockState state, boolean cutout) {
+    private record CogModel(BlockState state, boolean cutout, int trim) {
     }
 }

@@ -301,7 +301,7 @@
     "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_4": "§7ПКМ §7в §7режиме §7Смещения §7по §7катку §7для §7выбора, §7Shift §7+ §7прокрутка §7для §7выбора §7направления, §7прокрутка §7для §7передвижения §7до §716 §7пикселей",
     "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_5": "Во-вторых — вы можете определять, §eкак §eименно §eтрак §eбудет §eобвивать §eкатки§r.",
     "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_6": "ПКМ в режиме Направления по боковой стороне катка назначает направление обвивания катка траком, а режим направления переключается с §aавтоматического§r на §eручной",
-    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_7": "Только посмотрите, как Боб счастлив, обретя такую свободу действий.",
+    "bits_n_tracks.ponder.cog_alignment_lever_customizing.text_11": "Только посмотрите, как Боб счастлив, обретя такую свободу действий.",
 
     "bits_n_tracks.ponder.cog_alignment_lever_tension.header": "Регулировка натяжения траков с помощью К.В.К.",
     "bits_n_tracks.ponder.cog_alignment_lever_tension.text_1": "Есть еще одна вещь, для которой можно использовать Ключ Выравнивания Катков....",

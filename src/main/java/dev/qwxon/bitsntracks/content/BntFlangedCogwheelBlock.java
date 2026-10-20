@@ -79,7 +79,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder.add(BntCogwheelPairing.WIDE, PHYSICS));
+        super.createBlockStateDefinition(builder.add(BntCogwheelPairing.WIDE, PHYSICS, BntCogwheelWidth.TRIM));
     }
 
     public BlockState getStateForPlacement(BlockPlaceContext context) {
@@ -134,7 +134,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     private VoxelShape getGridShape(BlockState state) {
-        return BntCogwheelShapes.get(this.size, state.getValue(AXIS));
+        return BntCogwheelShapes.get(this.size, state);
     }
 
     protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {

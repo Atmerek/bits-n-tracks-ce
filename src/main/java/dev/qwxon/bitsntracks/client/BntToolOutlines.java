@@ -115,6 +115,11 @@ public final class BntToolOutlines {
                     hover(level, withPartner(level, aimed));
                 }
             }
+            case WIDTH -> {
+                if (aimed != null) {
+                    hover(level, wholeTrack ? trackWithPartners(level, aimed) : withPartner(level, aimed));
+                }
+            }
         }
     }
 

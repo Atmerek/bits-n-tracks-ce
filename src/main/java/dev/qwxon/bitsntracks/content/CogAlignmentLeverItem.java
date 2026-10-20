@@ -180,6 +180,30 @@ public class CogAlignmentLeverItem extends Item {
         BntToolSounds.toggle(level, pos, !access.bnt$isHiddenByLever());
     }
 
+    public static void resize(Level level, Player player, BlockPos pos, int direction, boolean wholeTrack) {
+        BlockState aimed = level.getBlockState(pos);
+        if (direction == 0 || !aimed.hasProperty(BntCogwheelWidth.TRIM)) {
+            BntToolSounds.refuse(player);
+            return;
+        }
+        Set<BlockPos> positions = new LinkedHashSet<>();
+        if (wholeTrack) {
+            positions.addAll(collectChainPositions(level, pos));
+        } else {
+            positions.add(pos);
+            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+            if (partnerPos != null) {
+                positions.add(partnerPos);
+            }
+        }
+        if (!BntCogwheelWidth.apply(level, positions, BntCogwheelWidth.stepped(aimed, direction))) {
+            BntToolSounds.refuse(player);
+            return;
+        }
+        BlockState state = level.getBlockState(pos);
+        BntToolSounds.adjust(level, pos, BntCogwheelWidth.quarters(state) / (float)BntCogwheelWidth.full(state));
+    }
+
     public static void reset(Level level, Player player, BlockPos pos) {
         Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
         for (BlockPos nodePos : collectChainPositions(level, pos)) {

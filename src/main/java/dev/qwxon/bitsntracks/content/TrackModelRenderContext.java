@@ -3,7 +3,7 @@ package dev.qwxon.bitsntracks.content;
 public final class TrackModelRenderContext {
     private static final ThreadLocal<Boolean> IS_RENDERING_TRACK = ThreadLocal.withInitial(() -> false);
     private static final ThreadLocal<Boolean> IS_RENDERING_CUSTOM_CHAIN = ThreadLocal.withInitial(() -> false);
-    private static final ThreadLocal<Boolean> IS_RENDERING_WIDE_CHAIN = ThreadLocal.withInitial(() -> false);
+    private static final ThreadLocal<Integer> CHAIN_QUARTERS = ThreadLocal.withInitial(() -> BntCogwheelWidth.SINGLE);
 
     private TrackModelRenderContext() {
     }
@@ -24,11 +24,11 @@ public final class TrackModelRenderContext {
         return IS_RENDERING_CUSTOM_CHAIN.get();
     }
 
-    public static void setRenderingWideChain(boolean isWide) {
-        IS_RENDERING_WIDE_CHAIN.set(isWide);
+    public static void setChainQuarters(int quarters) {
+        CHAIN_QUARTERS.set(quarters);
     }
 
-    public static boolean isRenderingWideChain() {
-        return IS_RENDERING_WIDE_CHAIN.get();
+    public static int chainQuarters() {
+        return CHAIN_QUARTERS.get();
     }
 }

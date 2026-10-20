@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.client;
 import com.simibubi.create.AllKeys;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.BntToolScope;
@@ -28,6 +29,7 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -194,6 +196,19 @@ public final class BntToolHud {
                     rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.cogwheel"), DIM));
                 }
             }
+            case WIDTH -> {
+                if (aimed != null) {
+                    BlockState state = level.getBlockState(aimed);
+                    int pixels = BntCogwheelWidth.trackPixels(BntCogwheelWidth.quarters(state));
+                    int full = BntCogwheelWidth.trackPixels(BntCogwheelWidth.full(state));
+                    Component value = Component.translatable("bits_n_tracks.tool_panel.pixels", pixels);
+                    rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.width"), value, TEXT, false)
+                        .bar(pixels / (float)full));
+                    hint = "bits_n_tracks.tool_panel.hint.width";
+                } else {
+                    rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.none.cogwheel"), DIM));
+                }
+            }
             case PHYSICS -> {
                 BlockPos target = BntToolInput.aimedBlock(level);
                 if (target != null && BntCogwheelInteraction.canTogglePhysics(level, target)
@@ -216,7 +231,7 @@ public final class BntToolHud {
                 }
             }
         }
-        Component scope = mode == BntLeverMode.OFFSET ? BntToolScope.name(CogAlignmentLeverItem.wholeTrack(stack)) : null;
+        Component scope = mode == BntLeverMode.OFFSET || mode == BntLeverMode.WIDTH ? BntToolScope.name(CogAlignmentLeverItem.wholeTrack(stack)) : null;
         return panel(Component.translatable(mode.translationKey()), mode.ordinal(), BntLeverMode.values().length, scope, rows, hint, hintColour, focused);
     }
 

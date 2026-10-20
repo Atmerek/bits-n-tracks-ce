@@ -180,6 +180,16 @@ public final class BntToolInput {
             case VISIBILITY -> {
                 return sendLever(cog, BntLeverPayload.VISIBILITY, fresh);
             }
+            case WIDTH -> {
+                if (cog == null) {
+                    return false;
+                }
+                if (fresh) {
+                    PacketDistributor.sendToServer(new BntLeverPayload(
+                        cog, BntLeverPayload.WIDTH, 0, Screen.hasShiftDown() ? -1 : 1, CogAlignmentLeverItem.wholeTrack(stack)));
+                }
+                return true;
+            }
             case PHYSICS -> {
                 BlockPos target = aimedBlock(level);
                 if (target == null || !BntCogwheelInteraction.canTogglePhysics(level, target)) {

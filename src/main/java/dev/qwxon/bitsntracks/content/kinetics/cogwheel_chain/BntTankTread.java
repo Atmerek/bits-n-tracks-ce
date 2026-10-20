@@ -2,6 +2,8 @@ package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.render.ChainQuadBuilder.VertexEmitter;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
@@ -74,7 +76,61 @@ public final class BntTankTread {
         Part.of(-6, 0.5, 0, -2, 1.5, 3, LINK_UV, true)
     };
 
+    private static final double PLATE = 14.0;
+    private static final double[][] NARROW_LINKS = {{-4, -1}, {1, 4}};
+    private static final double[][] WIDE_LINKS = {{8, 12}, {2, 6}, {-11, -8}, {-6, -2}};
+    private static final Part[][] PARTS = new Part[BntCogwheelWidth.PAIR + 1][];
+
+    static {
+        for (int quarters = 1; quarters <= BntCogwheelWidth.PAIR; quarters++) {
+            PARTS[quarters] = parts(quarters);
+        }
+    }
+
     private BntTankTread() {
+    }
+
+    private static Part[] parts(int quarters) {
+        if (quarters == BntCogwheelWidth.SINGLE) {
+            return NARROW;
+        }
+        if (quarters == BntCogwheelWidth.PAIR) {
+            return WIDE;
+        }
+        boolean wide = quarters > BntCogwheelWidth.SINGLE;
+        int half = BntCogwheelWidth.trackPixels(quarters) / 2;
+        double fullHalf = wide ? PLATE : PLATE / 2.0;
+        List<Part> parts = new ArrayList<>();
+        if (wide) {
+            parts.add(Part.of(0, 0, -2, half, 2, 1, crop(TREAD_UV, 0.0, half / PLATE), false));
+            parts.add(Part.of(-half, 0, -2, 0, 2, 1, crop(TREAD_UV_MIRRORED, 1.0 - half / PLATE, 1.0), false));
+        } else {
+            parts.add(Part.of(-half, 0, -2, 0, 2, 1, crop(TREAD_UV, 1.0 - half / PLATE, 1.0), false));
+            parts.add(Part.of(0, 0, -2, half, 2, 1, crop(TREAD_UV, 0.0, half / PLATE), false));
+        }
+        for (double[] link : wide ? WIDE_LINKS : NARROW_LINKS) {
+            double from = Math.round(link[0] * half / fullHalf);
+            double to = Math.round(link[1] * half / fullHalf);
+            if (to > from) {
+                parts.add(Part.of(from, 0.5, 0, to, 1.5, 3, LINK_UV, true));
+            }
+        }
+        return parts.toArray(Part[]::new);
+    }
+
+    private static double[][] crop(double[][] uv, double from, double to) {
+        double[][] cropped = new double[uv.length][];
+        for (int face = 0; face < uv.length; face++) {
+            cropped[face] = uv[face].clone();
+        }
+        for (int face = 0; face < 4; face++) {
+            boolean lowFirst = face == 0 || face == 2;
+            double low = uv[face][lowFirst ? 0 : 2];
+            double high = uv[face][lowFirst ? 2 : 0];
+            cropped[face][lowFirst ? 0 : 2] = low + (high - low) * from;
+            cropped[face][lowFirst ? 2 : 0] = low + (high - low) * to;
+        }
+        return cropped;
     }
 
     public record Target(
@@ -84,9 +140,10 @@ public final class BntTankTread {
     }
 
     public static void emitSegment(
-        Target target, List<Vec3> source, List<Vec3> destination, double start, double span, boolean wide,
+        Target target, List<Vec3> source, List<Vec3> destination, double start, double span, int quarters,
         boolean frameTopOutward
     ) {
+        Part[] parts = PARTS[Mth.clamp(quarters, 1, BntCogwheelWidth.PAIR)];
         if (source.size() != 4 || destination.size() != 4 || span <= MIN_SPAN) {
             return;
         }
@@ -101,7 +158,7 @@ public final class BntTankTread {
 
         for (long plate = first; plate <= last; plate++) {
             double base = plate * CELL;
-            for (Part part : wide ? WIDE : NARROW) {
+            for (Part part : parts) {
                 if (!part.link() || target.links()) {
                     place(segment, start, span, from, to, base + part.at(), part);
                 }
@@ -386,6 +443,5 @@ public final class BntTankTread {
                 (toZ - fromZ) * 0.5 * PX,
                 sheet(uv),
                 link);
-        }
-    }
+        }    }
 }

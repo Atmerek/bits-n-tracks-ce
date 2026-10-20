@@ -2,6 +2,7 @@ package dev.qwxon.bitsntracks;
 
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import dev.qwxon.bitsntracks.client.BntShaderHand;
+import dev.qwxon.bitsntracks.client.BntSqueezedModel;
 import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
 import dev.qwxon.bitsntracks.client.BntToolHud;
 import dev.qwxon.bitsntracks.client.BntToolInput;
@@ -52,7 +53,10 @@ public class BitsNTracksClient {
     }
 
     private static void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> PonderIndex.addPlugin(new BntPonderPlugin()));
+        event.enqueueWork(() -> {
+            PonderIndex.addPlugin(new BntPonderPlugin());
+            BntSqueezedModel.register();
+        });
     }
 
 

@@ -13,6 +13,7 @@ import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntChainShapeContext;
 import dev.qwxon.bitsntracks.client.BntToolVisuals;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
@@ -319,6 +320,41 @@ public final class BntBobScenes {
                 wrapUnder(be);
             });
         }
+
+        caption(scene, "Thirdly, you can make " + tint(ChatFormatting.YELLOW, "cogwheels and their tracks narrower") + ChatFormatting.RESET + ".", 70);
+
+        scene.overlay().showText(110)
+            .text(tint(ChatFormatting.GRAY, "In Width mode, right-click a cogwheel to narrow it, or Shift + right-click to widen it"))
+            .placeNearTarget()
+            .pointAt(face);
+        scene.addKeyframe();
+        scene.idle(30);
+        scene.overlay().showControls(face, Pointing.RIGHT, 15).rightClick().withItem(lever);
+        scene.idle(10);
+        setTrim(scene, List.of(tiny), 1);
+        scene.idle(80);
+
+        scene.overlay().showText(110)
+            .text("A track is always as wide as the widest cogwheel on it, so narrowing just one cogwheel leaves the track as it was")
+            .placeNearTarget()
+            .pointAt(face);
+        scene.idle(120);
+
+        scene.overlay().showText(130)
+            .text("Ctrl + left-click switches the lever to " + ChatFormatting.GOLD + "Per-track" + ChatFormatting.RESET
+                + ", and then one right-click narrows every cogwheel on the track, and the track with them")
+            .placeNearTarget()
+            .pointAt(face);
+        scene.addKeyframe();
+        scene.idle(40);
+        scene.overlay().showControls(face, Pointing.RIGHT, 15).leftClick().whileCTRL().withItem(lever);
+        scene.idle(25);
+        scene.overlay().showControls(face, Pointing.RIGHT, 15).rightClick().withItem(lever);
+        scene.idle(10);
+        setTrim(scene, trackCogs(util, 2), 2);
+        scene.idle(80);
+
+        setTrim(scene, trackCogs(util, 6), 2);
         scene.addInstruction(BntPonderCamera.glideHome(-ZOOM_TILT, -ZOOM_TURN, 30));
         scene.idle(60);
 
@@ -640,6 +676,23 @@ public final class BntBobScenes {
         try {
             assembler.getClass().getMethod("clientFlickLeverTo", boolean.class).invoke(assembler, on);
         } catch (ReflectiveOperationException ignored) {
+        }
+    }
+
+    private static List<BlockPos> trackCogs(SceneBuildingUtil util, int x) {
+        List<BlockPos> cogs = new ArrayList<>();
+        for (int z = 3; z <= 6; z++) {
+            cogs.add(util.grid().at(x, 2, z));
+        }
+        for (int z : new int[]{2, 3, 6, 7}) {
+            cogs.add(util.grid().at(x, 3, z));
+        }
+        return cogs;
+    }
+
+    private static void setTrim(CreateSceneBuilder scene, List<BlockPos> cogs, int trim) {
+        for (BlockPos cog : cogs) {
+            scene.world().modifyBlock(cog, state -> BntCogwheelWidth.withTrim(state, trim), false);
         }
     }
 

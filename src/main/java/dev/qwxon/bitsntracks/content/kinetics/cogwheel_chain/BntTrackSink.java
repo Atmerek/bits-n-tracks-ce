@@ -24,7 +24,7 @@ public interface BntTrackSink {
 
     void box(float[][] uv, Vec3 centre, Vec3 width, Vec3 thick, Vec3 length, int light, Vec3 drift, double along, double alongRate);
 
-    record Belt(boolean flip, boolean wide) {
+    record Belt(boolean flip, int quarters) {
     }
 
     record Generic(ChainRenderInfo info, boolean flip) {
