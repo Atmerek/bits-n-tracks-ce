@@ -1,5 +1,6 @@
 package dev.qwxon.bitsntracks.client;
 
+import dev.qwxon.bitsntracks.content.BntCogwheelShafts;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
@@ -15,11 +16,16 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -78,6 +84,26 @@ public final class BntToolState {
     static Axis blockAxis(ClientLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         return state.hasProperty(BlockStateProperties.AXIS) ? state.getValue(BlockStateProperties.AXIS) : null;
+    }
+
+    @Nullable
+    static Direction aimedShaft(ClientLevel level, @Nullable BlockPos pos) {
+        if (pos == null) {
+            return null;
+        }
+        List<Direction> ends = BntCogwheelShafts.outerEnds(level.getBlockState(pos));
+        if (ends.size() < 2) {
+            return ends.isEmpty() ? null : ends.get(0);
+        }
+        if (!(Minecraft.getInstance().hitResult instanceof BlockHitResult hit) || !hit.getBlockPos().equals(pos)) {
+            return null;
+        }
+        Axis axis = ends.get(0).getAxis();
+        if (hit.getDirection().getAxis() == axis) {
+            return hit.getDirection();
+        }
+        Vec3 local = hit.getLocation().subtract(BntToolVisuals.drawnCentre(level, pos));
+        return Direction.fromAxisAndDirection(axis, local.get(axis) < 0.0 ? AxisDirection.NEGATIVE : AxisDirection.POSITIVE);
     }
 
     static int axisRow(ClientLevel level, BlockPos pos) {

@@ -161,7 +161,8 @@ public final class BntCogwheelPairing {
             BlockPos neighbourPos = pos.relative(direction);
             BlockState neighbour = level.getBlockState(neighbourPos);
             if (canPair(state, neighbour) && sideOf(neighbour) == BntWideSide.NONE) {
-                return BntCogwheelWidth.withTrim(state.setValue(WIDE, BntWideSide.of(direction)), BntCogwheelWidth.trim(neighbour));
+                return BntCogwheelShafts.keepSeam(
+                    BntCogwheelWidth.withTrim(state.setValue(WIDE, BntWideSide.of(direction)), BntCogwheelWidth.trim(neighbour)));
             }
         }
 
@@ -181,7 +182,7 @@ public final class BntCogwheelPairing {
         }
 
         BntWideSide expected = BntWideSide.of(direction.getOpposite());
-        BlockState linked = BntCogwheelWidth.withTrim(partner.setValue(WIDE, expected), BntCogwheelWidth.trim(state));
+        BlockState linked = BntCogwheelShafts.keepSeam(BntCogwheelWidth.withTrim(partner.setValue(WIDE, expected), BntCogwheelWidth.trim(state)));
         if (linked != partner) {
             level.setBlock(partnerPos, linked, Block.UPDATE_ALL);
         }

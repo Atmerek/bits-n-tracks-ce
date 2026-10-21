@@ -3,6 +3,8 @@ package dev.qwxon.bitsntracks.client;
 import com.simibubi.create.AllKeys;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntCogwheelShafts;
 import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
@@ -28,6 +30,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.HumanoidArm;
@@ -248,6 +251,35 @@ public final class BntToolHud {
                         .bar(pixels / (float)full));
                     actions.add(action("narrow", RMB));
                     actions.add(action("widen", SHIFT, RMB));
+                } else {
+                    rows.add(none("cogwheel"));
+                }
+            }
+            case SHAFT -> {
+                Direction end = BntToolState.aimedShaft(level, aimed);
+                if (end != null) {
+                    BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, aimed);
+                    for (AxisDirection direction : AxisDirection.values()) {
+                        Direction each = Direction.fromAxisAndDirection(end.getAxis(), direction);
+                        BlockState half = level.getBlockState(partnerPos != null && each == BntCogwheelPairing.partnerDirection(level.getBlockState(aimed))
+                            ? partnerPos
+                            : aimed);
+                        if (BntCogwheelShafts.hideable(half, each)) {
+                            boolean current = each == end;
+                            rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.side." + each.getName()),
+                                Component.translatable(BntCogwheelShafts.has(half, each)
+                                    ? "bits_n_tracks.tool_panel.shaft.shown"
+                                    : "bits_n_tracks.tool_panel.shaft.hidden"), current ? ACCENT : LABEL, current));
+                        }
+                    }
+                    boolean shown = BntCogwheelShafts.has(level.getBlockState(aimed), end);
+                    boolean held = shown && BntSuspension.mountedOn(level, aimed, end);
+                    if (held) {
+                        rows.add(Row.text(Component.translatable("bits_n_tracks.tool_panel.shaft.held"), WARNING));
+                    }
+                    if (!held || CogAlignmentLeverItem.wholeTrack(stack)) {
+                        actions.add(action(shown ? "hide" : "show", RMB));
+                    }
                 } else {
                     rows.add(none("cogwheel"));
                 }

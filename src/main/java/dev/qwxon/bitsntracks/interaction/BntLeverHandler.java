@@ -4,6 +4,7 @@ import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -45,6 +46,11 @@ public final class BntLeverHandler {
             case BntLeverPayload.VISIBILITY -> CogAlignmentLeverItem.toggleVisibility(level, player, pos);
             case BntLeverPayload.RESET -> CogAlignmentLeverItem.reset(level, player, pos, payload.wholeTrack());
             case BntLeverPayload.WIDTH -> CogAlignmentLeverItem.resize(level, player, pos, payload.steps(), payload.wholeTrack());
+            case BntLeverPayload.SHAFT -> {
+                if (payload.axis() >= 0 && payload.axis() < Direction.values().length) {
+                    CogAlignmentLeverItem.toggleShaft(level, player, pos, Direction.values()[payload.axis()], payload.wholeTrack());
+                }
+            }
             default -> {
             }
         }

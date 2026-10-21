@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -202,6 +203,24 @@ public class CogAlignmentLeverItem extends Item {
         }
         BlockState state = level.getBlockState(pos);
         BntToolSounds.adjust(level, pos, BntCogwheelWidth.quarters(state) / (float)BntCogwheelWidth.full(state));
+    }
+
+    public static void toggleShaft(Level level, Player player, BlockPos pos, Direction end, boolean wholeTrack) {
+        BlockState aimed = level.getBlockState(pos);
+        if (!BntCogwheelShafts.hideable(aimed, end)) {
+            BntToolSounds.refuse(player);
+            return;
+        }
+        boolean kept = !BntCogwheelShafts.has(aimed, end);
+        BntCogwheelShafts.Result result = BntCogwheelShafts.apply(level, wholeTrack ? collectChainPositions(level, pos) : Set.of(pos), end, kept);
+        if (result.held() > 0) {
+            BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.shaft.piece"));
+        }
+        if (result.changed() == 0) {
+            BntToolSounds.refuse(player);
+            return;
+        }
+        BntToolSounds.toggle(level, pos, kept);
     }
 
     public static void reset(Level level, Player player, BlockPos pos, boolean wholeTrack) {

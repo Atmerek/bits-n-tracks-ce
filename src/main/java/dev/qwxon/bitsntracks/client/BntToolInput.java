@@ -18,6 +18,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
@@ -187,6 +188,17 @@ public final class BntToolInput {
                 if (fresh) {
                     PacketDistributor.sendToServer(new BntLeverPayload(
                         cog, BntLeverPayload.WIDTH, 0, Screen.hasShiftDown() ? -1 : 1, CogAlignmentLeverItem.wholeTrack(stack)));
+                }
+                return true;
+            }
+            case SHAFT -> {
+                Direction end = BntToolState.aimedShaft(level, cog);
+                if (end == null) {
+                    return false;
+                }
+                if (fresh) {
+                    PacketDistributor.sendToServer(new BntLeverPayload(
+                        cog, BntLeverPayload.SHAFT, end.ordinal(), 0, CogAlignmentLeverItem.wholeTrack(stack)));
                 }
                 return true;
             }

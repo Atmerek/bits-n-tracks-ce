@@ -13,6 +13,7 @@ import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.client.BntChainShapeContext;
 import dev.qwxon.bitsntracks.client.BntToolVisuals;
+import dev.qwxon.bitsntracks.content.BntCogwheelShafts;
 import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
@@ -352,9 +353,42 @@ public final class BntBobScenes {
         scene.overlay().showControls(face, Pointing.RIGHT, 15).rightClick().withItem(lever);
         scene.idle(10);
         setTrim(scene, trackCogs(util, 2), 2);
+        setTrim(scene, trackCogs(util, 6), 2);
         scene.idle(80);
 
-        setTrim(scene, trackCogs(util, 6), 2);
+        caption(scene, "Finally, you can " + tint(ChatFormatting.YELLOW, "hide the shafts sticking out of a cogwheel") + ChatFormatting.RESET + ".", 70);
+
+        scene.overlay().showText(110)
+            .text(tint(ChatFormatting.GRAY, "In Shaft mode, right-click either end of a cogwheel to hide or show its shaft there"))
+            .placeNearTarget()
+            .pointAt(face);
+        scene.addKeyframe();
+        scene.idle(30);
+        scene.overlay().showControls(face, Pointing.RIGHT, 15).rightClick().withItem(lever);
+        scene.idle(10);
+        setShafts(scene, List.of(tiny), Direction.WEST, false);
+        scene.idle(80);
+
+        scene.overlay().showText(110)
+            .text("A hidden shaft connects to nothing, so a cogwheel that only rides on its track doesn't need any")
+            .placeNearTarget()
+            .pointAt(face);
+        scene.idle(120);
+
+        Vec3 lowerFace = util.vector().blockSurface(util.grid().at(2, 2, 4), Direction.WEST).add(rest);
+        scene.overlay().showText(120)
+            .text("The lever is still on " + ChatFormatting.GOLD + "Per-track" + ChatFormatting.RESET
+                + ", so one right-click hides that side's shafts along the whole track")
+            .placeNearTarget()
+            .pointAt(lowerFace);
+        scene.addKeyframe();
+        scene.idle(40);
+        scene.overlay().showControls(lowerFace, Pointing.RIGHT, 15).rightClick().withItem(lever);
+        scene.idle(10);
+        setShafts(scene, trackCogs(util, 2), Direction.WEST, false);
+        setShafts(scene, trackCogs(util, 6), Direction.EAST, false);
+        scene.idle(80);
+
         scene.addInstruction(BntPonderCamera.glideHome(-ZOOM_TILT, -ZOOM_TURN, 30));
         scene.idle(60);
 
@@ -693,6 +727,12 @@ public final class BntBobScenes {
     private static void setTrim(CreateSceneBuilder scene, List<BlockPos> cogs, int trim) {
         for (BlockPos cog : cogs) {
             scene.world().modifyBlock(cog, state -> BntCogwheelWidth.withTrim(state, trim), false);
+        }
+    }
+
+    private static void setShafts(CreateSceneBuilder scene, List<BlockPos> cogs, Direction end, boolean kept) {
+        for (BlockPos cog : cogs) {
+            scene.world().modifyBlock(cog, state -> BntCogwheelShafts.withShaft(state, end, kept), false);
         }
     }
 

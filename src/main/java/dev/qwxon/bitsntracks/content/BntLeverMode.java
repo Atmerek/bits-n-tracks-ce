@@ -7,6 +7,7 @@ public enum BntLeverMode {
     VISIBILITY("visibility"),
     PHYSICS("physics"),
     WIDTH("width"),
+    SHAFT("shaft"),
     RESET("reset");
 
     private static final BntLeverMode[] VALUES = values();

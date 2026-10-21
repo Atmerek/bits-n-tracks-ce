@@ -51,9 +51,10 @@ Hold Alt (Create's tool menu key) and scroll to switch modes.
 * **Visibility**: right-click a cogwheel to show or hide it.
 * **Physics**: right-click a cogwheel to switch its physics on or off.
 * **Width**: right-click a cogwheel to narrow it a quarter at a time, and Shift + right-click to widen it. A track is as wide as its widest cogwheel.
+* **Shaft**: right-click either end of a cogwheel to hide or show its shaft there. A hidden shaft connects to nothing, so a cogwheel without shafts only turns with its track.
 * **Reset**: right-click a cogwheel twice to reset alignment, visibility, track routing and suspension tuning.
 
-Ctrl + left-click switches Offset, Width and Reset between one cogwheel and the whole track. On the whole track, Offset only moves the cogwheels that share the clicked one's physics setting.
+Ctrl + left-click switches Offset, Width, Shaft and Reset between one cogwheel and the whole track. On the whole track, Offset only moves the cogwheels that share the clicked one's physics setting.
 
 ## Suspension
 

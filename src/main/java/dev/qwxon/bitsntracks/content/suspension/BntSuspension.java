@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.content.suspension;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntCogwheelShafts;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
@@ -101,11 +102,35 @@ public final class BntSuspension {
             return 0;
         }
         for (int facing : facingOrder(preferred)) {
-            if (mounted(level, armEnd(level, pos, axis, facing), axis, side, facing)) {
+            BlockPos end = armEnd(level, pos, axis, facing);
+            if (shaftAt(level, end, axis, facing) && mounted(level, end, axis, side, facing)) {
                 return facing;
             }
         }
         return 0;
+    }
+
+    public static Direction shaftSide(Axis axis, int facing) {
+        return Direction.get(facing > 0 ? Direction.AxisDirection.POSITIVE : Direction.AxisDirection.NEGATIVE, axis);
+    }
+
+    private static boolean shaftAt(Level level, BlockPos pos, Axis axis, int facing) {
+        return BntCogwheelShafts.has(level.getBlockState(pos), shaftSide(axis, facing));
+    }
+
+    private static boolean shaftsAt(Level level, BlockPos pos, BlockPos partnerPos, Axis axis, int facing) {
+        return shaftAt(level, armEnd(level, pos, axis, facing), axis, facing)
+            && shaftAt(level, armEnd(level, partnerPos, axis, facing), axis, facing);
+    }
+
+    public static boolean mountedOn(Level level, BlockPos pos, Direction end) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!hasPiece(be)) {
+            return false;
+        }
+        Axis axis = axis(be.getBlockState());
+        int facing = ((KineticBlockEntityPhysicsAccess)be).bnt$getSuspensionFacing();
+        return facing != 0 && shaftSide(axis, facing) == end && armEnd(level, pos, axis, facing).equals(pos);
     }
 
     private static int[] facingOrder(int preferred) {
@@ -173,11 +198,18 @@ public final class BntSuspension {
             }
         }
         for (int facing : facingOrder(preferred)) {
-            if (heldAtEnd(level, pos, partnerPos, axis, facing)) {
+            if (shaftsAt(level, pos, partnerPos, axis, facing) && heldAtEnd(level, pos, partnerPos, axis, facing)) {
                 return facing;
             }
         }
-        return hangsOver(level, pos, partnerPos) ? 1 : 0;
+        if (hangsOver(level, pos, partnerPos)) {
+            for (int facing : facingOrder(1)) {
+                if (shaftsAt(level, pos, partnerPos, axis, facing)) {
+                    return facing;
+                }
+            }
+        }
+        return 0;
     }
 
     private static boolean bogieMounted(Level level, BlockPos pos, BlockPos partnerPos, Axis axis, int facing) {

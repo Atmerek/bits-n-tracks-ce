@@ -46,8 +46,12 @@ public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFl
         }
         if (!BntVisualized.drawn(be)) {
             BlockState renderState = modelState(be);
-            int trim = BntCogwheelWidth.trim(be.getLevel() == null ? be.getBlockState() : be.getLevel().getBlockState(be.getBlockPos()));
-            SuperByteBuffer model = trim > 0 ? BntSqueezedModel.buffer(renderState, trim) : this.getRotatedModel(be, renderState);
+            BlockState live = be.getLevel() == null ? be.getBlockState() : be.getLevel().getBlockState(be.getBlockPos());
+            int trim = BntCogwheelWidth.trim(live);
+            BntShaftEnds shafts = BntCogwheelShafts.ends(live);
+            SuperByteBuffer model = BntSqueezedModel.changes(renderState, trim, shafts)
+                ? BntSqueezedModel.buffer(renderState, trim, shafts)
+                : this.getRotatedModel(be, renderState);
             ms.pushPose();
             Vec3 translation = BntCogwheels.getModelTranslation(be, partialTicks);
             ms.translate(translation.x, translation.y, translation.z);

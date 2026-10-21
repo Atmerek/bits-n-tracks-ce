@@ -14,6 +14,7 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -25,7 +26,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -79,7 +82,39 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder.add(BntCogwheelPairing.WIDE, PHYSICS, BntCogwheelWidth.TRIM));
+        super.createBlockStateDefinition(builder.add(BntCogwheelPairing.WIDE, PHYSICS, BntCogwheelWidth.TRIM, BntCogwheelShafts.SHAFTS));
+    }
+
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        return reoriented(super.rotate(state, rotation), rotation.rotate(positiveEnd(state)));
+    }
+
+    protected BlockState mirror(BlockState state, Mirror mirror) {
+        return reoriented(super.mirror(state, mirror), mirror.mirror(positiveEnd(state)));
+    }
+
+    private static Direction positiveEnd(BlockState state) {
+        return Direction.fromAxisAndDirection(state.getValue(AXIS), AxisDirection.POSITIVE);
+    }
+
+    private static BlockState reoriented(BlockState state, Direction formerPositive) {
+        if (formerPositive.getAxisDirection() == AxisDirection.POSITIVE) {
+            return state;
+        }
+        return BntCogwheelShafts.flipped(state.setValue(BntCogwheelPairing.WIDE, state.getValue(BntCogwheelPairing.WIDE).opposite()));
+    }
+
+    protected boolean areStatesKineticallyEquivalent(BlockState oldState, BlockState newState) {
+        if (!super.areStatesKineticallyEquivalent(oldState, newState)) {
+            return false;
+        }
+        for (AxisDirection direction : AxisDirection.values()) {
+            Direction end = Direction.fromAxisAndDirection(newState.getValue(AXIS), direction);
+            if (BntCogwheelShafts.has(oldState, end) != BntCogwheelShafts.has(newState, end)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public BlockState getStateForPlacement(BlockPlaceContext context) {
@@ -109,7 +144,7 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
     }
 
     public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
-        return face.getAxis() == state.getValue(AXIS);
+        return face.getAxis() == state.getValue(AXIS) && BntCogwheelShafts.has(state, face);
     }
 
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {

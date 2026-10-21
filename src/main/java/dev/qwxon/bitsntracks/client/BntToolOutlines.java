@@ -3,6 +3,8 @@ package dev.qwxon.bitsntracks.client;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntCogwheelShafts;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.BntLeverZone;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
@@ -23,6 +25,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -36,6 +39,8 @@ import org.jetbrains.annotations.Nullable;
 public final class BntToolOutlines {
     private static final double MARKER_REACH = 0.75;
     private static final int MAX_OUTLINES = 64;
+    private static final double SHAFT_STUB = 2.0 / 16.0;
+    private static final double SHAFT_RADIUS = 2.0 / 16.0;
 
     private BntToolOutlines() {
     }
@@ -122,7 +127,37 @@ public final class BntToolOutlines {
                     hover(level, wholeTrack ? trackWithPartners(level, aimed) : withPartner(level, aimed));
                 }
             }
+            case SHAFT -> {
+                Direction end = BntToolState.aimedShaft(level, aimed);
+                if (end != null) {
+                    shafts(level, wholeTrack ? trackWithPartners(level, aimed) : Set.of(aimed), end,
+                        !BntCogwheelShafts.has(level.getBlockState(aimed), end));
+                }
+            }
         }
+    }
+
+    private static void shafts(ClientLevel level, Set<BlockPos> positions, Direction end, boolean kept) {
+        int index = 0;
+        for (BlockPos pos : positions) {
+            BlockState state = level.getBlockState(pos);
+            if (index >= MAX_OUTLINES || !BntCogwheelShafts.hideable(state, end) || BntCogwheelShafts.has(state, end) == kept) {
+                continue;
+            }
+            boolean held = !kept && BntSuspension.mountedOn(level, pos, end);
+            BntToolVisuals.box("bnt_tool_shaft_" + index++, shaftBox(level, pos, state, end),
+                held ? BntToolVisuals.WARNING : BntToolVisuals.HOVER, BntToolVisuals.THIN);
+        }
+    }
+
+    private static AABB shaftBox(ClientLevel level, BlockPos pos, BlockState state, Direction end) {
+        double inner = 0.5 - SHAFT_STUB - BntCogwheelWidth.flangeShift(BntCogwheelPairing.isWide(state), BntCogwheelWidth.trim(state)) / 16.0;
+        Vec3 normal = Vec3.atLowerCornerOf(end.getNormal());
+        Vec3 centre = BntToolVisuals.drawnCentre(level, pos);
+        Vec3 from = centre.add(normal.scale(inner));
+        Vec3 to = centre.add(normal.scale(0.5));
+        Vec3 across = new Vec3(1.0, 1.0, 1.0).subtract(normal.multiply(normal)).scale(SHAFT_RADIUS);
+        return new AABB(from.subtract(across), to.add(across)).inflate(BntToolVisuals.THIN);
     }
 
     private static void tuner(ClientLevel level, boolean wholeTrack) {
