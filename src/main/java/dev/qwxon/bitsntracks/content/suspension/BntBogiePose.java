@@ -2,23 +2,30 @@ package dev.qwxon.bitsntracks.content.suspension;
 
 final class BntBogiePose {
     static final int PARTS = 10;
+    private static final float PIVOT_X = -0.5F;
+    private static final float PIVOT_Y = 0.20711F;
+    private static final float TOP_X = -0.5F;
+    private static final float TOP_Y = 1.20711F;
+    private static final float SHAFT_GAP = 0.73218F;
+    private static final float NOMOVE_TOP = 0.73031F;
+    private static final float NOMOVE_BOTTOM = 0.08188F;
     final double[] affine = new double[PARTS * 6];
     final double[] turn = new double[PARTS * 2];
 
     BntBogiePose(double leadX, double leadY, double partnerX, double partnerY, double drop) {
         this.set(0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
-        double span = BntBogieModel.NOMOVE_TOP - BntBogieModel.NOMOVE_BOTTOM;
+        double span = NOMOVE_TOP - NOMOVE_BOTTOM;
         double stretch = (span + drop) / span;
-        this.set(1, 1.0, 0.0, 0.0, stretch, 0.0, BntBogieModel.NOMOVE_TOP * (1.0 - stretch), 0.0);
+        this.set(1, 1.0, 0.0, 0.0, stretch, 0.0, NOMOVE_TOP * (1.0 - stretch), 0.0);
         this.side(0, 0.0, leadX, leadY, drop);
         this.side(1, -1.0, partnerX, partnerY, drop);
     }
 
     private void side(int side, double restX, double dx, double dy, double drop) {
-        double pivotX = BntBogieModel.PIVOT_X;
-        double pivotY = BntBogieModel.PIVOT_Y;
-        double topX = BntBogieModel.TOP_X;
-        double topY = BntBogieModel.TOP_Y;
+        double pivotX = PIVOT_X;
+        double pivotY = PIVOT_Y;
+        double topX = TOP_X;
+        double topY = TOP_Y;
         double cogX = restX + dx;
         double cogY = dy - drop;
 
@@ -30,7 +37,7 @@ final class BntBogiePose {
 
         double rest = Math.hypot(topX - restX, topY);
         double now = Math.hypot(topX - cogX, topY - cogY);
-        double reach = Math.max(1.0, (now - BntBogieModel.SHAFT_GAP) / (rest - BntBogieModel.SHAFT_GAP));
+        double reach = Math.max(1.0, (now - SHAFT_GAP) / (rest - SHAFT_GAP));
         this.along(6 + side, restX, 0.0, topX, topY, cogX, cogY, topX, topY, reach * rest / now);
     }
 

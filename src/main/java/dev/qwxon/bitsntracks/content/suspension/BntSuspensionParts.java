@@ -5,8 +5,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
@@ -18,8 +16,9 @@ public final class BntSuspensionParts {
     public static final int ARM = 0;
     public static final int BOGIE = 1;
     public static final int WIDE_BOGIE = 2;
-    private static final float[][] QUADS = {BntSuspensionPieceModel.ARM, BntBogieModel.QUADS, BntWideBogieModel.QUADS};
-    private static final int[][][] PART_QUADS = {split(QUADS[ARM]), split(QUADS[BOGIE]), split(QUADS[WIDE_BOGIE])};
+    private static final float ARM_LENGTH = 0.70711F;
+    private static final float SHAFT_START = 0.0F;
+    private static final float SHAFT_END = 0.6875F;
     private static final Vec3 UP = new Vec3(0.0, 1.0, 0.0);
     private static final Vec3 CENTRE = new Vec3(0.5, 0.5, 0.5);
 
@@ -28,15 +27,6 @@ public final class BntSuspensionParts {
     }
 
     private BntSuspensionParts() {
-    }
-
-    public static float[] quads(int model) {
-        return QUADS[model];
-    }
-
-    public static int[] quadsOf(int model, int part) {
-        int[][] parts = PART_QUADS[model];
-        return part < parts.length ? parts[part] : new int[0];
     }
 
     public static ResourceLocation texture(int model) {
@@ -81,9 +71,9 @@ public final class BntSuspensionParts {
         double armAcross = armward.dot(across);
         Vec3 normalward = across.scale(-side * armward.y).add(UP.scale(side * armAcross));
         Vec3 offAxis = pivot.subtract(cog.add(armward.scale(length)));
-        double stretch = length - BntSuspensionPieceModel.ARM_LENGTH;
-        double span = BntSuspensionPieceModel.SHAFT_END - BntSuspensionPieceModel.SHAFT_START;
-        double start = BntSuspensionPieceModel.SHAFT_START;
+        double stretch = length - ARM_LENGTH;
+        double span = SHAFT_END - SHAFT_START;
+        double start = SHAFT_START;
         double grow = (span + stretch) / span;
 
         sink.part(ARM, 0, armward, normalward, depth, cog, armward, normalward);
@@ -119,8 +109,9 @@ public final class BntSuspensionParts {
         Vec3 depth = BntSuspension.along(BntSuspension.axis(be.getBlockState())).scale(wide ? facing : -facing);
         Vec3 origin = CENTRE.add(shift);
         int model = wide ? WIDE_BOGIE : BOGIE;
-        for (int part = 0; part < PART_QUADS[model].length; part++) {
-            if (PART_QUADS[model][part].length == 0) {
+        BntSuspensionMeshes.Mesh mesh = BntSuspensionMeshes.mesh(model);
+        for (int part = 0; part < BntSuspensionMeshes.parts(model); part++) {
+            if (mesh.part(part).length == 0) {
                 continue;
             }
             int at = part * 6;
@@ -145,9 +136,10 @@ public final class BntSuspensionParts {
             ResourceLocation texture = texture(model);
             VertexConsumer consumer = buffer.getBuffer(ghost ? RenderType.entityTranslucent(texture) : RenderType.entityCutout(texture));
             boolean reverse = normalX.dot(normalY.cross(z)) < 0.0;
-            float[] quads = QUADS[model];
+            BntSuspensionMeshes.Mesh mesh = BntSuspensionMeshes.mesh(model);
+            float[] quads = mesh.quads();
             Vec3[] corners = new Vec3[4];
-            for (int quad : PART_QUADS[model][part]) {
+            for (int quad : mesh.part(part)) {
                 for (int k = 0; k < 4; k++) {
                     int at = quad + k * 5;
                     corners[k] = origin.add(x.scale(quads[at])).add(y.scale(quads[at + 1])).add(z.scale(quads[at + 2]));
@@ -165,24 +157,5 @@ public final class BntSuspensionParts {
                 }
             }
         };
-    }
-
-    private static int[][] split(float[] quads) {
-        int parts = 0;
-        for (int quad = 0; quad < quads.length; quad += 24) {
-            parts = Math.max(parts, (int)quads[quad + 23] + 1);
-        }
-        List<List<Integer>> byPart = new ArrayList<>();
-        for (int part = 0; part < parts; part++) {
-            byPart.add(new ArrayList<>());
-        }
-        for (int quad = 0; quad < quads.length; quad += 24) {
-            byPart.get((int)quads[quad + 23]).add(quad);
-        }
-        int[][] split = new int[parts][];
-        for (int part = 0; part < parts; part++) {
-            split[part] = byPart.get(part).stream().mapToInt(Integer::intValue).toArray();
-        }
-        return split;
     }
 }

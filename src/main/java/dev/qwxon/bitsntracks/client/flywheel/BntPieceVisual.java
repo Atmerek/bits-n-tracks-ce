@@ -11,6 +11,8 @@ import dev.engine_room.flywheel.lib.material.CutoutShaders;
 import dev.engine_room.flywheel.lib.material.SimpleMaterial;
 import dev.engine_room.flywheel.lib.model.QuadMesh;
 import dev.engine_room.flywheel.lib.model.SingleMeshModel;
+import dev.engine_room.flywheel.lib.util.RendererReloadCache;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspensionMeshes;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionParts;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +26,7 @@ import org.joml.Vector4fc;
 
 final class BntPieceVisual implements BntSuspensionParts.Sink {
     private static final Vector4fc BOUNDS = new Vector4f(0.0F, 0.5F, 0.0F, 2.0F);
-    private static final Map<PartKey, Model> MODELS = new ConcurrentHashMap<>();
+    private static final RendererReloadCache<PartKey, Model> MODELS = new RendererReloadCache<>(BntPieceVisual::build);
     private static final Map<ResourceLocation, Material> MATERIALS = new ConcurrentHashMap<>();
 
     private final VisualizationContext context;
@@ -78,7 +80,7 @@ final class BntPieceVisual implements BntSuspensionParts.Sink {
     @Override
     public void part(int model, int part, Vec3 x, Vec3 y, Vec3 z, Vec3 origin, Vec3 normalX, Vec3 normalY) {
         boolean mirrored = x.dot(y.cross(z)) < 0.0;
-        Model mesh = MODELS.computeIfAbsent(new PartKey(model, part, mirrored), BntPieceVisual::build);
+        Model mesh = MODELS.get(new PartKey(model, part, mirrored));
         TransformedInstance instance = pools
             .computeIfAbsent(mesh, key -> new BntInstancePool<>(() -> context.instancerProvider().instancer(InstanceTypes.TRANSFORMED, key)))
             .next();
@@ -100,7 +102,8 @@ final class BntPieceVisual implements BntSuspensionParts.Sink {
             .mipmap(false)
             .ambientOcclusion(false)
             .build());
-        return new SingleMeshModel(new PartMesh(BntSuspensionParts.quads(key.model()), BntSuspensionParts.quadsOf(key.model(), key.part()), key.mirrored()), material);
+        BntSuspensionMeshes.Mesh mesh = BntSuspensionMeshes.mesh(key.model());
+        return new SingleMeshModel(new PartMesh(mesh.quads(), mesh.part(key.part()), key.mirrored()), material);
     }
 
     private record PartKey(int model, int part, boolean mirrored) {
