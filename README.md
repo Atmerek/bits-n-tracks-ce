@@ -28,6 +28,7 @@ This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/m
 * **Taut track routing**: the track wraps around its cogwheels the way a real track sits on its road wheels. A cogwheel inside the loop that the track cannot reach is enclosed by it, and turns freely until the track touches it.
 * **Steerable routing**: bring the far run of track around any cogwheel, which then turns the other way, like a belt crossed over a pulley.
 * **A track that meets the ground**: the run between cogwheels drapes over terrain, grips and drives along its length, and carries the vehicle over obstacles. Its tension can be set per track.
+* **Grip that follows the ground**: a track grips by the weight resting on it, and less on dirt, sand, snow and mud than on stone. The Tank Tread bites into soft ground, and a belt wrapped in chains holds on ice, snow and mud.
 * **Suspension**: Suspension Pieces mount swinging arms, bogies and wide bogies on physics cogwheels, and the Suspension Tool tunes each one.
 * **Configurable** physics, track and rendering settings.
 

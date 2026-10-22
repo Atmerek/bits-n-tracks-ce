@@ -1,5 +1,6 @@
 package dev.qwxon.bitsntracks.content;
 
+import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.simibubi.create.content.kinetics.simpleRelays.SimpleKineticBlockEntity;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
@@ -28,6 +29,8 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -47,6 +50,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     private float beltTension = BntBeltTension.DEFAULT;
     private int beltLinks = BntBeltLinks.UNSET;
     private double beltFit;
+    private int wrapChains;
     private long drawnDropTick = Long.MIN_VALUE;
     private double drawnDrop;
     private double lastDrawnDrop;
@@ -156,6 +160,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         this.beltTension = tag.contains("BntBeltTension") ? BntBeltTension.clamp(tag.getFloat("BntBeltTension")) : BntBeltTension.DEFAULT;
         this.beltLinks = tag.getInt("BntBeltLinks");
         this.beltFit = tag.getDouble("BntBeltFit");
+        this.wrapChains = Math.max(0, tag.getInt("BntWrapChains"));
         this.bnt$setSuspension(tag.getInt("BntSuspensionSide"), tag.getInt("BntSuspensionFacing"));
         boolean current = tag.contains("BntTuningLevels");
         CompoundTag levels = tag.getCompound(current ? "BntTuningLevels" : "BntTuning");
@@ -194,6 +199,9 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         tag.putFloat("BntBeltTension", this.beltTension);
         tag.putInt("BntBeltLinks", this.beltLinks);
         tag.putDouble("BntBeltFit", this.beltFit);
+        if (this.wrapChains > 0) {
+            tag.putInt("BntWrapChains", this.wrapChains);
+        }
         if (this.suspensionSide != 0) {
             tag.putInt("BntSuspensionSide", this.suspensionSide);
             tag.putInt("BntSuspensionFacing", this.suspensionFacing);
@@ -212,6 +220,9 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public ItemRequirement getRequiredItems(BlockState state) {
         ItemRequirement requirement = super.getRequiredItems(state);
+        if (this.wrapChains > 0 && this.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof CogwheelChainBehaviour chain && chain.isController()) {
+            requirement = requirement.union(new ItemRequirement(ItemUseType.CONSUME, new ItemStack(Items.CHAIN, this.wrapChains)));
+        }
         return BntFlangedCogwheelBlock.physics(state) && this.suspensionSide != 0 && !BntSuspension.heldByWidePartner(this)
             ? requirement.union(new ItemRequirement(ItemUseType.CONSUME, BitsNTracksItems.SUSPENSION_PIECE.get()))
             : requirement;
@@ -442,6 +453,16 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public void bnt$setBeltLinks(int links) {
         this.beltLinks = Math.max(BntBeltLinks.UNSET, links);
+    }
+
+    @Override
+    public int bnt$getWrapChains() {
+        return this.wrapChains;
+    }
+
+    @Override
+    public void bnt$setWrapChains(int chains) {
+        this.wrapChains = Math.max(0, chains);
     }
 
     @Override

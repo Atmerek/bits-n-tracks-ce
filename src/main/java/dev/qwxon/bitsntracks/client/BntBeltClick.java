@@ -4,9 +4,13 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.ChainCoordinateSpace;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.CogwheelChainInteractionHandler;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
+import dev.qwxon.bitsntracks.interaction.BntChainWrapPayload;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -15,6 +19,8 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.Nullable;
 
 @OnlyIn(Dist.CLIENT)
 public final class BntBeltClick {
@@ -24,17 +30,38 @@ public final class BntBeltClick {
     }
 
     public static boolean wouldRetension() {
+        return aimedTrack() != null;
+    }
+
+    @Nullable
+    public static BlockPos aimedTrack() {
         Minecraft minecraft = Minecraft.getInstance();
         Level level = minecraft.level;
         if (level == null) {
-            return false;
+            return null;
         }
 
         BlockPos controllerPos = CogwheelChainInteractionHandler.getSelectedController();
         Vec3 baked = CogwheelChainInteractionHandler.getSelectedBakedPosition();
         return controllerPos != null && baked != null
             && BntCogwheels.isOwnChain(level, controllerPos)
-            && !onAimedCogwheel(level, controllerPos, baked, minecraft.hitResult);
+            && !onAimedCogwheel(level, controllerPos, baked, minecraft.hitResult)
+            ? controllerPos
+            : null;
+    }
+
+    public static boolean wrap() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null || !player.getMainHandItem().is(Items.CHAIN)) {
+            return false;
+        }
+        BlockPos controllerPos = aimedTrack();
+        if (controllerPos == null) {
+            return false;
+        }
+        PacketDistributor.sendToServer(new BntChainWrapPayload(controllerPos));
+        player.swing(InteractionHand.MAIN_HAND);
+        return true;
     }
 
     private static boolean onAimedCogwheel(Level level, BlockPos controllerPos, Vec3 baked, HitResult hitResult) {

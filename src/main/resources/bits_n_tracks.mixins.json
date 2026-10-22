@@ -28,6 +28,7 @@
         "SubLevelEntityCollisionMixin",
         "BntEntityCollideMixin",
         "RapierPhysicsPipelineMixin",
+        "WrenchCogwheelChainPacketMixin",
         "accessor.RotationPropagatorAccessor"
     ],
     "client": [

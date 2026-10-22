@@ -86,6 +86,10 @@ public interface KineticBlockEntityPhysicsAccess {
 
     void bnt$setBeltLinks(int links);
 
+    int bnt$getWrapChains();
+
+    void bnt$setWrapChains(int chains);
+
     long bnt$getDrawnDropTick();
 
     void bnt$advanceDrawnDrop(long gameTime, double sample, double rate);

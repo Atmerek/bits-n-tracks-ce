@@ -12,6 +12,8 @@ import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainWrap;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -105,7 +107,8 @@ public class BntCogwheelInteraction {
 
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.SUCCESS);
-        if (!level.isClientSide) {
+        BlockPos controllerPos = BntChains.controllerPos(chain);
+        if (!level.isClientSide && (controllerPos == null || !BntChainWrap.strip(level, controllerPos, player))) {
             chain.destroyChain(!player.isCreative(), true);
         }
     }

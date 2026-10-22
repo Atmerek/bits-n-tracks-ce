@@ -81,10 +81,29 @@ public final class BntTankTread {
     private static final double[][] WIDE_LINKS = {{8, 12}, {2, 6}, {-11, -8}, {-6, -2}};
     private static final Part[][] PARTS = new Part[BntCogwheelWidth.PAIR + 1][];
 
+    private static final double CHAIN_SEAT = 2.2;
+    private static final double CHAIN_LINK = 2.0;
+    private static final double CHAIN_SHEET = 0.1;
+    private static final Part[][] CHAIN_PARTS = new Part[BntCogwheelWidth.PAIR + 1][];
+
     static {
         for (int quarters = 1; quarters <= BntCogwheelWidth.PAIR; quarters++) {
             PARTS[quarters] = parts(quarters);
+            CHAIN_PARTS[quarters] = chainParts(quarters);
         }
+    }
+
+    private static Part[] chainParts(int quarters) {
+        double half = BntCogwheelWidth.trackPixels(quarters) / 2.0 + 0.5;
+        double across = 2.0 * half;
+        double[] none = {0, 0, 0, 0, 0};
+        double[][] flat = {{0, 0, 6, across, 90}, {0, 0, 6, across, 90}, none, none, none, none};
+        double[][] upright = {none, none, {6, 0, 12, across, 90}, {6, 0, 12, across, 90}, none, none};
+        double middle = CHAIN_LINK / 2.0;
+        return new Part[]{
+            Part.of(-half, CHAIN_SEAT, 0, half, CHAIN_SEAT + CHAIN_SHEET, CHAIN_LINK, flat, false),
+            Part.of(-half, CHAIN_SEAT, middle - CHAIN_SHEET / 2.0, half, CHAIN_SEAT + CHAIN_LINK, middle + CHAIN_SHEET / 2.0, upright, false)
+        };
     }
 
     private BntTankTread() {
@@ -143,8 +162,21 @@ public final class BntTankTread {
         Target target, List<Vec3> source, List<Vec3> destination, double start, double span, int quarters,
         boolean frameTopOutward
     ) {
-        Part[] parts = PARTS[Mth.clamp(quarters, 1, BntCogwheelWidth.PAIR)];
-        if (source.size() != 4 || destination.size() != 4 || span <= MIN_SPAN) {
+        emit(target, source, destination, start, span, PARTS[Mth.clamp(quarters, 1, BntCogwheelWidth.PAIR)], CELL, frameTopOutward);
+    }
+
+    public static void emitChains(
+        Target target, List<Vec3> source, List<Vec3> destination, double start, double span, double cell, int quarters,
+        boolean frameTopOutward
+    ) {
+        emit(target, source, destination, start, span, CHAIN_PARTS[Mth.clamp(quarters, 1, BntCogwheelWidth.PAIR)], cell, frameTopOutward);
+    }
+
+    private static void emit(
+        Target target, List<Vec3> source, List<Vec3> destination, double start, double span, Part[] parts, double cell,
+        boolean frameTopOutward
+    ) {
+        if (source.size() != 4 || destination.size() != 4 || span <= MIN_SPAN || cell <= MIN_SPAN) {
             return;
         }
 
@@ -153,11 +185,11 @@ public final class BntTankTread {
         Segment segment = new Segment(target, source, destination, frameTopOutward ? 1.0 : -1.0, rate / span);
         double from = rate < 0.0 ? start - ahead : start;
         double to = rate > 0.0 ? start + span + ahead : start + span;
-        long first = (long)Math.floor(from / CELL) - 1L;
-        long last = (long)Math.ceil(to / CELL) + 1L;
+        long first = (long)Math.floor(from / cell) - 1L;
+        long last = (long)Math.ceil(to / cell) + 1L;
 
         for (long plate = first; plate <= last; plate++) {
-            double base = plate * CELL;
+            double base = plate * cell;
             for (Part part : parts) {
                 if (!part.link() || target.links()) {
                     place(segment, start, span, from, to, base + part.at(), part);

@@ -9,9 +9,11 @@ import dev.qwxon.bitsntracks.content.BntVisualized;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainWrap;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -48,6 +50,14 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         if (BntCogwheels.isSuppressingChainDestroy()) {
             ci.cancel();
         }
+    }
+
+    @Inject(
+        method = {"destroyChain"},
+        at = {@At("HEAD")}
+    )
+    private void bnt$dropWrapChains(boolean drop, boolean effects, CallbackInfoReturnable<ItemStack> cir) {
+        BntChainWrap.destroyed((CogwheelChainBehaviour)(Object)this);
     }
 
     @Inject(

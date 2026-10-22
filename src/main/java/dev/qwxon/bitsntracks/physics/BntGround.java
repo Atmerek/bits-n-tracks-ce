@@ -21,6 +21,9 @@ public final class BntGround {
     private static final double BELT_SOFT = 0.85;
     private static final double TREAD_HARD = 0.9;
     private static final double TREAD_SOFT = 1.15;
+    private static final double CHAINED_HARD = 0.95;
+    private static final double CHAINED_SOFT = 1.0;
+    private static final double CHAINED_FLOOR = 0.4;
     private static final double SINK = 1.0 / 16.0;
     private static final double MIN_SPREAD = 0.75;
     private static final double MAX_SPREAD = 1.3;
@@ -62,7 +65,10 @@ public final class BntGround {
             : 1.0;
     }
 
-    public static double grip(Surface surface, @Nullable CogwheelChainType type) {
+    public static double grip(Surface surface, @Nullable CogwheelChainType type, boolean chained) {
+        if (chained) {
+            return Math.max(surface.grip(), CHAINED_FLOOR) * (surface.soft() ? CHAINED_SOFT : CHAINED_HARD);
+        }
         boolean tread = type == BntCogwheelChainTypes.TANK_TREAD_CHAIN.get();
         return surface.grip() * (surface.soft() ? (tread ? TREAD_SOFT : BELT_SOFT) : (tread ? TREAD_HARD : BELT_HARD));
     }

@@ -32,6 +32,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainMotion;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainTextures;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainWrap;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTankTread;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackSink;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
@@ -83,6 +84,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             be.getBehaviour(CogwheelChainBehaviour.TYPE) instanceof TrackModelBehaviourAccess access && access.bnt$isTrackModel());
         TrackModelRenderContext.setRenderingCustomChain(BntCogwheels.isOwnCogwheel(be.getBlockState()));
         TrackModelRenderContext.setChainQuarters(BntCogwheelWidth.chainQuarters(be));
+        TrackModelRenderContext.setWrapped(BntChainWrap.wrapped(be));
         BntClientCompat.beginChainLight(be);
         BntTreadView.begin(ms.last().pose(), be.getLevel());
 
@@ -92,6 +94,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             TrackModelRenderContext.setRenderingTrack(false);
             TrackModelRenderContext.setRenderingCustomChain(false);
             TrackModelRenderContext.setChainQuarters(BntCogwheelWidth.SINGLE);
+            TrackModelRenderContext.setWrapped(false);
             BntBeltLinks.clearLoop();
             BntClientCompat.endChainLight();
             BntTreadView.end();
@@ -257,6 +260,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             scaledDestinationPoints = bnt$scaleChainWidth(destinationPoints, widthScale);
         }
         boolean bntBelt = chainRenderInfo == ChainRenderInfo.BELT && ownTexture;
+        boolean wrapped = bntBelt && TrackModelRenderContext.isWrapped();
 
         BntTrackSink sink = BntTrackSink.current();
         if (sink != null) {
@@ -271,6 +275,13 @@ public abstract class CogwheelChainBehaviourRendererMixin {
                     : new BntTrackSink.Generic(chainRenderInfo, flipInsideOutside);
                 float scrollV = (float)((invertScroll ? linkSquish : -linkSquish) * sink.scrollRate());
                 sink.span(shape, scaledSourcePoints, scaledDestinationPoints, minV, maxV, scrollV, lightAtSource, lightAtDest);
+                if (wrapped) {
+                    sink.at(BntChainTextures.WRAP_CHAIN, from);
+                    double cell = BntBeltLinks.repeatLength();
+                    double[] chains = BntBeltLinks.onLoop(to, offset, length, cell);
+                    BntTankTread.Target target = new BntTankTread.Target(null, null, null, lightAtSource, lightAtDest, relTo, null, true, sink);
+                    BntTankTread.emitChains(target, sourcePoints, destinationPoints, chains[0], chains[1], cell, quarters, flipInsideOutside);
+                }
             }
             ms.popPose();
             ci.cancel();
@@ -301,6 +312,15 @@ public abstract class CogwheelChainBehaviourRendererMixin {
             BntTankTread.emitSegment(target, sourcePoints, destinationPoints, tread[0], tread[1], quarters, flipInsideOutside);
         } else if (bntBelt) {
             BntBeltFaces.emit(emitter, scaledSourcePoints, scaledDestinationPoints, flipInsideOutside, quarters, minV, maxV);
+            if (wrapped) {
+                double cell = BntBeltLinks.repeatLength();
+                double[] chains = BntBeltLinks.onLoop(to, offset, length, cell);
+                BntTankTread.Target target = new BntTankTread.Target(
+                    buffer.getBuffer(RenderTypes.chain(BntChainTextures.WRAP_CHAIN)), poseMatrix, pose.normal(),
+                    lightAtSource, lightAtDest, relTo, BntTreadView.eyeFrom(from), true, null
+                );
+                BntTankTread.emitChains(target, sourcePoints, destinationPoints, chains[0], chains[1], cell, quarters, flipInsideOutside);
+            }
         } else {
             ChainQuadBuilder.buildSegmentFaces(scaledDestinationPoints, scaledSourcePoints, chainRenderInfo, minV, maxV, flipInsideOutside, emitter, true);
         }
