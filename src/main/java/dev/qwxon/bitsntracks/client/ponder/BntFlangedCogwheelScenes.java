@@ -28,7 +28,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -281,9 +280,9 @@ public final class BntFlangedCogwheelScenes {
         scene.markAsFinished();
     }
 
-    public static void chains(SceneBuilder builder, SceneBuildingUtil util) {
+    public static void grousers(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
-        scene.title("track_chains", "Wrapping Tracks in Chain");
+        scene.title("track_grousers", "Fitting Grousers to Tracks");
         scene.configureBasePlate(0, 0, 9);
 
         BlockPos left = util.grid().at(2, 2, 5);
@@ -302,27 +301,27 @@ public final class BntFlangedCogwheelScenes {
         caption(scene, "On snow, ice or mud, a belt slips easily");
         scene.addKeyframe();
 
-        scene.overlay().showControls(run, Pointing.DOWN, 30).rightClick().withItem(new ItemStack(Items.CHAIN));
+        scene.overlay().showControls(run, Pointing.DOWN, 30).rightClick().withItem(BitsNTracksItems.GROUSER.asStack());
         scene.idle(15);
-        setWrap(scene, List.of(left, right), 1);
+        setGrousers(scene, List.of(left, right), 1);
         scene.idle(20);
-        caption(scene, "Right-click it with chains to wrap it, using one chain for every two blocks of track", run);
-        caption(scene, "A wrapped belt grips much better on slippery and soft ground, and a little worse on hard ground");
+        caption(scene, "Right-click it with grousers to fit them, using one grouser for every block of track", run);
+        caption(scene, "Grousers dig into soft and slippery ground, and grip a little worse on hard ground");
         scene.addKeyframe();
 
         scene.overlay().showControls(run, Pointing.DOWN, 30).rightClick().withItem(AllItems.WRENCH.asStack());
         scene.idle(15);
-        setWrap(scene, List.of(left, right), 0);
+        setGrousers(scene, List.of(left, right), 0);
         scene.idle(20);
-        caption(scene, "A wrench takes the chains off again, and a second use removes the track", run);
+        caption(scene, "A wrench takes the grousers off again, and a second use removes the track", run);
         scene.markAsFinished();
     }
 
-    private static void setWrap(CreateSceneBuilder scene, List<BlockPos> wheels, int chains) {
+    private static void setGrousers(CreateSceneBuilder scene, List<BlockPos> wheels, int grousers) {
         for (BlockPos wheel : wheels) {
             scene.world().modifyBlockEntity(wheel, KineticBlockEntity.class, be -> {
                 if (be instanceof KineticBlockEntityPhysicsAccess access) {
-                    access.bnt$setWrapChains(chains);
+                    access.bnt$setGrousers(grousers);
                 }
             });
         }

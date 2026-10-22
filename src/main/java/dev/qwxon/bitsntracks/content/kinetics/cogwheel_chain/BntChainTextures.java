@@ -11,7 +11,7 @@ public final class BntChainTextures {
         BitsNTracks.asResource("textures/block/industrial_belt_wide.png");
     public static final ResourceLocation TANK_TREAD = BitsNTracks.asResource("textures/block/tank_tread.png");
     public static final ResourceLocation TANK_TREAD_WIDE = BitsNTracks.asResource("textures/block/tank_tread_wide.png");
-    public static final ResourceLocation WRAP_CHAIN = ResourceLocation.withDefaultNamespace("textures/block/chain.png");
+    public static final ResourceLocation GROUSER = BitsNTracks.asResource("textures/block/grouser.png");
 
     private BntChainTextures() {
     }

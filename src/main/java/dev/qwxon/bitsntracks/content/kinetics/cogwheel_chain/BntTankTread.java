@@ -6,6 +6,7 @@ import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
@@ -81,29 +82,66 @@ public final class BntTankTread {
     private static final double[][] WIDE_LINKS = {{8, 12}, {2, 6}, {-11, -8}, {-6, -2}};
     private static final Part[][] PARTS = new Part[BntCogwheelWidth.PAIR + 1][];
 
-    private static final double CHAIN_SEAT = 2.2;
-    private static final double CHAIN_LINK = 2.0;
-    private static final double CHAIN_SHEET = 0.1;
-    private static final Part[][] CHAIN_PARTS = new Part[BntCogwheelWidth.PAIR + 1][];
+    private static final double BELT_FACE = 2.0;
+    private static final double MODEL_CENTRE = 8.0;
+    private static final double LINK_PLATE = 1.5 / 16.0;
+    private static volatile Grousers grousers = new Grousers(null, new Part[BntCogwheelWidth.PAIR + 1][]);
 
     static {
         for (int quarters = 1; quarters <= BntCogwheelWidth.PAIR; quarters++) {
             PARTS[quarters] = parts(quarters);
-            CHAIN_PARTS[quarters] = chainParts(quarters);
         }
     }
 
-    private static Part[] chainParts(int quarters) {
-        double half = BntCogwheelWidth.trackPixels(quarters) / 2.0 + 0.5;
-        double across = 2.0 * half;
-        double[] none = {0, 0, 0, 0, 0};
-        double[][] flat = {{0, 0, 6, across, 90}, {0, 0, 6, across, 90}, none, none, none, none};
-        double[][] upright = {none, none, {6, 0, 12, across, 90}, {6, 0, 12, across, 90}, none, none};
-        double middle = CHAIN_LINK / 2.0;
-        return new Part[]{
-            Part.of(-half, CHAIN_SEAT, 0, half, CHAIN_SEAT + CHAIN_SHEET, CHAIN_LINK, flat, false),
-            Part.of(-half, CHAIN_SEAT, middle - CHAIN_SHEET / 2.0, half, CHAIN_SEAT + CHAIN_LINK, middle + CHAIN_SHEET / 2.0, upright, false)
-        };
+    private record Grousers(BntGrouserModel.Model model, Part[][] parts) {
+    }
+
+    public static ResourceLocation grouserTexture() {
+        return BntGrouserModel.model().texture();
+    }
+
+    private static Part[] grouserParts(int quarters) {
+        BntGrouserModel.Model model = BntGrouserModel.model();
+        Grousers built = grousers;
+        if (built.model() != model) {
+            Part[][] parts = new Part[BntCogwheelWidth.PAIR + 1][];
+            for (int q = 1; q <= BntCogwheelWidth.PAIR; q++) {
+                parts[q] = grouserParts(model, q);
+            }
+            built = new Grousers(model, parts);
+            grousers = built;
+        }
+        return built.parts()[Mth.clamp(quarters, 1, BntCogwheelWidth.PAIR)];
+    }
+
+    private static Part[] grouserParts(BntGrouserModel.Model model, int quarters) {
+        double scale = BntCogwheelWidth.trackPixels(quarters) / (double)BntCogwheelWidth.trackPixels(BntCogwheelWidth.SINGLE);
+        Part[] parts = new Part[model.elements().size()];
+        for (int i = 0; i < parts.length; i++) {
+            BntGrouserModel.Element element = model.elements().get(i);
+            float[] from = element.from();
+            float[] to = element.to();
+            boolean spans = from[0] < MODEL_CENTRE && to[0] > MODEL_CENTRE;
+            float[][] uv = new float[element.faces().length][];
+            for (int face = 0; face < uv.length; face++) {
+                uv[face] = spans && face < 4 ? stretch(element.faces()[face], scale) : element.faces()[face];
+            }
+            double shift = spans ? 0.0 : ((from[0] + to[0]) * 0.5 - MODEL_CENTRE) * (scale - 1.0);
+            double fromX = spans ? (from[0] - MODEL_CENTRE) * scale : from[0] - MODEL_CENTRE + shift;
+            double toX = spans ? (to[0] - MODEL_CENTRE) * scale : to[0] - MODEL_CENTRE + shift;
+            parts[i] = Part.of(
+                fromX, from[1] + BELT_FACE, from[2] - MODEL_CENTRE + CELL_START,
+                toX, to[1] + BELT_FACE, to[2] - MODEL_CENTRE + CELL_START,
+                uv);
+        }
+        return parts;
+    }
+
+    private static float[] stretch(float[] uv, double scale) {
+        float[] stretched = uv.clone();
+        int axis = ((int)uv[4] & 1) == 0 ? 0 : 1;
+        stretched[axis + 2] = (float)(uv[axis] + (uv[axis + 2] - uv[axis]) * scale);
+        return stretched;
     }
 
     private BntTankTread() {
@@ -162,19 +200,22 @@ public final class BntTankTread {
         Target target, List<Vec3> source, List<Vec3> destination, double start, double span, int quarters,
         boolean frameTopOutward
     ) {
-        emit(target, source, destination, start, span, PARTS[Mth.clamp(quarters, 1, BntCogwheelWidth.PAIR)], CELL, frameTopOutward);
+        emit(target, source, destination, start, span, PARTS[Mth.clamp(quarters, 1, BntCogwheelWidth.PAIR)], CELL, 1, 0.0, 0.0, false,
+            frameTopOutward);
     }
 
-    public static void emitChains(
-        Target target, List<Vec3> source, List<Vec3> destination, double start, double span, double cell, int quarters,
+    public static void emitGrousers(
+        Target target, List<Vec3> source, List<Vec3> destination, double start, double span, double repeat, int quarters,
         boolean frameTopOutward
     ) {
-        emit(target, source, destination, start, span, CHAIN_PARTS[Mth.clamp(quarters, 1, BntCogwheelWidth.PAIR)], cell, frameTopOutward);
+        int bars = Math.max(1, (int)Math.round(repeat / BntGrousers.spacing()));
+        emit(target, source, destination, start, span, grouserParts(quarters), repeat, bars, repeat / bars, -LINK_PLATE * repeat,
+            true, frameTopOutward);
     }
 
     private static void emit(
         Target target, List<Vec3> source, List<Vec3> destination, double start, double span, Part[] parts, double cell,
-        boolean frameTopOutward
+        int repeats, double spacing, double shift, boolean rigid, boolean frameTopOutward
     ) {
         if (source.size() != 4 || destination.size() != 4 || span <= MIN_SPAN || cell <= MIN_SPAN) {
             return;
@@ -189,13 +230,55 @@ public final class BntTankTread {
         long last = (long)Math.ceil(to / cell) + 1L;
 
         for (long plate = first; plate <= last; plate++) {
-            double base = plate * cell;
-            for (Part part : parts) {
-                if (!part.link() || target.links()) {
-                    place(segment, start, span, from, to, base + part.at(), part);
+            for (int repeat = 0; repeat < repeats; repeat++) {
+                double base = plate * cell + shift + repeat * spacing;
+                if (rigid) {
+                    placeRigid(segment, start, span, from, to, base, parts);
+                    continue;
+                }
+                for (Part part : parts) {
+                    if (!part.link() || target.links()) {
+                        place(segment, start, span, from, to, base + part.at(), part);
+                    }
                 }
             }
         }
+    }
+
+    private static void placeRigid(Segment segment, double offset, double length, double from, double to, double at, Part[] parts) {
+        if (at < from || at >= to) {
+            return;
+        }
+        double along = (offset + length - at) / length;
+        Vec3[] frame = frame(segment, along);
+        if (frame == null) {
+            return;
+        }
+        for (Part part : parts) {
+            Vec3 seat = frame[0].add(frame[3].scale(-part.at())).add(frame[1].scale(part.across())).add(frame[2].scale(part.up()));
+            box(segment, seat, frame[1].scale(part.halfWidth()), frame[2].scale(part.halfThick()),
+                frame[3].scale(part.halfLength()), part.uv(), along);
+        }
+    }
+
+    private static Vec3[] frame(Segment segment, double along) {
+        double inside = Mth.clamp(along, 0.0, 1.0);
+        Vec3 frame0 = segment.source.get(0).lerp(segment.destination.get(0), inside);
+        Vec3 frame1 = segment.source.get(1).lerp(segment.destination.get(1), inside);
+        Vec3 frame2 = segment.source.get(2).lerp(segment.destination.get(2), inside);
+        Vec3 across = unit(frame0.subtract(frame1)).scale(segment.facing);
+        Vec3 thick = unit(frame1.subtract(frame2)).scale(segment.facing);
+        if (across.lengthSqr() < 0.5 || thick.lengthSqr() < 0.5) {
+            return null;
+        }
+        Vec3 forward = segment.forward;
+        if (forward.lengthSqr() < 0.5) {
+            forward = unit(across.cross(thick));
+            if (forward.lengthSqr() < 0.5) {
+                return null;
+            }
+        }
+        return new Vec3[]{segment.origin.add(segment.run.scale(along)), across, thick, forward};
     }
 
     private static void place(Segment segment, double offset, double length, double from, double to, double at, Part part) {
@@ -204,29 +287,13 @@ public final class BntTankTread {
         }
 
         double along = (offset + length - at) / length;
-        double inside = Mth.clamp(along, 0.0, 1.0);
-        Vec3 frame0 = segment.source.get(0).lerp(segment.destination.get(0), inside);
-        Vec3 frame1 = segment.source.get(1).lerp(segment.destination.get(1), inside);
-        Vec3 frame2 = segment.source.get(2).lerp(segment.destination.get(2), inside);
-
-        Vec3 centre = segment.origin.add(segment.run.scale(along));
-        Vec3 across = unit(frame0.subtract(frame1)).scale(segment.facing);
-        Vec3 thick = unit(frame1.subtract(frame2)).scale(segment.facing);
-        if (across.lengthSqr() < 0.5 || thick.lengthSqr() < 0.5) {
+        Vec3[] frame = frame(segment, along);
+        if (frame == null) {
             return;
         }
-
-        Vec3 forward = segment.forward;
-        if (forward.lengthSqr() < 0.5) {
-            forward = unit(across.cross(thick));
-            if (forward.lengthSqr() < 0.5) {
-                return;
-            }
-        }
-
-        Vec3 seat = centre.add(across.scale(part.across())).add(thick.scale(part.up()));
-        box(segment, seat, across.scale(part.halfWidth()), thick.scale(part.halfThick()),
-            forward.scale(part.halfLength()), part.uv(), along);
+        Vec3 seat = frame[0].add(frame[1].scale(part.across())).add(frame[2].scale(part.up()));
+        box(segment, seat, frame[1].scale(part.halfWidth()), frame[2].scale(part.halfThick()),
+            frame[3].scale(part.halfLength()), part.uv(), along);
     }
 
     private static Vec3 sourceCentre(List<Vec3> points) {
@@ -475,5 +542,18 @@ public final class BntTankTread {
                 (toZ - fromZ) * 0.5 * PX,
                 sheet(uv),
                 link);
-        }    }
+        }
+
+        static Part of(double fromX, double fromY, double fromZ, double toX, double toY, double toZ, float[][] uv) {
+            return new Part(
+                (fromX + toX) * 0.5 * PX,
+                ((fromY + toY) * 0.5 - CENTRE_Y) * PX,
+                ((fromZ + toZ) * 0.5 - CELL_START) * PX,
+                (toX - fromX) * 0.5 * PX,
+                (toY - fromY) * 0.5 * PX,
+                (toZ - fromZ) * 0.5 * PX,
+                uv,
+                false);
+        }
+    }
 }

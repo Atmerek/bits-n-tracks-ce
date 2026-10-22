@@ -16,6 +16,7 @@ import dev.qwxon.bitsntracks.client.flywheel.BntFlywheel;
 import dev.qwxon.bitsntracks.client.ponder.BntPonderPlugin;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntGrouserModel;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionMeshes;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.createmod.ponder.foundation.PonderIndex;
@@ -40,7 +41,10 @@ public class BitsNTracksClient {
         modEventBus.addListener(BitsNTracksClient::onClientSetup);
         modEventBus.addListener(BitsNTracksClient::registerClientExtensions);
         modEventBus.addListener(BntToolHud::registerLayers);
-        modEventBus.addListener((RegisterClientReloadListenersEvent event) -> event.registerReloadListener(BntSuspensionMeshes.INSTANCE));
+        modEventBus.addListener((RegisterClientReloadListenersEvent event) -> {
+            event.registerReloadListener(BntSuspensionMeshes.INSTANCE);
+            event.registerReloadListener(BntGrouserModel.INSTANCE);
+        });
         NeoForge.EVENT_BUS.addListener(BntToolOutlines::onHighlight);
         NeoForge.EVENT_BUS.addListener(BntToolInput::onInteraction);
         NeoForge.EVENT_BUS.addListener(BntToolInput::onScroll);

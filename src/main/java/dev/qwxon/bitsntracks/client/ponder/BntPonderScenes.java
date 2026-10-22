@@ -30,7 +30,10 @@ public final class BntPonderScenes {
                 BitsNTracksItems.TANK_TREAD.getId(),
                 BitsNTracksItems.INDUSTRIAL_BELT.getId())
             .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::tracks)
-            .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::chains);
+            .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::grousers);
+
+        helper.forComponents(BitsNTracksItems.GROUSER.getId())
+            .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::grousers);
 
         helper.forComponents(BitsNTracksItems.COG_ALIGNMENT_LEVER.getId())
             .addStoryBoard("bob", BntBobScenes::collisions)

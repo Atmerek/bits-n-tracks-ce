@@ -86,9 +86,9 @@ public interface KineticBlockEntityPhysicsAccess {
 
     void bnt$setBeltLinks(int links);
 
-    int bnt$getWrapChains();
+    int bnt$getGrousers();
 
-    void bnt$setWrapChains(int chains);
+    void bnt$setGrousers(int grousers);
 
     long bnt$getDrawnDropTick();
 

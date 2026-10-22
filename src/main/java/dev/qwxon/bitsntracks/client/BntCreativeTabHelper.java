@@ -13,6 +13,7 @@ public final class BntCreativeTabHelper {
     private static final List<Supplier<? extends ItemLike>> ITEMS = List.of(
         BitsNTracksItems.INDUSTRIAL_BELT,
         BitsNTracksItems.TANK_TREAD,
+        BitsNTracksItems.GROUSER,
         BitsNTracksItems.COG_ALIGNMENT_LEVER,
         BitsNTracksItems.SUSPENSION_TOOL,
         BitsNTracksItems.SUSPENSION_PIECE,

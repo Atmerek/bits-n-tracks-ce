@@ -4,7 +4,7 @@ public final class TrackModelRenderContext {
     private static final ThreadLocal<Boolean> IS_RENDERING_TRACK = ThreadLocal.withInitial(() -> false);
     private static final ThreadLocal<Boolean> IS_RENDERING_CUSTOM_CHAIN = ThreadLocal.withInitial(() -> false);
     private static final ThreadLocal<Integer> CHAIN_QUARTERS = ThreadLocal.withInitial(() -> BntCogwheelWidth.SINGLE);
-    private static final ThreadLocal<Boolean> WRAPPED = ThreadLocal.withInitial(() -> false);
+    private static final ThreadLocal<Boolean> GROUSERS = ThreadLocal.withInitial(() -> false);
 
     private TrackModelRenderContext() {
     }
@@ -33,11 +33,11 @@ public final class TrackModelRenderContext {
         return CHAIN_QUARTERS.get();
     }
 
-    public static void setWrapped(boolean wrapped) {
-        WRAPPED.set(wrapped);
+    public static void setGrousers(boolean grousers) {
+        GROUSERS.set(grousers);
     }
 
-    public static boolean isWrapped() {
-        return WRAPPED.get();
+    public static boolean hasGrousers() {
+        return GROUSERS.get();
     }
 }

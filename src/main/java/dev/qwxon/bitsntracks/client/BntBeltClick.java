@@ -4,13 +4,13 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.ChainCoordinateSpace;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.shape.CogwheelChainInteractionHandler;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
-import dev.qwxon.bitsntracks.interaction.BntChainWrapPayload;
+import dev.qwxon.bitsntracks.index.BitsNTracksItems;
+import dev.qwxon.bitsntracks.interaction.BntGrouserPayload;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -50,16 +50,16 @@ public final class BntBeltClick {
             : null;
     }
 
-    public static boolean wrap() {
+    public static boolean fitGrousers() {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !player.getMainHandItem().is(Items.CHAIN)) {
+        if (player == null || !player.getMainHandItem().is(BitsNTracksItems.GROUSER.get())) {
             return false;
         }
         BlockPos controllerPos = aimedTrack();
         if (controllerPos == null) {
             return false;
         }
-        PacketDistributor.sendToServer(new BntChainWrapPayload(controllerPos));
+        PacketDistributor.sendToServer(new BntGrouserPayload(controllerPos));
         player.swing(InteractionHand.MAIN_HAND);
         return true;
     }

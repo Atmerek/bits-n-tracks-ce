@@ -4,7 +4,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public final class BntNetwork {
-    private static final String VERSION = "3";
+    private static final String VERSION = "4";
 
     private BntNetwork() {
     }
@@ -22,9 +22,9 @@ public final class BntNetwork {
             (payload, context) -> context.enqueueWork(() -> BntBeltTensionHandler.applyFromClient(context.player(), payload)));
 
         registrar.playToServer(
-            BntChainWrapPayload.TYPE,
-            BntChainWrapPayload.CODEC,
-            (payload, context) -> context.enqueueWork(() -> BntChainWrapHandler.applyFromClient(context.player(), payload)));
+            BntGrouserPayload.TYPE,
+            BntGrouserPayload.CODEC,
+            (payload, context) -> context.enqueueWork(() -> BntGrouserHandler.applyFromClient(context.player(), payload)));
 
         registrar.playToServer(
             BntTuningModePayload.TYPE,

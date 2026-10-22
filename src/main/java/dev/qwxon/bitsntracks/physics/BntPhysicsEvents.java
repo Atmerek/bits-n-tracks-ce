@@ -715,7 +715,7 @@ public final class BntPhysicsEvents {
         contact.isDriven = tread.driven();
         contact.surfaceSpeed = tread.surfaceSpeed();
         contact.brakeStrength = tread.brake();
-        contact.touchingFriction = BntGround.grip(contact.ground, tread.type(), tread.chained());
+        contact.touchingFriction = BntGround.grip(contact.ground, tread.type(), tread.grousers());
         contact.width = tread.width();
     }
 

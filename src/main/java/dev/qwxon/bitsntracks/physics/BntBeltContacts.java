@@ -15,9 +15,9 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltPath;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltSlack;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
-import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainWrap;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntGrousers;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
 import dev.ryanhcode.sable.api.physics.force.ForceTotal;
@@ -71,7 +71,7 @@ public final class BntBeltContacts {
     }
 
     public record BntTread(
-        boolean driven, double surfaceSpeed, double brake, @Nullable CogwheelChainType type, double width, boolean chained
+        boolean driven, double surfaceSpeed, double brake, @Nullable CogwheelChainType type, double width, boolean grousers
     ) {
     }
 
@@ -158,7 +158,7 @@ public final class BntBeltContacts {
             ? BntCogwheelWidth.chainQuarters(kinetic)
             : BntCogwheelWidth.SINGLE;
         return new BntTread(lowest < Double.MAX_VALUE, surfaceSpeed, brake, chain.getChainType(),
-            BntCogwheelWidth.trackPixels(quarters) / 16.0, BntChainWrap.accepts(chain) && BntChainWrap.wrapped(controller));
+            BntCogwheelWidth.trackPixels(quarters) / 16.0, BntGrousers.accepts(chain) && BntGrousers.fitted(controller));
     }
 
     private static void spans(

@@ -10,6 +10,7 @@ import net.minecraft.world.item.Item;
 public class BitsNTracksItems {
     public static final ItemEntry<Item> INDUSTRIAL_BELT = BitsNTracks.REGISTRATE.item("industrial_belt", Item::new).register();
     public static final ItemEntry<Item> TANK_TREAD = BitsNTracks.REGISTRATE.item("tank_tread", Item::new).register();
+    public static final ItemEntry<Item> GROUSER = BitsNTracks.REGISTRATE.item("grouser", Item::new).register();
     public static final ItemEntry<CogAlignmentLeverItem> COG_ALIGNMENT_LEVER = BitsNTracks.REGISTRATE
         .item("cog_alignment_lever", CogAlignmentLeverItem::new)
         .properties(properties -> properties.stacksTo(1))
