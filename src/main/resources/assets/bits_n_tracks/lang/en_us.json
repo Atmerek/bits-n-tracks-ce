@@ -298,6 +298,12 @@
     "bits_n_tracks.ponder.track_introduction.text_3": "Belts also come in different styles, with 3 variants...",
     "bits_n_tracks.ponder.track_introduction.text_4": "... and 2 sizes",
 
+    "bits_n_tracks.ponder.track_chains.header": "Wrapping Tracks in Chain",
+    "bits_n_tracks.ponder.track_chains.text_1": "On snow, ice or mud, a belt slips easily",
+    "bits_n_tracks.ponder.track_chains.text_2": "Right-click it with chains to wrap it, using one chain for every two blocks of track",
+    "bits_n_tracks.ponder.track_chains.text_3": "A wrapped belt grips much better on slippery and soft ground, and a little worse on hard ground",
+    "bits_n_tracks.ponder.track_chains.text_4": "A wrench takes the chains off again, and a second use removes the track",
+
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.header": "Using the C.A.L. to enable collisions",
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_1": "The Cog Alignment Lever is the main multitool for Bits 'n' Tracks. Hold Alt and scroll to switch between its modes.",
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_2": "Let's see it in action",

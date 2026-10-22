@@ -30,7 +30,7 @@ public final class BntPonderScenes {
                 BitsNTracksItems.TANK_TREAD.getId(),
                 BitsNTracksItems.INDUSTRIAL_BELT.getId())
             .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::tracks)
-            .addStoryBoard("bob", BntBobScenes::tension);
+            .addStoryBoard("track/introduction", BntFlangedCogwheelScenes::chains);
 
         helper.forComponents(BitsNTracksItems.COG_ALIGNMENT_LEVER.getId())
             .addStoryBoard("bob", BntBobScenes::collisions)

@@ -298,6 +298,12 @@
     "bits_n_tracks.ponder.track_introduction.text_3": "Gąsienice też występują w różnych stylach, w 3 wariantach...",
     "bits_n_tracks.ponder.track_introduction.text_4": "... i 2 rozmiarach",
 
+    "bits_n_tracks.ponder.track_chains.header": "Owijanie gąsienic łańcuchem",
+    "bits_n_tracks.ponder.track_chains.text_1": "Na śniegu, lodzie czy błocie pas łatwo się ślizga",
+    "bits_n_tracks.ponder.track_chains.text_2": "Kliknij go prawym przyciskiem z łańcuchami, aby go owinąć, zużywając jeden łańcuch na każde dwa bloki gąsienicy",
+    "bits_n_tracks.ponder.track_chains.text_3": "Owinięty pas trzyma się znacznie lepiej śliskiego i miękkiego podłoża, a nieco gorzej twardego",
+    "bits_n_tracks.ponder.track_chains.text_4": "Klucz zdejmuje łańcuchy z powrotem, a drugie użycie zdejmuje gąsienicę",
+
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.header": "Włączanie kolizji Dźwignią wyrównywania",
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_1": "Dźwignia wyrównywania kół zębatych to główne wielofunkcyjne narzędzie Bits 'n' Tracks. Przytrzymaj Alt i przewiń, aby przełączać jej tryby.",
     "bits_n_tracks.ponder.cog_alignment_lever_collisions.text_2": "Zobaczmy ją w akcji",

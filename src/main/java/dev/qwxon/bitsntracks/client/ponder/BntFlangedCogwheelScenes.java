@@ -5,6 +5,7 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
+import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntWideSide;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
@@ -27,6 +28,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -279,6 +281,53 @@ public final class BntFlangedCogwheelScenes {
         scene.markAsFinished();
     }
 
+    public static void chains(SceneBuilder builder, SceneBuildingUtil util) {
+        CreateSceneBuilder scene = new CreateSceneBuilder(builder);
+        scene.title("track_chains", "Wrapping Tracks in Chain");
+        scene.configureBasePlate(0, 0, 9);
+
+        BlockPos left = util.grid().at(2, 2, 5);
+        BlockPos right = util.grid().at(6, 2, 5);
+        Selection controller = util.select().position(left);
+        Selection wheels = util.select().position(left).add(util.select().position(right));
+        Vec3 run = util.vector().of(4.5, 3.6, 5.5);
+
+        setChainType(scene, controller, BitsNTracksItems.INDUSTRIAL_BELT.asStack(), BntCogwheelChainTypes.INDUSTRIAL_BELT_CHAIN.getId());
+        scene.showBasePlate();
+        scene.idle(10);
+        scene.world().showSection(util.select().fromTo(1, 1, 6, 7, 2, 6), Direction.DOWN);
+        scene.idle(5);
+        scene.world().showSection(wheels, Direction.DOWN);
+        scene.idle(20);
+        caption(scene, "On snow, ice or mud, a belt slips easily");
+        scene.addKeyframe();
+
+        scene.overlay().showControls(run, Pointing.DOWN, 30).rightClick().withItem(new ItemStack(Items.CHAIN));
+        scene.idle(15);
+        setWrap(scene, List.of(left, right), 1);
+        scene.idle(20);
+        caption(scene, "Right-click it with chains to wrap it, using one chain for every two blocks of track", run);
+        caption(scene, "A wrapped belt grips much better on slippery and soft ground, and a little worse on hard ground");
+        scene.addKeyframe();
+
+        scene.overlay().showControls(run, Pointing.DOWN, 30).rightClick().withItem(AllItems.WRENCH.asStack());
+        scene.idle(15);
+        setWrap(scene, List.of(left, right), 0);
+        scene.idle(20);
+        caption(scene, "A wrench takes the chains off again, and a second use removes the track", run);
+        scene.markAsFinished();
+    }
+
+    private static void setWrap(CreateSceneBuilder scene, List<BlockPos> wheels, int chains) {
+        for (BlockPos wheel : wheels) {
+            scene.world().modifyBlockEntity(wheel, KineticBlockEntity.class, be -> {
+                if (be instanceof KineticBlockEntityPhysicsAccess access) {
+                    access.bnt$setWrapChains(chains);
+                }
+            });
+        }
+    }
+
     private static void caption(CreateSceneBuilder scene, String text) {
         scene.overlay().showText(70).text(text);
         scene.idle(80);
@@ -350,6 +399,10 @@ public final class BntFlangedCogwheelScenes {
         scene.idle(15);
         placeBelt(scene, clicks, belt);
         scene.world().restoreBlocks(controller);
+        setChainType(scene, controller, belt, type);
+    }
+
+    private static void setChainType(CreateSceneBuilder scene, Selection controller, ItemStack belt, ResourceLocation type) {
         scene.world().modifyBlockEntityNBT(controller, KineticBlockEntity.class, tag -> {
             CompoundTag chain = tag.getCompound("Chain");
             chain.putString("chain_type", type.toString());
