@@ -1,14 +1,14 @@
 package dev.qwxon.bitsntracks.physics;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
-import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
-import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
@@ -19,7 +19,6 @@ import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension;
-import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
 import dev.ryanhcode.sable.platform.SableEventPlatform;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
@@ -29,6 +28,7 @@ import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +81,10 @@ public final class BntPhysicsEvents {
     private static final double ARM_SPRING_RATE = 0.15;
     private static final double SHARE_MEMORY = 3.0;
     private static final double WAKE_SHARE = 0.05;
-    private static final double GRIP_LOAD = 0.5;
+    private static final double GRIP_MEMORY = 0.1;
+    private static final double SLIP_GRIP = 0.25;
+    private static final double SLIP_SLIDE = 1.0;
+    private static final long TREAD_SWEEP = 200L;
     private static final double CLIMB_CREEP = 0.25;
     private static final Map<ServerSubLevel, Long> REPORTED = new WeakHashMap<>();
     private static final Map<ServerSubLevel, double[]> SHARES = new WeakHashMap<>();
@@ -89,6 +92,7 @@ public final class BntPhysicsEvents {
     private static final Map<KineticBlockEntity, double[]> HELD = new WeakHashMap<>();
     private static final Map<KineticBlockEntity, double[]> CLIMB = new WeakHashMap<>();
     private static final Map<ServerLevel, long[]> STEPS = new WeakHashMap<>();
+    private static final Map<Level, Map<BlockPos, double[]>> TREAD_LOADS = new WeakHashMap<>();
     private static final long PARKED_REFRESH = 20L;
     private static final double PARKED_DRIFT = 1.0E-4;
     private static final double PARKED_TURN = 1.0E-5;
@@ -103,6 +107,10 @@ public final class BntPhysicsEvents {
     public static void onPhysicsTick(SubLevelPhysicsSystem physicsSystem, double timeStep) {
         ServerLevel level = physicsSystem.getLevel();
         long step = ++STEPS.computeIfAbsent(level, ignored -> new long[1])[0];
+        Map<BlockPos, double[]> treadLoads = TREAD_LOADS.get(level);
+        if (step % TREAD_SWEEP == 0L && treadLoads != null) {
+            treadLoads.values().removeIf(last -> (long)last[0] < step - 1L);
+        }
         Map<ServerSubLevel, List<KineticBlockEntity>> wheelsByBody = new Reference2ObjectOpenHashMap<>();
 
         Iterator<KineticBlockEntity> iterator = BntPhysicsRegistry.getEnabled(level).iterator();
@@ -176,6 +184,9 @@ public final class BntPhysicsEvents {
                 for (BntBeltContacts.BntBeltContact beltContact : belt.contacts()) {
                     bodyContacts.add(fromBelt(beltContact, carrier));
                 }
+                for (BntPhysicsEvents.WheelContact contact : bodyContacts) {
+                    joinTread(contact, belt.treads());
+                }
 
                 if (massData != null && subLevel != frame) {
                     for (BntPhysicsEvents.WheelContact contact : bodyContacts) {
@@ -195,7 +206,7 @@ public final class BntPhysicsEvents {
                         physicsSystem.getPipeline().wakeUp(subLevel);
                     }
                 }
-                solveTraction(level, massData, contacts, share, timeStep);
+                solveTraction(level, massData, contacts, timeStep, step);
                 for (BntPhysicsEvents.WheelContact contact : contacts) {
                     applyContactForces(contact);
                 }
@@ -384,8 +395,7 @@ public final class BntPhysicsEvents {
         double rolling = localVelocity.dot(groundNormalD);
         double target = rolling;
         if (inTrack && track.getSpeed() != 0.0F) {
-            double brake = level.getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
-            target = surfaceSpeed(CogwheelSizeHelper.getChainRadius(block), track.getSpeed()) * (1.0 - brake);
+            target = surfaceSpeed(CogwheelSizeHelper.getChainRadius(block), track.getSpeed()) * (1.0 - treadBrake(level, track));
         }
 
         Vec3i sideVec = Direction.get(AxisDirection.POSITIVE, axis).getNormal();
@@ -400,6 +410,29 @@ public final class BntPhysicsEvents {
             target,
             velocity.y
         );
+    }
+
+    private static double treadBrake(Level level, KineticBlockEntity track) {
+        BlockPos controllerPos = BntChains.controllerPos(track);
+        if (controllerPos == null) {
+            return level.getSignal(track.getBlockPos().above(), Direction.DOWN) / 15.0;
+        }
+        int signal = 0;
+        for (PathedCogwheelNode node : BntChains.beltOrder(level, controllerPos)) {
+            BlockPos nodePos = controllerPos.offset(node.localPos());
+            signal = Math.max(signal, brakeSignal(level, nodePos));
+            BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, nodePos);
+            if (partnerPos != null) {
+                signal = Math.max(signal, brakeSignal(level, partnerPos));
+            }
+        }
+        return signal / 15.0;
+    }
+
+    private static int brakeSignal(Level level, BlockPos pos) {
+        return level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled()
+            ? level.getSignal(pos.above(), Direction.DOWN)
+            : 0;
     }
 
     public static double getHeldRenderExtension(KineticBlockEntity kbe, float partialTick) {
@@ -528,10 +561,9 @@ public final class BntPhysicsEvents {
             mixin.bnt$setMaxAirExtension(0.0);
         }
 
-        double touchingFriction = 1.0;
-        if (reach.cast().minInteractingBlock != null) {
-            touchingFriction = fudgeFriction(PhysicsBlockPropertyHelper.getFriction(kbe.getLevel().getBlockState(reach.cast().minInteractingBlock)));
-        }
+        BntGround.Surface ground = reach.cast().minInteractingBlock == null
+            ? BntGround.UNKNOWN
+            : BntGround.of(kbe.getLevel().getBlockState(reach.cast().minInteractingBlock));
         mixin.bnt$setExtension(-settled);
 
         Vec3i hitNormal = reach.cast().normal.getNormal();
@@ -551,13 +583,11 @@ public final class BntPhysicsEvents {
         contact.normalD = groundAxis(normalD, groundUp);
         contact.sideD = groundAxis(sideD, groundUp);
         contact.localVelocity = localVelocity;
-        contact.surfaceSpeed = surfaceSpeed(CogwheelSizeHelper.getChainRadius(block), track.getSpeed());
-        contact.touchingFriction = touchingFriction;
+        contact.ground = ground;
+        contact.patch = BntGround.patch(radius) * (BntCogwheelPairing.isWide(state) ? 0.5 : 1.0);
         contact.normalMass = 1.0 / inverseNormalMass;
-        contact.hasTraction = axis != Axis.Y;
-        contact.isDriven = isConnected && BntChainEngagement.isEngaged(behaviour);
-        contact.isTrackModel = isConnected || block instanceof BntFlangedCogwheelBlock;
-        contact.brakeStrength = kbe.getLevel().getSignal(kbe.getBlockPos().above(), Direction.DOWN) / 15.0;
+        contact.tread = isConnected && BntChainEngagement.isEngaged(behaviour) ? BntChains.controllerPos(track) : null;
+        contact.hasTraction = axis != Axis.Y && contact.tread != null;
         contact.loaded = true;
         contact.verticalSpeed = verticalSpeed;
         contact.pos = kbe.getBlockPos();
@@ -668,14 +698,36 @@ public final class BntPhysicsEvents {
         contact.penetration = belt.penetration;
         contact.support = belt.support;
         contact.normalMass = belt.normalMass;
-        contact.touchingFriction = fudgeFriction(belt.friction) * BntBeltTension.gripScale(belt.tension);
-        contact.surfaceSpeed = belt.surfaceSpeed;
-        contact.brakeStrength = belt.brake;
+        contact.ground = belt.ground;
+        contact.patch = belt.length;
+        contact.tread = belt.tread;
         contact.hasTraction = true;
-        contact.isDriven = belt.driven;
-        contact.isTrackModel = true;
         contact.loaded = true;
         return contact;
+    }
+
+    private static void joinTread(BntPhysicsEvents.WheelContact contact, Map<BlockPos, BntBeltContacts.BntTread> treads) {
+        BntBeltContacts.BntTread tread = contact.tread == null ? null : treads.get(contact.tread);
+        if (tread == null) {
+            contact.hasTraction = false;
+            return;
+        }
+        contact.isDriven = tread.driven();
+        contact.surfaceSpeed = tread.surfaceSpeed();
+        contact.brakeStrength = tread.brake();
+        contact.touchingFriction = BntGround.grip(contact.ground, tread.type());
+        contact.width = tread.width();
+    }
+
+    private static double treadLoad(Level level, BlockPos tread, double pressed, double timeStep, long step) {
+        Map<BlockPos, double[]> loads = TREAD_LOADS.computeIfAbsent(level, ignored -> new HashMap<>());
+        double force = pressed / timeStep;
+        double[] last = loads.get(tread);
+        if (last != null && (long)last[0] == step - 1L) {
+            force = last[1] + (force - last[1]) * (1.0 - Math.exp(-timeStep / GRIP_MEMORY));
+        }
+        loads.put(tread, new double[]{step, force});
+        return force * timeStep;
     }
 
     private static double wheelShare(ServerSubLevel subLevel, int wheels, double timeStep) {
@@ -887,7 +939,7 @@ public final class BntPhysicsEvents {
     }
 
     private static void solveTraction(
-        Level level, @Nullable MassData massData, List<BntPhysicsEvents.WheelContact> contacts, double wheelShare, double timeStep
+        Level level, @Nullable MassData massData, List<BntPhysicsEvents.WheelContact> contacts, double timeStep, long step
     ) {
         if (massData == null || massData.isInvalid() || massData.getCenterOfMass() == null) {
             return;
@@ -900,42 +952,56 @@ public final class BntPhysicsEvents {
             return;
         }
 
-        double loadShare = massData.getMass() / wheelShare;
+        Map<BlockPos, double[]> treads = new HashMap<>();
+        for (BntPhysicsEvents.WheelContact contact : contacts) {
+            if (contact.hasTraction) {
+                double[] tread = treads.computeIfAbsent(contact.tread, ignored -> new double[6]);
+                tread[0] += Math.max(0.0, contact.push);
+                tread[1]++;
+                tread[3] += contact.patch * contact.width;
+            }
+        }
+        if (treads.isEmpty()) {
+            return;
+        }
         double gravity = DimensionPhysicsData.getGravity(level).length();
+        for (Map.Entry<BlockPos, double[]> entry : treads.entrySet()) {
+            double[] tread = entry.getValue();
+            tread[2] = treadLoad(level, entry.getKey(), tread[0], timeStep, step);
+            tread[3] = tread[3] > 1.0E-9 && gravity > 1.0E-6 ? tread[2] / (gravity * timeStep * tread[3]) : 0.0;
+        }
+
         double response = BntPhysicsTuning.getTractionResponse();
         double pivotScrub = BntPhysicsTuning.getPivotScrub();
-        boolean anyTraction = false;
+        double trackGrip = BntPhysicsTuning.getTrackGrip();
+        double rollingResistance = BntPhysicsTuning.getRollingResistance();
 
         for (BntPhysicsEvents.WheelContact contact : contacts) {
             if (!contact.hasTraction) {
                 continue;
             }
 
-            anyTraction = true;
+            double[] tread = treads.get(contact.tread);
+            double share = tread[0] > 1.0E-9 ? Math.max(0.0, contact.push) / tread[0] : 1.0 / tread[1];
+            double load = tread[2] * share;
             contact.lever = new Vector3d(contact.forcePoint).sub(centerOfMass);
-            double gripMultiplier = contact.isTrackModel ? BntPhysicsTuning.getTrackGripMultiplier() : BntPhysicsTuning.getCogwheelGripMultiplier();
-            double grip = contact.touchingFriction * gripMultiplier;
             double targetSpeed = contact.isDriven ? contact.surfaceSpeed * (1.0 - contact.brakeStrength) : 0.0;
-            double driveTraction = contact.isDriven
-                ? BntPhysicsTuning.getDriveTraction() + contact.brakeStrength * BntPhysicsTuning.getBrakeTraction()
-                : BntPhysicsTuning.getRollingResistance();
             double longitudinalSpeed = contact.localVelocity.dot(contact.normalD);
             contact.targetSpeed = targetSpeed;
             contact.goalLongitudinal = longitudinalSpeed + response * (targetSpeed - longitudinalSpeed);
-            if (contact.belt) {
-                double carried = gravity > 1.0E-6 ? contact.push / gravity : 0.0;
-                contact.limitLongitudinal = driveTraction * grip * carried;
-                contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * carried;
-            } else {
-                double resting = GRIP_LOAD * loadShare * gravity * timeStep;
-                double load = resting > 0.0 ? Mth.clamp(contact.push / resting, 0.0, 1.0) : 1.0;
-                contact.limitLongitudinal = driveTraction * grip * loadShare * timeStep * load;
-                contact.limitLateral = BntPhysicsTuning.getLateralTraction() * grip * loadShare * timeStep * load;
-            }
-        }
+            contact.pressure = tread[3];
+            double spread = contact.ground.soft() ? BntGround.spread(contact.pressure) : 1.0;
+            contact.grip = trackGrip * contact.touchingFriction * spread * load;
+            contact.longitudinalCap = contact.isDriven
+                ? contact.grip
+                : Mth.lerp(contact.brakeStrength, Math.min(rollingResistance * load, contact.grip), contact.grip);
 
-        if (!anyTraction) {
-            return;
+            Vector3d angular = contact.lever.cross(contact.normalD, new Vector3d());
+            contact.longitudinalResponse = inverseInertia.transform(angular, new Vector3d());
+            contact.longitudinalInverseMass = inverseMass + angular.dot(contact.longitudinalResponse);
+            angular = contact.lever.cross(contact.sideD, new Vector3d());
+            contact.lateralResponse = inverseInertia.transform(angular, new Vector3d());
+            contact.lateralInverseMass = inverseMass + angular.dot(contact.lateralResponse);
         }
 
         double commandedYawRate = pivotScrub > 0.0 ? solveCommandedYawRate(contacts) : 0.0;
@@ -948,49 +1014,67 @@ public final class BntPhysicsEvents {
                     * pivotScrub
                     * (contact.lever.z() * contact.sideD.x() - contact.lever.x() * contact.sideD.z());
                 contact.goalLateral = lateralSpeed - response * (lateralSpeed - scrubSpeed);
+
+                double[] tread = treads.get(contact.tread);
+                double weight = tread[0] > 1.0E-9 ? Math.max(0.0, contact.push) : 1.0;
+                tread[4] += weight * Math.abs(lateralSpeed - scrubSpeed);
+                tread[5] += weight;
+            }
+        }
+
+        double slidingGrip = BntPhysicsTuning.getSlidingGrip();
+        for (BntPhysicsEvents.WheelContact contact : contacts) {
+            if (contact.hasTraction) {
+                double[] tread = treads.get(contact.tread);
+                double slide = Mth.smoothstep(Mth.clamp(
+                    ((tread[5] > 0.0 ? tread[4] / tread[5] : 0.0) - SLIP_GRIP) / (SLIP_SLIDE - SLIP_GRIP), 0.0, 1.0));
+                contact.slide = slide;
+                contact.grip *= Mth.lerp(slide, 1.0, slidingGrip);
+                contact.longitudinalCap = Math.min(contact.longitudinalCap, contact.grip);
             }
         }
 
         Vector3d deltaVelocity = new Vector3d();
         Vector3d deltaAngularVelocity = new Vector3d();
         Vector3d pointVelocity = new Vector3d();
-        Vector3d angularAxis = new Vector3d();
-        Vector3d transformed = new Vector3d();
 
         for (int iteration = 0; iteration < TRACTION_ITERATIONS; iteration++) {
             for (BntPhysicsEvents.WheelContact contact : contacts) {
                 if (contact.hasTraction) {
-                    contact.longitudinalImpulse = solveTractionAxis(
-                        contact,
-                        contact.normalD,
-                        contact.goalLongitudinal,
-                        contact.limitLongitudinal,
-                        contact.longitudinalImpulse,
-                        inverseMass,
-                        inverseInertia,
-                        deltaVelocity,
-                        deltaAngularVelocity,
-                        pointVelocity,
-                        angularAxis,
-                        transformed
-                    );
-                    contact.lateralImpulse = solveTractionAxis(
-                        contact,
-                        contact.sideD,
-                        contact.goalLateral,
-                        contact.limitLateral,
-                        contact.lateralImpulse,
-                        inverseMass,
-                        inverseInertia,
-                        deltaVelocity,
-                        deltaAngularVelocity,
-                        pointVelocity,
-                        angularAxis,
-                        transformed
-                    );
+                    solveGrip(contact, inverseMass, deltaVelocity, deltaAngularVelocity, pointVelocity);
                 }
             }
         }
+    }
+
+    private static void solveGrip(
+        BntPhysicsEvents.WheelContact contact, double inverseMass,
+        Vector3d deltaVelocity, Vector3d deltaAngularVelocity, Vector3d pointVelocity
+    ) {
+        if (!(contact.longitudinalInverseMass > 0.0) || !(contact.lateralInverseMass > 0.0)
+            || !Double.isFinite(contact.longitudinalInverseMass) || !Double.isFinite(contact.lateralInverseMass)) {
+            return;
+        }
+
+        deltaAngularVelocity.cross(contact.lever, pointVelocity).add(deltaVelocity).add(contact.localVelocity);
+        double longitudinal = contact.longitudinalImpulse
+            + (contact.goalLongitudinal - pointVelocity.dot(contact.normalD)) / contact.longitudinalInverseMass;
+        double lateral = contact.lateralImpulse
+            + (contact.goalLateral - pointVelocity.dot(contact.sideD)) / contact.lateralInverseMass;
+        double magnitude = Math.hypot(longitudinal, lateral);
+        if (magnitude > contact.grip) {
+            double scale = contact.grip / magnitude;
+            longitudinal *= scale;
+            lateral *= scale;
+        }
+        longitudinal = Mth.clamp(longitudinal, -contact.longitudinalCap, contact.longitudinalCap);
+
+        double appliedLongitudinal = longitudinal - contact.longitudinalImpulse;
+        double appliedLateral = lateral - contact.lateralImpulse;
+        deltaVelocity.fma(appliedLongitudinal * inverseMass, contact.normalD).fma(appliedLateral * inverseMass, contact.sideD);
+        deltaAngularVelocity.fma(appliedLongitudinal, contact.longitudinalResponse).fma(appliedLateral, contact.lateralResponse);
+        contact.longitudinalImpulse = longitudinal;
+        contact.lateralImpulse = lateral;
     }
 
     private static double solveCommandedYawRate(List<BntPhysicsEvents.WheelContact> contacts) {
@@ -1051,36 +1135,6 @@ public final class BntPhysicsEvents {
         return Double.isFinite(yawRate) ? Mth.clamp(yawRate, -MAX_COMMANDED_YAW_RATE, MAX_COMMANDED_YAW_RATE) : 0.0;
     }
 
-    private static double solveTractionAxis(
-        BntPhysicsEvents.WheelContact contact,
-        Vector3dc axis,
-        double goal,
-        double limit,
-        double accumulated,
-        double inverseMass,
-        Matrix3dc inverseInertia,
-        Vector3d deltaVelocity,
-        Vector3d deltaAngularVelocity,
-        Vector3d pointVelocity,
-        Vector3d angularAxis,
-        Vector3d transformed
-    ) {
-        deltaAngularVelocity.cross(contact.lever, pointVelocity).add(deltaVelocity).add(contact.localVelocity);
-        double error = goal - pointVelocity.dot(axis);
-        contact.lever.cross(axis, angularAxis);
-        inverseInertia.transform(angularAxis, transformed);
-        double inverseEffectiveMass = inverseMass + angularAxis.dot(transformed);
-        if (!Double.isFinite(inverseEffectiveMass) || inverseEffectiveMass <= 0.0) {
-            return accumulated;
-        }
-
-        double total = Mth.clamp(accumulated + error / inverseEffectiveMass, -limit, limit);
-        double applied = total - accumulated;
-        deltaVelocity.fma(applied * inverseMass, axis);
-        deltaAngularVelocity.fma(applied, transformed);
-        return total;
-    }
-
     private static void report(ServerLevel level, ServerSubLevel subLevel, int wheels,
                                List<BntPhysicsEvents.WheelContact> nearGround, List<BntPhysicsEvents.WheelContact> solved,
                                int bodies, double mass) {
@@ -1095,10 +1149,11 @@ public final class BntPhysicsEvents {
         double yaw = 0.0;
         for (BntPhysicsEvents.WheelContact contact : nearGround) {
             yaw = contact.yawRate;
-            line.append(String.format(" [%s %s %s comp%.2f hold%.2f floor%.2f push%.2f vy%.2f %s tgt%.2f lon%.2f lat%.2f]",
+            line.append(String.format(" [%s %s %s comp%.2f hold%.2f floor%.2f push%.2f vy%.2f %s tgt%.2f grip%.2f pressure%.1f slide%.2f lon%.2f lat%.2f]",
                 contact.pos.toShortString(), contact.loaded ? "on" : "off", contact.arm ? "arm" : "rigid", contact.compression,
-                contact.hold, contact.carried, contact.push, contact.verticalSpeed, contact.isDriven ? "drive" : "free",
-                contact.targetSpeed, contact.longitudinalImpulse, contact.lateralImpulse));
+                contact.hold, contact.carried, contact.push, contact.verticalSpeed,
+                contact.tread == null ? "none" : contact.isDriven ? "drive" : "free",
+                contact.targetSpeed, contact.grip, contact.pressure, contact.slide, contact.longitudinalImpulse, contact.lateralImpulse));
         }
 
         int beltContacts = 0;
@@ -1340,10 +1395,6 @@ public final class BntPhysicsEvents {
         }
     }
 
-    private static double fudgeFriction(double realValue) {
-        return realValue < 1.0 ? 0.1 + 0.9 * realValue : realValue;
-    }
-
     private static class WheelContact {
         KineticBlockEntityPhysicsAccess mixin;
         ServerSubLevel subLevel;
@@ -1370,6 +1421,11 @@ public final class BntPhysicsEvents {
         double support;
         double previousPush;
         double touchingFriction;
+        BntGround.Surface ground = BntGround.UNKNOWN;
+        double patch;
+        double width;
+        double pressure;
+        double slide;
         double normalMass;
         double verticalSpeed;
         double brakeStrength;
@@ -1382,13 +1438,18 @@ public final class BntPhysicsEvents {
         double yawRate;
         double goalLongitudinal;
         double goalLateral;
-        double limitLongitudinal;
-        double limitLateral;
+        double grip;
+        double longitudinalCap;
+        double longitudinalInverseMass;
+        double lateralInverseMass;
+        Vector3d longitudinalResponse;
+        Vector3d lateralResponse;
         double longitudinalImpulse;
         double lateralImpulse;
+        @Nullable
+        BlockPos tread;
         boolean hasTraction;
         boolean isDriven;
-        boolean isTrackModel;
         boolean loaded;
         boolean belt;
         boolean arm;

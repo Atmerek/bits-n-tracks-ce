@@ -3,10 +3,12 @@ package dev.qwxon.bitsntracks.physics;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.types.CogwheelChainType;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltPath;
@@ -22,11 +24,11 @@ import dev.ryanhcode.sable.api.physics.mass.MassData;
 import dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3d;
-import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 
 public final class BntBeltContacts {
@@ -59,13 +62,16 @@ public final class BntBeltContacts {
         Vector3d velocity;
         double penetration;
         double normalMass;
-        double friction;
+        BntGround.Surface ground;
         double support;
-        float tension;
+        double length;
         Axis axis;
-        double surfaceSpeed;
-        boolean driven;
-        double brake;
+        BlockPos tread;
+    }
+
+    public record BntTread(
+        boolean driven, double surfaceSpeed, double brake, @Nullable CogwheelChainType type, double width
+    ) {
     }
 
     public static final class BntBeltWeight {
@@ -75,7 +81,7 @@ public final class BntBeltContacts {
         private double mass;
     }
 
-    public record BntBeltLoads(List<BntBeltContact> contacts, List<BntBeltWeight> weights) {
+    public record BntBeltLoads(List<BntBeltContact> contacts, List<BntBeltWeight> weights, Map<BlockPos, BntTread> treads) {
         public boolean isEmpty() {
             return this.contacts.isEmpty() && this.weights.isEmpty();
         }
@@ -84,15 +90,14 @@ public final class BntBeltContacts {
     public static BntBeltLoads build(
         ServerSubLevel subLevel, List<KineticBlockEntity> wheels, Level level
     ) {
-        BntBeltLoads loads = new BntBeltLoads(new ArrayList<>(), new ArrayList<>());
-        if (!BntPhysicsTuning.isBeltCollisionEnabled() || wheels.isEmpty()) {
+        BntBeltLoads loads = new BntBeltLoads(new ArrayList<>(), new ArrayList<>(), new HashMap<>());
+        if (wheels.isEmpty()) {
             return loads;
         }
 
         MassData massData = subLevel.getMassTracker();
-        if (massData == null || massData.isInvalid() || massData.getCenterOfMass() == null) {
-            return loads;
-        }
+        boolean sampled = BntPhysicsTuning.isBeltCollisionEnabled()
+            && massData != null && !massData.isInvalid() && massData.getCenterOfMass() != null;
 
         Map<BlockPos, Double> brakes = new LinkedHashMap<>();
         Map<BlockPos, Float> speeds = new LinkedHashMap<>();
@@ -115,31 +120,49 @@ public final class BntBeltContacts {
                 continue;
             }
 
-            List<PathedCogwheelNode> nodes = chain instanceof BntChainGeometryRefresh refreshable
+            List<PathedCogwheelNode> latched = chain instanceof BntChainGeometryRefresh refreshable
                 ? refreshable.bnt$latchedBeltOrder()
                 : List.of();
-            if (nodes.size() < 2) {
-                continue;
+            try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
+                loads.treads().put(controllerPos,
+                    tread(level, controllerPos, chain, BntChains.beltOrder(level, controllerPos), entry.getValue()));
+                if (sampled && latched.size() >= 2) {
+                    spans(loads, level, subLevel, pose, massData, controllerPos, latched, speeds.getOrDefault(controllerPos, 0.0F));
+                }
             }
-
-            collectSpans(loads, level, subLevel, pose, massData, controllerPos, nodes,
-                speeds.getOrDefault(controllerPos, 0.0F), entry.getValue());
         }
         return loads;
     }
 
-    private static void collectSpans(
-        BntBeltLoads loads, Level level, ServerSubLevel subLevel, Pose3d pose, MassData massData,
-        BlockPos controllerPos, List<PathedCogwheelNode> nodes, float speed, double brake
+    private static BntTread tread(
+        Level level, BlockPos controllerPos, CogwheelChain chain, List<PathedCogwheelNode> nodes, double brake
     ) {
-        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
-            spans(loads, level, subLevel, pose, massData, controllerPos, nodes, speed, brake);
+        double lowest = Double.MAX_VALUE;
+        double surfaceSpeed = 0.0;
+        for (PathedCogwheelNode node : nodes) {
+            BlockPos nodePos = controllerPos.offset(node.localPos());
+            if (!(level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic)
+                || !BntChainEngagement.isEngaged(kinetic.getBehaviour(CogwheelChainBehaviour.TYPE))) {
+                continue;
+            }
+            double y = BntBeltLinks.drawnCentre(level, controllerPos, node).y + BntTrackFloor.at(level, kinetic);
+            if (y < lowest) {
+                lowest = y;
+                surfaceSpeed = BntPhysicsEvents.surfaceSpeed(
+                    CogwheelSizeHelper.getChainRadius(level.getBlockState(nodePos).getBlock()), kinetic.getSpeed());
+            }
         }
+        BlockEntity controller = level.getBlockEntity(controllerPos);
+        int quarters = controller instanceof KineticBlockEntity kinetic
+            ? BntCogwheelWidth.chainQuarters(kinetic)
+            : BntCogwheelWidth.SINGLE;
+        return new BntTread(lowest < Double.MAX_VALUE, surfaceSpeed, brake, chain.getChainType(),
+            BntCogwheelWidth.trackPixels(quarters) / 16.0);
     }
 
     private static void spans(
         BntBeltLoads loads, Level level, ServerSubLevel subLevel, Pose3d pose, MassData massData,
-        BlockPos controllerPos, List<PathedCogwheelNode> nodes, float speed, double brake
+        BlockPos controllerPos, List<PathedCogwheelNode> nodes, float speed
     ) {
         Axis axis = BntChainGeometry.sharedAxis(nodes);
         if (axis == null || axis == Axis.Y) {
@@ -155,8 +178,6 @@ public final class BntBeltContacts {
         double[] support = new double[count];
         float tension = BntBeltTension.at(level, controllerPos);
         double averageY = 0.0;
-        double lowest = Double.MAX_VALUE;
-        double surfaceSpeed = 0.0;
 
         for (int i = 0; i < count; i++) {
             PathedCogwheelNode node = nodes.get(i);
@@ -170,16 +191,9 @@ public final class BntBeltContacts {
             alongAxis[i] = BntBeltPath.axisCoord(centre, axis);
             radii[i] = BntChainGeometry.trackRadius(node);
             sides[i] = node.side();
-            if (nodeBe instanceof KineticBlockEntity kinetic && centre.y < lowest
-                && BntChainEngagement.isEngaged(kinetic.getBehaviour(CogwheelChainBehaviour.TYPE))) {
-                lowest = centre.y;
-                surfaceSpeed = BntPhysicsEvents.surfaceSpeed(
-                    CogwheelSizeHelper.getChainRadius(level.getBlockState(nodePos).getBlock()), kinetic.getSpeed());
-            }
             averageY += centre.y;
         }
         averageY /= count;
-        boolean driven = lowest < Double.MAX_VALUE;
 
         double[][] runs = new double[count][];
         double[] runLengths = new double[count];
@@ -236,11 +250,9 @@ public final class BntBeltContacts {
                     : null;
                 if (contact != null) {
                     contact.support = runSupport;
-                    contact.tension = tension;
+                    contact.length = run[0] / samples;
                     contact.axis = axis;
-                    contact.surfaceSpeed = surfaceSpeed;
-                    contact.driven = driven;
-                    contact.brake = brake;
+                    contact.tread = controllerPos;
                     loads.contacts().add(contact);
                 } else if (segmentMass > 0.0) {
                     Vec3 point = chord.subtract(0.0, droop, 0.0);
@@ -297,7 +309,7 @@ public final class BntBeltContacts {
         contact.penetration = lift;
         contact.velocity = Sable.HELPER.getVelocity(level, JOMLConversion.toJOML(new Vec3(chord.x, localHit.y, chord.z)));
         contact.normalMass = 1.0 / inverseNormalMass;
-        contact.friction = PhysicsBlockPropertyHelper.getFriction(level.getBlockState(hit.getBlockPos()));
+        contact.ground = BntGround.of(level.getBlockState(hit.getBlockPos()));
         return contact;
     }
 

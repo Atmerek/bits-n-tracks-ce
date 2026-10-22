@@ -112,10 +112,6 @@ public final class BntBeltTension {
         return BntPhysicsTuning.BELT_SUPPORT * Mth.lerp(normalised, 1.0 / range, range);
     }
 
-    public static double gripScale(float tension) {
-        return BntPhysicsTuning.getBeltGrip() * Mth.lerp(clamp(tension), 0.5, 1.0);
-    }
-
     public static BlockPos controllerPos(Level level, BlockPos pos) {
         BlockPos controller = BntChains.controllerPos(level, pos);
         return controller == null ? pos : controller;

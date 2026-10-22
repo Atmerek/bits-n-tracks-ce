@@ -198,16 +198,12 @@
     "bits_n_tracks.configuration.largeToolHighlightRadius": "Радиус подсветки большого катка",
 
     "bits_n_tracks.configuration.drive": "Вождение",
-    "bits_n_tracks.configuration.driveTraction": "Эффективность разгона",
-    "bits_n_tracks.configuration.brakeTraction": "Эффективность торможения",
     "bits_n_tracks.configuration.tractionResponse": "Чувствительность сцепления",
 
     "bits_n_tracks.configuration.friction": "Трение",
-    "bits_n_tracks.configuration.cogwheelGripMultiplier": "Сцепление катков",
-    "bits_n_tracks.configuration.trackGripMultiplier": "Сцепление гусеницы",
-    "bits_n_tracks.configuration.lateralTraction": "Боковое сцепление",
+    "bits_n_tracks.configuration.trackGrip": "Сцепление гусеницы",
     "bits_n_tracks.configuration.pivotScrub": "Сопротивление развороту",
-    "bits_n_tracks.configuration.rollingResistance": "Сопротивление качению",
+    "bits_n_tracks.configuration.trackRollingResistance": "Сопротивление качению",
 
     "bits_n_tracks.configuration.belt": "Трак",
     "bits_n_tracks.configuration.beltCollisionEnabled": "Коллизия трака",
@@ -216,7 +212,6 @@
     "bits_n_tracks.configuration.beltSurfaceClearance": "Зазор до поверхности",
     "bits_n_tracks.configuration.beltMaxSag": "Максимальный прогиб трака",
     "bits_n_tracks.configuration.beltStiffnessRange": "Диапазон жесткости трака",
-    "bits_n_tracks.configuration.beltGrip": "Сцепление трака",
     "bits_n_tracks.configuration.beltTensionStep": "Шаг натяжения трака",
     "bits_n_tracks.configuration.beltLinkPitch": "Шаг звеньев трака",
     "bits_n_tracks.configuration.beltLinksPerTexture": "Количество звеньев на текстуру",

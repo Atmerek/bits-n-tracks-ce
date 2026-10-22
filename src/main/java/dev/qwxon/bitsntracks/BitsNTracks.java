@@ -11,6 +11,7 @@ import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksDataComponents;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.interaction.BntNetwork;
+import dev.qwxon.bitsntracks.physics.BntGround;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
 import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import dev.qwxon.bitsntracks.physics.BntStressValues;
@@ -39,6 +40,7 @@ public class BitsNTracks {
         BitsNTracksBlockEntityTypes.init();
         BntCogwheelChainTypes.init(modEventBus);
         modEventBus.addListener(BntNetwork::register);
+        modEventBus.addListener(BntGround::register);
         REGISTRATE.registerEventListeners(modEventBus);
         BntPhysicsEvents.register();
     }

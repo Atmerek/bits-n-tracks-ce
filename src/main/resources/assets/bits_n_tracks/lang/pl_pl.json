@@ -216,16 +216,14 @@
     "bits_n_tracks.configuration.largeToolHighlightRadius": "Promień podświetlenia (duże)",
 
     "bits_n_tracks.configuration.drive": "Napęd",
-    "bits_n_tracks.configuration.driveTraction": "Przyczepność napędu",
-    "bits_n_tracks.configuration.brakeTraction": "Przyczepność hamowania",
     "bits_n_tracks.configuration.tractionResponse": "Reakcja przyczepności",
 
     "bits_n_tracks.configuration.friction": "Tarcie",
-    "bits_n_tracks.configuration.cogwheelGripMultiplier": "Chwyt kół zębatych",
-    "bits_n_tracks.configuration.trackGripMultiplier": "Chwyt gąsienicy",
-    "bits_n_tracks.configuration.lateralTraction": "Przyczepność boczna",
+    "bits_n_tracks.configuration.trackGrip": "Chwyt gąsienicy",
+    "bits_n_tracks.configuration.softGroundPressure": "Nacisk na miękki grunt",
+    "bits_n_tracks.configuration.slidingGrip": "Chwyt w poślizgu",
     "bits_n_tracks.configuration.pivotScrub": "Tarcie przy obrocie w miejscu",
-    "bits_n_tracks.configuration.rollingResistance": "Opór toczenia",
+    "bits_n_tracks.configuration.trackRollingResistance": "Opór toczenia",
 
     "bits_n_tracks.configuration.belt": "Pas",
     "bits_n_tracks.configuration.beltCollisionEnabled": "Kolizja pasa",
@@ -234,7 +232,6 @@
     "bits_n_tracks.configuration.beltSurfaceClearance": "Odstęp pasa od powierzchni",
     "bits_n_tracks.configuration.beltMaxSag": "Maksymalny zwis pasa",
     "bits_n_tracks.configuration.beltStiffnessRange": "Zakres sztywności pasa",
-    "bits_n_tracks.configuration.beltGrip": "Chwyt pasa",
     "bits_n_tracks.configuration.beltTensionStep": "Krok naciągu pasa",
     "bits_n_tracks.configuration.beltLinkPitch": "Podziałka ogniw pasa",
     "bits_n_tracks.configuration.beltLinksPerTexture": "Ogniwa pasa na teksturę",

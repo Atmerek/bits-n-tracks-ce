@@ -1,0 +1,22 @@
+{
+  "values": {
+    "minecraft:grass_block": { "grip": 0.9, "soft": true },
+    "minecraft:dirt": { "grip": 0.9, "soft": true },
+    "minecraft:coarse_dirt": { "grip": 0.9, "soft": true },
+    "minecraft:rooted_dirt": { "grip": 0.9, "soft": true },
+    "minecraft:podzol": { "grip": 0.9, "soft": true },
+    "minecraft:mycelium": { "grip": 0.9, "soft": true },
+    "minecraft:dirt_path": { "grip": 0.9, "soft": true },
+    "minecraft:farmland": { "grip": 0.9, "soft": true },
+    "minecraft:moss_block": { "grip": 0.9, "soft": true },
+    "minecraft:soul_soil": { "grip": 0.8, "soft": true },
+    "#c:sands": { "grip": 0.7, "soft": true },
+    "#c:gravels": { "grip": 0.7, "soft": true },
+    "minecraft:clay": { "grip": 0.6, "soft": true },
+    "minecraft:muddy_mangrove_roots": { "grip": 0.5, "soft": true },
+    "minecraft:snow": { "grip": 0.45, "soft": true },
+    "minecraft:snow_block": { "grip": 0.45, "soft": true },
+    "minecraft:powder_snow": { "grip": 0.45, "soft": true },
+    "minecraft:mud": { "soft": true }
+  }
+}

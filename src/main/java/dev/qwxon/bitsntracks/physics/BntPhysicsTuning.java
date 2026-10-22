@@ -34,13 +34,11 @@ public final class BntPhysicsTuning {
     private static final Map<CogwheelSize, DoubleValue> VISUAL_VERTICAL_OFFSET;
     private static final Map<CogwheelSize, DoubleValue> TOOL_HIGHLIGHT_RADIUS;
 
-    private static final DoubleValue DRIVE_TRACTION;
-    private static final DoubleValue BRAKE_TRACTION;
     private static final DoubleValue TRACTION_RESPONSE;
 
-    private static final DoubleValue COGWHEEL_GRIP_MULTIPLIER;
-    private static final DoubleValue TRACK_GRIP_MULTIPLIER;
-    private static final DoubleValue LATERAL_TRACTION;
+    private static final DoubleValue TRACK_GRIP;
+    private static final DoubleValue SOFT_GROUND_PRESSURE;
+    private static final DoubleValue SLIDING_GRIP;
     private static final DoubleValue PIVOT_SCRUB;
     private static final DoubleValue ROLLING_RESISTANCE;
 
@@ -50,7 +48,6 @@ public final class BntPhysicsTuning {
     private static final DoubleValue BELT_SURFACE_CLEARANCE;
     private static final DoubleValue BELT_MAX_SAG;
     private static final DoubleValue BELT_STIFFNESS_RANGE;
-    private static final DoubleValue BELT_GRIP;
     private static final DoubleValue BELT_TENSION_STEP;
     private static final DoubleValue BELT_LINK_PITCH;
     private static final IntValue BELT_LINKS_PER_TEXTURE;
@@ -105,33 +102,29 @@ public final class BntPhysicsTuning {
             new double[]{0.34, 0.38, 0.42, 0.56, 0.62, 0.68});
         builder.pop();
 
-        builder.comment("How fast a track carries the vehicle. The speed a track aims for is fixed by its cogwheel sizes and its rotational speed, so a track always travels at the speed its links are moving. These values only decide how hard it may push to get there.")
+        builder.comment("How fast a track carries the vehicle. The speed a track aims for is fixed by its cogwheel sizes and its rotational speed, so a track always travels at the speed its links are moving. How hard it may push to get there is its grip.")
             .push("drive");
-        DRIVE_TRACTION = builder
-            .comment("Strongest acceleration a track at full grip can apply, in blocks per second squared.")
-            .defineInRange("driveTraction", 10.0, 0.0, 1000.0);
-        BRAKE_TRACTION = builder
-            .comment("Additional acceleration available for braking at full redstone signal.")
-            .defineInRange("brakeTraction", 20.0, 0.0, 1000.0);
         TRACTION_RESPONSE = builder
             .comment("Share of the remaining difference between track speed and ground speed corrected each physics step.")
             .defineInRange("tractionResponse", 0.35, 0.0, 1.0);
         builder.pop();
 
-        builder.comment("Grip along and across the wheel.").push("friction");
-        COGWHEEL_GRIP_MULTIPLIER = builder
-            .comment("Grip of cogwheels that are not part of a chain. At zero they roll freely and only carry the suspension.")
-            .defineInRange("cogwheelGripMultiplier", 0.0, 0.0, 100.0);
-        TRACK_GRIP_MULTIPLIER = builder.defineInRange("trackGripMultiplier", 1.0, 0.0, 100.0);
-        LATERAL_TRACTION = builder
-            .comment("Strongest sideways acceleration a track at full grip can apply to stop a slide, in blocks per second squared.")
-            .defineInRange("lateralTraction", 12.0, 0.0, 1000.0);
+        builder.comment("Grip of the track on the ground. Only the track grips: cogwheels shape it and carry the suspension, and a cogwheel without a track rolls freely.").push("friction");
+        TRACK_GRIP = builder
+            .comment("How hard a track grips ordinary ground, as a share of the weight resting on it. At 1 a track can push forward, sideways or both together with as much force as that weight. Slippery and sticky blocks scale it, and a redstone brake cannot hold beyond it.")
+            .defineInRange("trackGrip", 1.25, 0.0, 10.0);
+        SOFT_GROUND_PRESSURE = builder
+            .comment("Ground pressure at which a track grips soft ground as well as that ground is listed for, in mass per square block of track touching it. A track pressing less, because it is wider, longer or carries less, grips soft ground better, and one pressing more grips it worse.")
+            .defineInRange("softGroundPressure", 12.0, 0.01, 1000.0);
+        SLIDING_GRIP = builder
+            .comment("Share of its grip a track keeps once it skids sideways over the ground. It fades in as the skid grows from a quarter of a block per second to one block per second, and grip returns as the skid stops.")
+            .defineInRange("slidingGrip", 0.8, 0.0, 1.0);
         PIVOT_SCRUB = builder
             .comment("How much of the turn the drive asks for the tracks may scrub through. At 0 they resist that turn as hard as any other sideways slide, which is what stops a vehicle from turning in place. At 1 the vehicle turns at exactly the rate its two track speeds work out to, which is quicker than a real tracked vehicle manages, since real tracks slip. Either way the vehicle stops turning as soon as the track speeds match again.")
             .defineInRange("pivotScrub", 0.7, 0.0, 1.0);
         ROLLING_RESISTANCE = builder
-            .comment("Deceleration applied by a cogwheel that is not driven by a chain, in blocks per second squared.")
-            .defineInRange("rollingResistance", 1.0, 0.0, 1000.0);
+            .comment("Drag of a track that is not driven, as a share of the weight resting on it. A redstone brake raises it toward the track's full grip.")
+            .defineInRange("trackRollingResistance", 0.09, 0.0, 1.0);
         builder.pop();
 
         builder.comment("How the run of track between two cogwheels meets the ground, and how tension changes that. Tension is set per chain with the alignment lever, from fully slack to fully taut.").push("belt");
@@ -153,9 +146,6 @@ public final class BntPhysicsTuning {
         BELT_STIFFNESS_RANGE = builder
             .comment("Spread between slack and taut. A taut belt pushes back this many times harder than a neutral one, a fully slack one this many times softer.")
             .defineInRange("beltStiffnessRange", 2.0, 1.0, 20.0);
-        BELT_GRIP = builder
-            .comment("Additional grip the track picks up from ground it touches between the cogwheels.")
-            .defineInRange("beltGrip", 1.0, 0.0, 10.0);
         BELT_TENSION_STEP = builder
             .comment("Tension change from one click of the alignment lever.")
             .defineInRange("beltTensionStep", 0.1, 0.01, 1.0);
@@ -342,28 +332,16 @@ public final class BntPhysicsTuning {
         return STRESS_IMPACT.get(size).get();
     }
 
-    public static double getDriveTraction() {
-        return DRIVE_TRACTION.get();
+    public static double getTrackGrip() {
+        return TRACK_GRIP.get();
     }
 
-    public static double getCogwheelGripMultiplier() {
-        return COGWHEEL_GRIP_MULTIPLIER.get();
+    public static double getSoftGroundPressure() {
+        return SOFT_GROUND_PRESSURE.get();
     }
 
-    public static double getTrackGripMultiplier() {
-        return TRACK_GRIP_MULTIPLIER.get();
-    }
-
-    public static double getLateralTraction() {
-        return LATERAL_TRACTION.get();
-    }
-
-    public static double getBeltGrip() {
-        return BELT_GRIP.get();
-    }
-
-    public static double getBrakeTraction() {
-        return BRAKE_TRACTION.get();
+    public static double getSlidingGrip() {
+        return SLIDING_GRIP.get();
     }
 
     public static double getTractionResponse() {

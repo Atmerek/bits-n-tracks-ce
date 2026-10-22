@@ -216,16 +216,14 @@
     "bits_n_tracks.configuration.largeToolHighlightRadius": "Large Highlight Radius",
 
     "bits_n_tracks.configuration.drive": "Drive",
-    "bits_n_tracks.configuration.driveTraction": "Drive Traction",
-    "bits_n_tracks.configuration.brakeTraction": "Brake Traction",
     "bits_n_tracks.configuration.tractionResponse": "Traction Response",
 
     "bits_n_tracks.configuration.friction": "Friction",
-    "bits_n_tracks.configuration.cogwheelGripMultiplier": "Cogwheel Grip",
-    "bits_n_tracks.configuration.trackGripMultiplier": "Track Grip",
-    "bits_n_tracks.configuration.lateralTraction": "Lateral Traction",
+    "bits_n_tracks.configuration.trackGrip": "Track Grip",
+    "bits_n_tracks.configuration.softGroundPressure": "Soft Ground Pressure",
+    "bits_n_tracks.configuration.slidingGrip": "Sliding Grip",
     "bits_n_tracks.configuration.pivotScrub": "Pivot Scrub",
-    "bits_n_tracks.configuration.rollingResistance": "Rolling Resistance",
+    "bits_n_tracks.configuration.trackRollingResistance": "Rolling Resistance",
 
     "bits_n_tracks.configuration.belt": "Belt",
     "bits_n_tracks.configuration.beltCollisionEnabled": "Belt Collision",
@@ -234,7 +232,6 @@
     "bits_n_tracks.configuration.beltSurfaceClearance": "Belt Surface Clearance",
     "bits_n_tracks.configuration.beltMaxSag": "Belt Maximum Sag",
     "bits_n_tracks.configuration.beltStiffnessRange": "Belt Stiffness Range",
-    "bits_n_tracks.configuration.beltGrip": "Belt Grip",
     "bits_n_tracks.configuration.beltTensionStep": "Belt Tension Step",
     "bits_n_tracks.configuration.beltLinkPitch": "Belt Link Pitch",
     "bits_n_tracks.configuration.beltLinksPerTexture": "Belt Links Per Texture",

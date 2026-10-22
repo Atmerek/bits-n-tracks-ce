@@ -12,6 +12,8 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Cogwheels with physics enabled are converted when a 2.x world loads. A Bits 'n' Bobs or Design n' Decor cogwheel with physics enabled becomes the Bits 'n' Tracks cogwheel of the same size.
 - Bits 'n' Tracks cogwheels no longer turn the blocks beside them, or get turned by them. Drive them through their axle or their track.
 - The Cog Alignment Lever now works in modes, switched by holding Alt and scrolling. What replaced its old click controls is listed under Changed.
+- The grip settings were reworked. Values set in Track Grip and Rolling Resistance are reset to the new defaults, and those listed under Removed are ignored.
+- A Bits 'n' Tracks cogwheel with physics enabled but no track no longer grips the ground, so a vehicle standing on such cogwheels alone rolls and slides freely.
 
 ### Added
 
@@ -34,7 +36,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Ponder scenes for the flanged cogwheels, tracks, the Cog Alignment Lever, the Suspension Piece and the Suspension Tool.
 - Decorative heads of the mod's creators and contributors.
 - Cogwheels with physics enabled now block players and other entities.
-- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Suspension Smoothing, Debug Logging, geometry and stress settings for the intermediate and medium-large sizes, and client settings for Flywheel rendering, track update rate and animation distance.
+- Settings: a Belt section for how the track meets the ground and how its length and tension behave, Soft Ground Pressure, Sliding Grip, Suspension Smoothing, Debug Logging, geometry and stress settings for the intermediate and medium-large sizes, and client settings for Flywheel rendering, track update rate and animation distance.
 - Polish translation.
 
 ### Changed
@@ -47,6 +49,8 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - The Cog Alignment Lever now breaks blocks other than Bits 'n' Tracks cogwheels normally.
 - The Industrial Belt recipe now takes two belt connectors and three iron nuggets, and makes two belts.
 - Flanged cogwheel recipes scale with size: two cogwheels and an Industrial Belt make two small ones, a cogwheel and two belts make a medium one, and a large cogwheel and three belts make a large one. The industrial versions take Industrial Iron Blocks in place of the belts.
+- Tracks grip harder, and only the track grips: a cogwheel without a track rolls freely. Grip follows the weight resting on the track, a track can skid in a hard turn at speed and grips less once it skids, and a redstone brake on any of a track's cogwheels brakes the whole track and holds only as well as the track grips.
+- Tracks grip less on dirt, sand, gravel, clay, snow and mud than on stone. The Tank Tread bites into soft ground better than the Industrial Belt, and grips a little less on hard ground. On soft ground, a track that presses less, because it is wider, longer or carries less, grips better. Datapacks can change the grip of any block through the `bits_n_tracks:ground` data map.
 - Tracks and Suspension Pieces add to a vehicle's mass: 0.25 for an Industrial Belt and 0.5 for a Tank Tread whatever their length, and 0.25 for each Suspension Piece.
 - Updated the Russian translation, by Hanahaki.
 
@@ -54,6 +58,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 
 - Design n' Decor cogwheels can no longer be used in tracks.
 - Settings: Cogwheel Suspension, Track Suspension, Base Strength, Spring Scale, Damping Scale, Cogwheel Spring, Track Spring, Cogwheel Damping, Track Damping, Cogwheel Impulse Limit, and the four Suspension Rest settings.
+- Settings: Drive Traction, Brake Traction, Lateral Traction and Cogwheel Grip.
 
 ### Fixed
 
