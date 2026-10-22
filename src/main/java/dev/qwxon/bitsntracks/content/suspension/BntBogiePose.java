@@ -7,7 +7,7 @@ final class BntBogiePose {
     private static final float TOP_X = -0.5F;
     private static final float TOP_Y = 1.20711F;
     private static final float SHAFT_GAP = 0.73218F;
-    private static final float NOMOVE_TOP = 0.73031F;
+    private static final float NOMOVE_TOP = 0.79281F;
     private static final float NOMOVE_BOTTOM = 0.08188F;
     final double[] affine = new double[PARTS * 6];
     final double[] turn = new double[PARTS * 2];
