@@ -7,6 +7,8 @@
 [![Requires Create](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.3.1/assets/cozy/requires/create_vector.svg)](https://modrinth.com/mod/create)
 [![Join the Discord](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.3.1/assets/cozy/social/discord-plural_vector.svg)](https://discord.gg/CxTmpvp6gs)
 
+![A tank on bogie suspension driving over slabs](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/01_hero.gif)
+
 Build working tank tracks in Create.
 Flanged cogwheels carry a belt or tread around them, and on a Sable vehicle the track grips the ground, drives it along and rides over what it crosses.
 
@@ -20,17 +22,73 @@ This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/m
 * [Create: Bits 'n' Bobs](https://modrinth.com/mod/create-bits-n-bobs) 2.3.5 or newer, with its own dependencies
 * [Create Aeronautics](https://modrinth.com/mod/create-aeronautics) 1.3.1 or newer, for assembling vehicles and for the spring in the Suspension Piece recipe
 
-## Features
+## What's inside
 
-* **Flanged cogwheels in six sizes**: tiny, intermediate, small, medium, medium-large and large, each in a plain and an industrial style. The industrial models are based on the Industrial Cogwheels from Create: Gears n' Kinetics.
-* **Two kinds of track**: the Industrial Belt and the plated Tank Tread, strung between cogwheels like a Bits 'n' Bobs chain.
-* **Two-wide wheels**: place a cogwheel beside another of the same size and style along its axle and they join into one wide wheel, with the track widening to match. Sneak while placing to keep them apart.
-* **Taut track routing**: the track wraps around its cogwheels the way a real track sits on its road wheels. A cogwheel inside the loop that the track cannot reach is enclosed by it, and turns freely until the track touches it.
-* **Steerable routing**: bring the far run of track around any cogwheel, which then turns the other way, like a belt crossed over a pulley.
-* **A track that meets the ground**: the run between cogwheels drapes over terrain, grips and drives along its length, and carries the vehicle over obstacles. Its tension can be set per track.
-* **Grip that follows the ground**: a track grips by the weight resting on it, and less on dirt, sand, snow and mud than on stone. The Tank Tread bites into soft ground, and a belt fitted with grousers holds on ice, snow and mud.
-* **Suspension**: Suspension Pieces mount swinging arms, bogies and wide bogies on physics cogwheels, and the Suspension Tool tunes each one.
-* **Configurable** physics, track and rendering settings.
+![Everything the mod adds](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/02_lineup.png)
+
+* **Flanged cogwheels** in six sizes, plain and industrial, that carry a track
+* **Three tracks**: Create's own belt, the Industrial Belt and the Tank Tread, plus grousers for the belts
+* **Suspension Pieces** that mount swinging arms and bogies
+* **Two tools**, the Cog Alignment Lever to shape a track and the Suspension Tool to tune its ride
+
+## Flanged cogwheels
+
+![The six cogwheel sizes, plain and industrial](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/03_cogwheels.png)
+
+Six sizes: tiny, intermediate, small, medium, medium-large and large, each in a plain and an industrial style.
+The industrial models are based on the Industrial Cogwheels from Create: Gears n' Kinetics.
+
+A placed cogwheel drives its track and turns through its axle.
+Switch physics on with the Cog Alignment Lever and it becomes a wheel of its Sable vehicle: it stands on the ground, blocks players and other entities, and can carry a Suspension Piece.
+
+## Tracks
+
+![Create's belt, Industrial Belt, Industrial Belt with grousers, Tank Tread](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/04_tracks.png)
+
+Every track is strung between cogwheels like a Bits 'n' Bobs chain.
+
+* **Create's belt**: a belt connector makes a track right away, no extra crafting needed.
+* **Industrial Belt**: the mod's own belt, made from belt connectors and iron nuggets.
+* **Tank Tread**: a plated track made in a Mechanical Crafter, which bites into soft ground better and grips a little less on hard ground.
+* **Grousers**: right-click either belt with them to fit them along it. A belt with grousers grips much better on ice, snow and mud and a little worse on hard ground.
+
+A track grips by the weight resting on it, and less on dirt, sand, gravel, clay, snow and mud than on stone.
+Datapacks can change the grip of any block.
+The run of track between cogwheels drapes over terrain and carries the vehicle over obstacles.
+A redstone brake on any of a track's cogwheels brakes the whole track.
+
+## Wide wheels
+
+![Narrowed, full-width and two-wide tracks](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/05_widths.png)
+
+Place a cogwheel beside another of the same size and style along its axle and they join into one wide wheel, with the track widening to match.
+Sneak while placing to keep them apart.
+The lever's Width mode narrows a cogwheel a quarter at a time, and a track is always as wide as its widest cogwheel.
+
+## Routing
+
+![Automatic routing and Route mode](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/06_routing.png)
+
+The track wraps around its cogwheels the way a real track sits on its road wheels.
+A cogwheel inside the loop that the track cannot reach is enclosed by it, and turns freely until the track touches it.
+
+With the lever's Route mode, bring the far run of track around any cogwheel instead.
+That cogwheel then turns the other way, like a belt crossed over a pulley.
+
+## Suspension
+
+![Arm, bogie and wide bogie](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/07_suspension.png)
+
+A **Suspension Piece** gives a physics cogwheel a sprung mount.
+
+* **Arm**: right-click a physics cogwheel of any size to select it, then look beside it and right-click where the green preview fits. The arm pivots on the cogwheel's top corner, which needs a block touching it along the axle. If blocks on both sides could hold it, it mounts on the side you are looking toward. Uses one piece.
+* **Bogie**: select a small, intermediate or tiny physics cogwheel, then right-click the one of the same size next to it. The bogie hangs from a block right above either cogwheel, or one next to that spot along the axle, and blocks can sit on top of it. Uses two pieces.
+* **Wide bogie**: the same between two two-wide small, intermediate or tiny cogwheels, each pair turning into two separate wheels with the bogie between them. Uses two pieces.
+
+![Bogies rocking over a slab](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/08_bogie.gif)
+
+Shift + right-click the cogwheel with an empty hand to take a piece or bogie back off.
+A mount whose supporting block is removed drops its pieces.
 
 ## Getting started
 
@@ -39,6 +97,8 @@ Hold the Ponder key (W by default) over a flanged cogwheel, a track, the Cog Ali
 The scenes walk through building a tracked vehicle, from placing and powering the cogwheels to tuning its suspension.
 
 ## The Cog Alignment Lever
+
+![The Cog Alignment Lever nudging a cogwheel](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/09_lever.png)
 
 The main tool of the mod.
 It adjusts cogwheels after they are placed, narrows or hides them, routes and tensions the track, and switches physics on or off.
@@ -57,18 +117,11 @@ Hold Alt (Create's tool menu key) and scroll to switch modes.
 
 Ctrl + left-click switches Offset, Width, Shaft and Reset between one cogwheel and the whole track. On the whole track, Offset only moves the cogwheels that share the clicked one's physics setting.
 
-## Suspension
+## The Suspension Tool
 
-A **Suspension Piece** gives a physics cogwheel a sprung mount.
+![The Suspension Tool beside a cogwheel on an arm](https://raw.githubusercontent.com/Atmerek/bits-n-tracks-ce/main/docs/readme/10_tool.png)
 
-* **Arm**: right-click a physics cogwheel of any size to select it, then look beside it and right-click where the green preview fits. The arm pivots on the cogwheel's top corner, which needs a block touching it along the axle. If blocks on both sides could hold it, it mounts on the side you are looking toward. Uses one piece.
-* **Bogie**: select a small, intermediate or tiny physics cogwheel, then right-click the one of the same size next to it. The bogie hangs from a block right above either cogwheel, or one next to that spot along the axle, and blocks can sit on top of it. Uses two pieces.
-* **Wide bogie**: the same between two two-wide small, intermediate or tiny cogwheels, each pair turning into two separate wheels with the bogie between them. Uses two pieces.
-
-Shift + right-click the cogwheel with an empty hand to take a piece or bogie back off.
-A mount whose supporting block is removed drops its pieces.
-
-The **Suspension Tool** reads and tunes cogwheels that carry a Suspension Piece.
+The Suspension Tool reads and tunes cogwheels that carry a Suspension Piece.
 It has four settings, stiffness, damping, travel and spring strength, each on levels 1 to 15 like a redstone signal, with 8 as the default.
 It uses the same panel as the lever, with one mode per setting.
 
