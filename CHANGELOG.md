@@ -73,7 +73,7 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Tracks looked wet and glossy with shader packs, and were lit as if they faced the sky.
 - A wheel pressed against a wall lost its grip as if it were in the air.
 - A vehicle on a slope could drift sideways.
-- Tracks built as their own structure and joined to the hull, such as on a Swivel Bearing, could not hold the vehicle up.
+- Tracks built as their own structure and joined to the hull, such as on a Swivel Bearing or a bearing they pivot on, could not hold the vehicle up.
 - A wheel touching several blocks could take its grip from the wrong one.
 - The Cog Alignment Lever could not reach a cogwheel drawn away from its block, such as one hanging on its suspension.
 - Bits 'n' Bobs chains and ropes could be placed on a cogwheel with physics enabled.

@@ -143,6 +143,8 @@ public final class BntPhysicsEvents {
 
             ServerSubLevel frame = assembly.size() == 1 ? assembly.get(0) : BntAssemblyMass.heaviest(assembly);
             MassData massData = frame == null ? null : BntAssemblyMass.of(frame, assembly);
+            BntArticulation articulation = frame == null ? null
+                : BntArticulation.of(level, physicsSystem.getPipeline(), frame, assembly, massData);
             List<BntPhysicsEvents.WheelContact> contacts = new ArrayList<>();
             List<BntPhysicsEvents.WheelContact> loaded = new ArrayList<>();
             List<BodyLoads> bodies = new ArrayList<>();
@@ -201,12 +203,12 @@ public final class BntPhysicsEvents {
 
             share = Math.max(share, 1.0);
             if (!contacts.isEmpty()) {
-                if (frame != null && solveSupport(level, frame.logicalPose(), massData, contacts, share, beltShare, timeStep)) {
+                if (frame != null && solveSupport(level, frame.logicalPose(), massData, contacts, share, beltShare, timeStep, articulation)) {
                     for (ServerSubLevel subLevel : assembly) {
                         physicsSystem.getPipeline().wakeUp(subLevel);
                     }
                 }
-                solveTraction(level, massData, contacts, timeStep, step);
+                solveTraction(level, massData, contacts, timeStep, step, articulation);
                 for (BntPhysicsEvents.WheelContact contact : contacts) {
                     applyContactForces(contact);
                 }
@@ -221,7 +223,7 @@ public final class BntPhysicsEvents {
                     BntBeltContacts.applyWeight(weight, level, timeStep);
                 }
                 report(level, body.subLevel(), body.wheels(), body.nearGround(), body.contacts(),
-                    assembly.size(), massData == null ? 0.0 : massData.getMass());
+                    assembly.size(), articulation == null ? 0 : articulation.freeAxes(), massData == null ? 0.0 : massData.getMass());
             }
         }
 
@@ -740,7 +742,7 @@ public final class BntPhysicsEvents {
 
     private static boolean solveSupport(
         Level level, Pose3dc framePose, @Nullable MassData massData, List<BntPhysicsEvents.WheelContact> contacts,
-        double wheelShare, int beltShare, double timeStep
+        double wheelShare, int beltShare, double timeStep, @Nullable BntArticulation articulation
     ) {
         if (massData == null || massData.isInvalid() || massData.getCenterOfMass() == null) {
             return false;
@@ -757,7 +759,7 @@ public final class BntPhysicsEvents {
         Vector3d fall = DimensionPhysicsData.getGravity(level).mul(timeStep);
         Vector3d deltaVelocity = framePose.transformNormalInverse(fall);
         return solveSupport(contacts, massData.getMass(), inverseMass, inverseInertia, centerOfMass, gravity, deltaVelocity,
-            wheelShare, beltShare, timeStep);
+            wheelShare, beltShare, timeStep, articulation);
     }
 
     public record SupportContact(
@@ -792,7 +794,7 @@ public final class BntPhysicsEvents {
             contacts.add(contact);
         }
         solveSupport(contacts, mass, 1.0 / mass, inverseInertia, centerOfMass, gravity,
-            new Vector3d(0.0, -gravity * timeStep, 0.0), contacts.size(), 0, timeStep);
+            new Vector3d(0.0, -gravity * timeStep, 0.0), contacts.size(), 0, timeStep, null);
         double[] pushes = new double[contacts.size()];
         for (int i = 0; i < pushes.length; i++) {
             pushes[i] = contacts.get(i).push;
@@ -802,7 +804,8 @@ public final class BntPhysicsEvents {
 
     private static boolean solveSupport(
         List<BntPhysicsEvents.WheelContact> contacts, double mass, double inverseMass, Matrix3dc inverseInertia,
-        Vector3dc centerOfMass, double gravity, Vector3d deltaVelocity, double wheelShare, int beltShare, double timeStep
+        Vector3dc centerOfMass, double gravity, Vector3d deltaVelocity, double wheelShare, int beltShare, double timeStep,
+        @Nullable BntArticulation articulation
     ) {
         int count = contacts.size();
         double[] inverseEffectiveMass = new double[count];
@@ -814,6 +817,8 @@ public final class BntPhysicsEvents {
         double[] tolerance = new double[count];
         Vector3d[] levers = new Vector3d[count];
         Vector3d[] responses = new Vector3d[count];
+        double[][] rows = new double[count][];
+        double[][] generals = new double[count][];
 
         for (int i = 0; i < count; i++) {
             BntPhysicsEvents.WheelContact contact = contacts.get(i);
@@ -860,6 +865,11 @@ public final class BntPhysicsEvents {
             Vector3d angular = levers[i].cross(contact.normal, new Vector3d());
             responses[i] = inverseInertia.transform(angular, new Vector3d());
             inverseEffectiveMass[i] = inverseMass + angular.dot(responses[i]);
+            if (articulation != null) {
+                rows[i] = articulation.row(contact.subLevel, contact.forcePoint, contact.normal);
+                generals[i] = articulation.respond(rows[i]);
+                inverseEffectiveMass[i] = BntArticulation.dot(rows[i], generals[i]);
+            }
             if (!Double.isFinite(inverseEffectiveMass[i]) || inverseEffectiveMass[i] <= 0.0) {
                 continue;
             }
@@ -895,7 +905,10 @@ public final class BntPhysicsEvents {
         Vector3d deltaAngularVelocity = new Vector3d();
         Vector3d pointVelocity = new Vector3d();
 
-        for (int iteration = 0; iteration < SUPPORT_ITERATIONS; iteration++) {
+        if (articulation != null) {
+            solveJointed(contacts, articulation, rows, generals, softness, bias, ceiling, deltaVelocity, accumulated);
+        }
+        for (int iteration = 0; articulation == null && iteration < SUPPORT_ITERATIONS; iteration++) {
             for (int i = 0; i < count; i++) {
                 if (ceiling[i] <= 0.0) {
                     continue;
@@ -921,6 +934,37 @@ public final class BntPhysicsEvents {
         return moving;
     }
 
+    private static void solveJointed(
+        List<BntPhysicsEvents.WheelContact> contacts, BntArticulation articulation, double[][] rows, double[][] generals,
+        double[] softness, double[] bias, double[] ceiling, Vector3dc deltaVelocity, double[] accumulated
+    ) {
+        int[] used = new int[contacts.size()];
+        int count = 0;
+        for (int i = 0; i < contacts.size(); i++) {
+            if (ceiling[i] > 0.0 && rows[i] != null) {
+                used[count++] = i;
+            }
+        }
+        double[] fall = articulation.fall(deltaVelocity);
+        double[][] matrix = new double[count][count];
+        double[] target = new double[count];
+        double[] bound = new double[count];
+        for (int a = 0; a < count; a++) {
+            int i = used[a];
+            BntPhysicsEvents.WheelContact contact = contacts.get(i);
+            for (int b = 0; b < count; b++) {
+                matrix[a][b] = BntArticulation.dot(rows[i], generals[used[b]]);
+            }
+            matrix[a][a] += softness[i];
+            target[a] = -(BntArticulation.dot(rows[i], fall) + contact.localVelocity.dot(contact.normal) + bias[i]);
+            bound[a] = ceiling[i];
+        }
+        double[] solution = BntArticulation.solveBox(matrix, target, bound);
+        for (int a = 0; a < count; a++) {
+            accumulated[used[a]] = solution[a];
+        }
+    }
+
     private static void applyContactForces(BntPhysicsEvents.WheelContact contact) {
         Vector3d impulse = new Vector3d(contact.normal).mul(contact.push);
         impulse.fma(contact.longitudinalImpulse, contact.normalD);
@@ -939,7 +983,8 @@ public final class BntPhysicsEvents {
     }
 
     private static void solveTraction(
-        Level level, @Nullable MassData massData, List<BntPhysicsEvents.WheelContact> contacts, double timeStep, long step
+        Level level, @Nullable MassData massData, List<BntPhysicsEvents.WheelContact> contacts, double timeStep, long step,
+        @Nullable BntArticulation articulation
     ) {
         if (massData == null || massData.isInvalid() || massData.getCenterOfMass() == null) {
             return;
@@ -1002,6 +1047,14 @@ public final class BntPhysicsEvents {
             angular = contact.lever.cross(contact.sideD, new Vector3d());
             contact.lateralResponse = inverseInertia.transform(angular, new Vector3d());
             contact.lateralInverseMass = inverseMass + angular.dot(contact.lateralResponse);
+            if (articulation != null) {
+                contact.longitudinalRow = articulation.row(contact.subLevel, contact.forcePoint, contact.normalD);
+                contact.longitudinalGeneral = articulation.respond(contact.longitudinalRow);
+                contact.longitudinalInverseMass = BntArticulation.dot(contact.longitudinalRow, contact.longitudinalGeneral);
+                contact.lateralRow = articulation.row(contact.subLevel, contact.forcePoint, contact.sideD);
+                contact.lateralGeneral = articulation.respond(contact.lateralRow);
+                contact.lateralInverseMass = BntArticulation.dot(contact.lateralRow, contact.lateralGeneral);
+            }
         }
 
         double commandedYawRate = pivotScrub > 0.0 ? solveCommandedYawRate(contacts) : 0.0;
@@ -1037,43 +1090,71 @@ public final class BntPhysicsEvents {
         Vector3d deltaVelocity = new Vector3d();
         Vector3d deltaAngularVelocity = new Vector3d();
         Vector3d pointVelocity = new Vector3d();
+        double[] change = articulation == null ? null : articulation.rest();
 
         for (int iteration = 0; iteration < TRACTION_ITERATIONS; iteration++) {
             for (BntPhysicsEvents.WheelContact contact : contacts) {
-                if (contact.hasTraction) {
+                if (!contact.hasTraction) {
+                    continue;
+                }
+                if (change != null) {
+                    solveGrip(contact, change);
+                } else {
                     solveGrip(contact, inverseMass, deltaVelocity, deltaAngularVelocity, pointVelocity);
                 }
             }
         }
     }
 
+    private static boolean gripSolvable(BntPhysicsEvents.WheelContact contact) {
+        return contact.longitudinalInverseMass > 0.0 && contact.lateralInverseMass > 0.0
+            && Double.isFinite(contact.longitudinalInverseMass) && Double.isFinite(contact.lateralInverseMass);
+    }
+
     private static void solveGrip(
         BntPhysicsEvents.WheelContact contact, double inverseMass,
         Vector3d deltaVelocity, Vector3d deltaAngularVelocity, Vector3d pointVelocity
     ) {
-        if (!(contact.longitudinalInverseMass > 0.0) || !(contact.lateralInverseMass > 0.0)
-            || !Double.isFinite(contact.longitudinalInverseMass) || !Double.isFinite(contact.lateralInverseMass)) {
+        if (!gripSolvable(contact)) {
             return;
         }
 
         deltaAngularVelocity.cross(contact.lever, pointVelocity).add(deltaVelocity).add(contact.localVelocity);
+        double longitudinal = contact.longitudinalImpulse;
+        double lateral = contact.lateralImpulse;
+        settleGrip(contact, pointVelocity.dot(contact.normalD), pointVelocity.dot(contact.sideD));
+        double appliedLongitudinal = contact.longitudinalImpulse - longitudinal;
+        double appliedLateral = contact.lateralImpulse - lateral;
+        deltaVelocity.fma(appliedLongitudinal * inverseMass, contact.normalD).fma(appliedLateral * inverseMass, contact.sideD);
+        deltaAngularVelocity.fma(appliedLongitudinal, contact.longitudinalResponse).fma(appliedLateral, contact.lateralResponse);
+    }
+
+    private static void solveGrip(BntPhysicsEvents.WheelContact contact, double[] change) {
+        if (!gripSolvable(contact) || contact.longitudinalRow == null || contact.lateralRow == null) {
+            return;
+        }
+
+        double longitudinal = contact.longitudinalImpulse;
+        double lateral = contact.lateralImpulse;
+        settleGrip(contact,
+            BntArticulation.dot(contact.longitudinalRow, change) + contact.localVelocity.dot(contact.normalD),
+            BntArticulation.dot(contact.lateralRow, change) + contact.localVelocity.dot(contact.sideD));
+        BntArticulation.add(change, contact.longitudinalImpulse - longitudinal, contact.longitudinalGeneral);
+        BntArticulation.add(change, contact.lateralImpulse - lateral, contact.lateralGeneral);
+    }
+
+    private static void settleGrip(BntPhysicsEvents.WheelContact contact, double longitudinalSpeed, double lateralSpeed) {
         double longitudinal = contact.longitudinalImpulse
-            + (contact.goalLongitudinal - pointVelocity.dot(contact.normalD)) / contact.longitudinalInverseMass;
+            + (contact.goalLongitudinal - longitudinalSpeed) / contact.longitudinalInverseMass;
         double lateral = contact.lateralImpulse
-            + (contact.goalLateral - pointVelocity.dot(contact.sideD)) / contact.lateralInverseMass;
+            + (contact.goalLateral - lateralSpeed) / contact.lateralInverseMass;
         double magnitude = Math.hypot(longitudinal, lateral);
         if (magnitude > contact.grip) {
             double scale = contact.grip / magnitude;
             longitudinal *= scale;
             lateral *= scale;
         }
-        longitudinal = Mth.clamp(longitudinal, -contact.longitudinalCap, contact.longitudinalCap);
-
-        double appliedLongitudinal = longitudinal - contact.longitudinalImpulse;
-        double appliedLateral = lateral - contact.lateralImpulse;
-        deltaVelocity.fma(appliedLongitudinal * inverseMass, contact.normalD).fma(appliedLateral * inverseMass, contact.sideD);
-        deltaAngularVelocity.fma(appliedLongitudinal, contact.longitudinalResponse).fma(appliedLateral, contact.lateralResponse);
-        contact.longitudinalImpulse = longitudinal;
+        contact.longitudinalImpulse = Mth.clamp(longitudinal, -contact.longitudinalCap, contact.longitudinalCap);
         contact.lateralImpulse = lateral;
     }
 
@@ -1137,7 +1218,7 @@ public final class BntPhysicsEvents {
 
     private static void report(ServerLevel level, ServerSubLevel subLevel, int wheels,
                                List<BntPhysicsEvents.WheelContact> nearGround, List<BntPhysicsEvents.WheelContact> solved,
-                               int bodies, double mass) {
+                               int bodies, int freeAxes, double mass) {
         long now = level.getGameTime();
         if (!BntDebugLog.enabled() || now % 20L != 0L || nearGround.isEmpty() && solved.isEmpty()
             || Long.valueOf(now).equals(REPORTED.get(subLevel))) {
@@ -1172,8 +1253,8 @@ public final class BntPhysicsEvents {
         }
         Vector3d first = solved.isEmpty() ? nearGround.get(0).ownPoint() : solved.get(0).ownPoint();
         Vec3 at = subLevel.logicalPose().transformPosition(new Vec3(first.x, first.y, first.z));
-        BntDebugLog.LOG.info("vehicle at {} bodies {} mass {} wheels {} near ground {} belt contacts {} belt push {} belt lon {} belt lat {} belt depth {} yaw {}{}",
-            String.format("%.1f %.1f %.1f", at.x, at.y, at.z), bodies, String.format("%.1f", mass), wheels, nearGround.size(), beltContacts,
+        BntDebugLog.LOG.info("vehicle at {} bodies {} free axes {} mass {} wheels {} near ground {} belt contacts {} belt push {} belt lon {} belt lat {} belt depth {} yaw {}{}",
+            String.format("%.1f %.1f %.1f", at.x, at.y, at.z), bodies, freeAxes, String.format("%.1f", mass), wheels, nearGround.size(), beltContacts,
             String.format("%.2f", beltPush), String.format("%.2f", beltLongitudinal), String.format("%.2f", beltLateral),
             String.format("%.3f", deepest), String.format("%.2f", yaw), line);
     }
@@ -1444,6 +1525,10 @@ public final class BntPhysicsEvents {
         double lateralInverseMass;
         Vector3d longitudinalResponse;
         Vector3d lateralResponse;
+        double[] longitudinalRow;
+        double[] longitudinalGeneral;
+        double[] lateralRow;
+        double[] lateralGeneral;
         double longitudinalImpulse;
         double lateralImpulse;
         @Nullable

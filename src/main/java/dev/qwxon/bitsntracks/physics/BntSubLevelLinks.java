@@ -28,7 +28,10 @@ public final class BntSubLevelLinks {
     private BntSubLevelLinks() {
     }
 
-    private record Link(PhysicsPipeline pipeline, ServerSubLevel a, ServerSubLevel b, PhysicsConstraintHandle handle) {
+    public record Link(
+        PhysicsPipeline pipeline, ServerSubLevel a, ServerSubLevel b, PhysicsConstraintConfiguration<?> configuration,
+        PhysicsConstraintHandle handle
+    ) {
         boolean alive(PhysicsPipeline current) {
             return this.pipeline == current && !this.a.isRemoved() && !this.b.isRemoved() && this.handle.isValid();
         }
@@ -39,8 +42,18 @@ public final class BntSubLevelLinks {
         PhysicsConstraintConfiguration<?> configuration, @Nullable PhysicsConstraintHandle handle
     ) {
         if (handle != null && bodyA instanceof ServerSubLevel a && bodyB instanceof ServerSubLevel b && carriesLoad(configuration)) {
-            LINKS.get(a.getLevel()).add(new Link(pipeline, a, b, handle));
+            LINKS.get(a.getLevel()).add(new Link(pipeline, a, b, configuration, handle));
         }
+    }
+
+    public static synchronized List<Link> within(ServerLevel level, PhysicsPipeline pipeline, Collection<ServerSubLevel> bodies) {
+        List<Link> links = new ArrayList<>();
+        for (Link link : LINKS.get(level)) {
+            if (link.alive(pipeline) && bodies.contains(link.a()) && bodies.contains(link.b())) {
+                links.add(link);
+            }
+        }
+        return links;
     }
 
     private static boolean carriesLoad(PhysicsConstraintConfiguration<?> configuration) {
