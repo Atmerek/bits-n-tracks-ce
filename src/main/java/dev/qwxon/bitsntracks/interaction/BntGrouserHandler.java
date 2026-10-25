@@ -1,5 +1,6 @@
 package dev.qwxon.bitsntracks.interaction;
 
+import com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorBlockEntity;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntGrousers;
@@ -29,12 +30,12 @@ public final class BntGrouserHandler {
 
         int cost = BntGrousers.cost(level, controllerPos);
         if (!BntGrousers.accepts(BntChains.chainAt(level, controllerPos)) || BntGrousers.at(level, controllerPos) > 0
-            || !player.hasInfiniteMaterials() && held.getCount() < cost) {
+            || !player.hasInfiniteMaterials() && !ChainConveyorBlockEntity.getChainsFromInventory(player, held, cost, true)) {
             BntToolSounds.refuse(player);
             return;
         }
         if (!player.hasInfiniteMaterials()) {
-            held.shrink(cost);
+            ChainConveyorBlockEntity.getChainsFromInventory(player, held, cost, false);
         }
         BntGrousers.write(level, controllerPos, cost);
         level.playSound(null, controllerPos, SoundEvents.NETHERITE_BLOCK_PLACE, SoundSource.BLOCKS, 1.0F, 1.0F);

@@ -1,6 +1,7 @@
 package dev.qwxon.bitsntracks;
 
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
+import dev.qwxon.bitsntracks.client.BntBeltClick;
 import dev.qwxon.bitsntracks.client.BntShaderHand;
 import dev.qwxon.bitsntracks.client.BntSqueezedModel;
 import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
@@ -21,6 +22,7 @@ import dev.qwxon.bitsntracks.content.suspension.BntSuspensionMeshes;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.createmod.ponder.foundation.PonderIndex;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -55,6 +57,7 @@ public class BitsNTracksClient {
         NeoForge.EVENT_BUS.addListener(BntTunerGauge::onRenderFrame);
         NeoForge.EVENT_BUS.addListener(BntToolSpin::onRenderFrame);
         NeoForge.EVENT_BUS.addListener(BntWheelEffects::onClientTick);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOW, BntBeltClick::showGrouserCost);
         NeoForge.EVENT_BUS.addListener(BntShaderHand::onRenderFrame);
         NeoForge.EVENT_BUS.addListener(BntFlywheel::onRenderFrame);
     }
