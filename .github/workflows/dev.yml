@@ -1,8 +1,6 @@
 name: Dev build
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -49,9 +47,9 @@ jobs:
       - name: Write release notes
         run: |
           {
-            echo "A development build of the latest \`main\`, not a release. It is less stable than a release and is meant for play testing, so back up your world before loading it. Report anything you find on the issue tracker."
+            echo "A development build, not a release. It is less stable than a release and is meant for play testing, so back up your world before loading it. Report anything you find on the issue tracker."
             echo
-            echo "Built from [\`${GITHUB_SHA:0:7}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})."
+            echo "Built from [\`${GITHUB_SHA:0:7}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}) on \`${GITHUB_REF_NAME}\`."
             echo
             last="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)"
             if [ -n "$last" ]; then

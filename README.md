@@ -143,7 +143,7 @@ Shader packs just work.
 ## Help and feedback
 
 Report bugs on the [issue tracker](https://github.com/Atmerek/bits-n-tracks-ce/issues), and ask questions or share builds on [Discord](https://discord.gg/CxTmpvp6gs).
-Development builds of the latest changes are on the [dev release](https://github.com/Atmerek/bits-n-tracks-ce/releases/tag/dev) page.
+Development builds, when one is out ahead of the latest release, are listed as pre-releases on the [releases](https://github.com/Atmerek/bits-n-tracks-ce/releases) page.
 
 ## Building from source
 
