@@ -1,6 +1,8 @@
 package dev.qwxon.bitsntracks.content;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
+import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
+import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.kinetics.simpleRelays.SimpleKineticBlockEntity;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
@@ -31,12 +33,13 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
-public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity implements KineticBlockEntityPhysicsAccess {
+public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity implements KineticBlockEntityPhysicsAccess, TransformableBlockEntity {
     private static final float RPM_PER_RADIAN_TICK = 190.9859F;
     private static final int DETACH_CHECK_TICKS = 20;
 
@@ -214,6 +217,11 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         if (!levels.isEmpty()) {
             tag.put("BntTuningLevels", levels);
         }
+    }
+
+    @Override
+    public void transform(BlockEntity be, StructureTransform transform) {
+        BntCogwheelTransform.apply(this, transform);
     }
 
     @Override

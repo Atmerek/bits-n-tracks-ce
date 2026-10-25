@@ -80,6 +80,8 @@ Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 
 - Turning off Bits 'n' Bobs' undedicated chain drive setting broke every track on Bits 'n' Tracks cogwheels.
 - Removing a cogwheel from a chain could crash the game.
 - Tracks and chains pasted from a rotated schematic, or rotated with a contraption, came out turned twice as far as the blocks around them.
+- Disassembling a vehicle that had turned broke its tracks.
+- Cogwheel alignment offsets did not turn with a rotated schematic, a contraption or a disassembled vehicle.
 - The Cog Alignment Lever was drawn at the wrong size in item frames.
 - The Small Physical Flanged Cogwheel was drawn larger than the other cogwheels in inventories, and turned differently in item frames.
 - The Cog Alignment Lever stacked up to 64.
