@@ -84,6 +84,9 @@ public final class BntTankTread {
 
     private static final double BELT_FACE = 2.0;
     private static final double MODEL_CENTRE = 8.0;
+    private static final double GROUSER_MIDDLE = 3.0;
+    private static final int[] ACROSS_FIRST = {0, 3, 2, 1};
+    private static final int[] ACROSS_LAST = {2, 1, 0, 3};
     private static final double LINK_PLATE = 1.5 / 16.0;
     private static volatile Grousers grousers = new Grousers(null, new Part[BntCogwheelWidth.PAIR + 1][]);
 
@@ -116,32 +119,82 @@ public final class BntTankTread {
 
     private static Part[] grouserParts(BntGrouserModel.Model model, int quarters) {
         double scale = BntCogwheelWidth.trackPixels(quarters) / (double)BntCogwheelWidth.trackPixels(BntCogwheelWidth.SINGLE);
-        Part[] parts = new Part[model.elements().size()];
-        for (int i = 0; i < parts.length; i++) {
-            BntGrouserModel.Element element = model.elements().get(i);
-            float[] from = element.from();
-            float[] to = element.to();
-            boolean spans = from[0] < MODEL_CENTRE && to[0] > MODEL_CENTRE;
-            float[][] uv = new float[element.faces().length][];
-            for (int face = 0; face < uv.length; face++) {
-                uv[face] = spans && face < 4 ? stretch(element.faces()[face], scale) : element.faces()[face];
+        List<Part> parts = new ArrayList<>();
+        for (BntGrouserModel.Element element : model.elements()) {
+            double low = element.from()[0] - MODEL_CENTRE;
+            double high = element.to()[0] - MODEL_CENTRE;
+            if (low < 0.0 && high > 0.0) {
+                spanParts(parts, element, low, high, scale);
+            } else {
+                double shift = (low + high) * 0.5 * (scale - 1.0);
+                parts.add(grouserPart(element, low + shift, high + shift, element.faces()));
             }
-            double shift = spans ? 0.0 : ((from[0] + to[0]) * 0.5 - MODEL_CENTRE) * (scale - 1.0);
-            double fromX = spans ? (from[0] - MODEL_CENTRE) * scale : from[0] - MODEL_CENTRE + shift;
-            double toX = spans ? (to[0] - MODEL_CENTRE) * scale : to[0] - MODEL_CENTRE + shift;
-            parts[i] = Part.of(
-                fromX, from[1] + BELT_FACE, from[2] - MODEL_CENTRE + CELL_START,
-                toX, to[1] + BELT_FACE, to[2] - MODEL_CENTRE + CELL_START,
-                uv);
         }
-        return parts;
+        return parts.toArray(Part[]::new);
     }
 
-    private static float[] stretch(float[] uv, double scale) {
-        float[] stretched = uv.clone();
-        int axis = ((int)uv[4] & 1) == 0 ? 0 : 1;
-        stretched[axis + 2] = (float)(uv[axis] + (uv[axis + 2] - uv[axis]) * scale);
-        return stretched;
+    private static void spanParts(List<Part> parts, BntGrouserModel.Element element, double low, double high, double scale) {
+        double outerLow = low * scale;
+        double outerHigh = high * scale;
+        double width = outerHigh - outerLow;
+        double lowEnd = Math.max(0.0, -GROUSER_MIDDLE - low);
+        double highEnd = Math.max(0.0, high - GROUSER_MIDDLE);
+        if (width <= lowEnd + highEnd) {
+            double split = outerLow + width * lowEnd / Math.max(lowEnd + highEnd, MIN_SPAN);
+            parts.add(spanPart(element, low, high, outerLow, split, low, low + split - outerLow));
+            parts.add(spanPart(element, low, high, split, outerHigh, high - (outerHigh - split), high));
+            return;
+        }
+        parts.add(spanPart(element, low, high, outerLow, outerLow + lowEnd, low, low + lowEnd));
+        parts.add(spanPart(element, low, high, outerHigh - highEnd, outerHigh, high - highEnd, high));
+        double fill = width - lowEnd - highEnd;
+        double middle = high - highEnd - (low + lowEnd);
+        double centre = (low + lowEnd + high - highEnd) * 0.5;
+        int tiles = middle > MIN_SPAN ? (int)Math.ceil(fill / middle - MIN_SPAN) : 1;
+        double tile = fill / tiles;
+        double source = Math.min(tile, middle) * 0.5;
+        for (int i = 0; i < tiles; i++) {
+            double at = outerLow + lowEnd + i * tile;
+            parts.add(spanPart(element, low, high, at, at + tile, centre - source, centre + source));
+        }
+    }
+
+    private static Part spanPart(
+        BntGrouserModel.Element element, double low, double high, double fromX, double toX, double sourceFrom, double sourceTo
+    ) {
+        float[][] faces = element.faces();
+        float[][] uv = new float[faces.length][];
+        for (int face = 0; face < 4; face++) {
+            uv[face] = faces[face] == null ? null : cropAcross(faces[face], face, low, high, sourceFrom, sourceTo);
+        }
+        uv[4] = sourceTo >= high - MIN_SPAN ? faces[4] : null;
+        uv[5] = sourceFrom <= low + MIN_SPAN ? faces[5] : null;
+        return grouserPart(element, fromX, toX, uv);
+    }
+
+    private static float[] cropAcross(float[] uv, int face, double low, double high, double from, double to) {
+        int turn = (int)uv[4] & 3;
+        int first = ACROSS_FIRST[turn];
+        int last = ACROSS_LAST[turn];
+        if (face == 2) {
+            int swap = first;
+            first = last;
+            last = swap;
+        }
+        float[] cropped = uv.clone();
+        double span = high - low;
+        cropped[first] = (float)(uv[first] + (uv[last] - uv[first]) * (from - low) / span);
+        cropped[last] = (float)(uv[first] + (uv[last] - uv[first]) * (to - low) / span);
+        return cropped;
+    }
+
+    private static Part grouserPart(BntGrouserModel.Element element, double fromX, double toX, float[][] uv) {
+        float[] from = element.from();
+        float[] to = element.to();
+        return Part.of(
+            fromX, from[1] + BELT_FACE, from[2] - MODEL_CENTRE + CELL_START,
+            toX, to[1] + BELT_FACE, to[2] - MODEL_CENTRE + CELL_START,
+            uv);
     }
 
     private BntTankTread() {
@@ -341,7 +394,7 @@ public final class BntTankTread {
 
         int light = segment.lightAt(c);
         for (int face = 0; face < 6; face++) {
-            if ((visible & (1 << face)) != 0) {
+            if ((visible & (1 << face)) != 0 && uv[face] != null) {
                 face(target, c, cx, cy, cz, px, py, pz, FACE_CORNERS[face], uv[face], light, scratch);
             }
         }
@@ -437,6 +490,9 @@ public final class BntTankTread {
             cz[corner] = (corner & 1) != 0 ? 1.0 : -1.0;
         }
         for (int face = 0; face < 6; face++) {
+            if (uv[face] == null) {
+                continue;
+            }
             int[] corners = FACE_CORNERS[face];
             int a = corners[0];
             int b = corners[1];

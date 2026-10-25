@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.1
+
+### Changed
+
+- Grousers have a new model and texture, and show as that model in the inventory.
+- New item icons for the Industrial Belt and the Tank Tread.
+- Contributor heads sit higher in inventory slots.
+
 ## 3.0.0
 
 Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.

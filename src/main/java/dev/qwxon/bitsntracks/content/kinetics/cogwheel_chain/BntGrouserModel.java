@@ -22,7 +22,7 @@ public final class BntGrouserModel implements ResourceManagerReloadListener {
     public static final BntGrouserModel INSTANCE = new BntGrouserModel();
     private static final ResourceLocation LOCATION = BitsNTracks.asResource("models/track/grouser.json");
     private static final String[] FACES = {"up", "down", "north", "south", "east", "west"};
-    private static final float[] MISSING = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
+    private static final float MIN_EXTENT = 0.02F;
     private static final Model EMPTY = new Model(List.of(), BntChainTextures.GROUSER);
 
     private static volatile Model model = EMPTY;
@@ -57,11 +57,26 @@ public final class BntGrouserModel implements ResourceManagerReloadListener {
             JsonObject faces = element.has("faces") ? element.getAsJsonObject("faces") : new JsonObject();
             float[][] uv = new float[FACES.length][];
             for (int face = 0; face < FACES.length; face++) {
-                uv[face] = faces.has(FACES[face]) ? face(faces.getAsJsonObject(FACES[face])) : MISSING;
+                uv[face] = faces.has(FACES[face]) ? face(faces.getAsJsonObject(FACES[face])) : null;
             }
-            elements.add(new Element(vector(element.getAsJsonArray("from")), vector(element.getAsJsonArray("to")), uv));
+            float[] from = vector(element.getAsJsonArray("from"));
+            float[] to = vector(element.getAsJsonArray("to"));
+            thicken(from, to);
+            elements.add(new Element(from, to, uv));
         }
         return new Model(List.copyOf(elements), texture(json));
+    }
+
+    private static void thicken(float[] from, float[] to) {
+        for (int axis = 0; axis < 3; axis++) {
+            float low = Math.min(from[axis], to[axis]);
+            float high = Math.max(from[axis], to[axis]);
+            if (high - low < MIN_EXTENT) {
+                float middle = (low + high) * 0.5F;
+                from[axis] = middle - MIN_EXTENT * 0.5F;
+                to[axis] = middle + MIN_EXTENT * 0.5F;
+            }
+        }
     }
 
     private static float[] face(JsonObject face) {
