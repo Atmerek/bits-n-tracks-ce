@@ -109,6 +109,11 @@ tasks.named('jar', Jar) {
             'Implementation-Vendor' : "${mod_authors}"
         ])
     }
+    from('LICENSE')
+}
+
+tasks.named('sourcesJar', Jar) {
+    from('LICENSE')
 }
 
 tasks.withType(JavaCompile).configureEach {
