@@ -2,6 +2,10 @@
 
 ## 3.0.1
 
+### Added
+
+- Hanahaki's Head.
+
 ### Changed
 
 - Grousers have a new model and texture, and show as that model in the inventory.

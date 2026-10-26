@@ -45,6 +45,7 @@ public class BitsNTracksBlockEntityTypes {
             BitsNTracksBlocks.ATMEREK_HEAD,
             BitsNTracksBlocks.CUBESTER_HEAD,
             BitsNTracksBlocks.ALESRR_HEAD,
+            BitsNTracksBlocks.HANAHAKI_HEAD,
             BitsNTracksBlocks.SPECIAL_THANKS_HEAD
         )
         .renderer(() -> BntHeadRenderer::new)

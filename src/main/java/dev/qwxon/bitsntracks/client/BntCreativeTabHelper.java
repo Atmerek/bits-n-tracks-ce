@@ -33,6 +33,7 @@ public final class BntCreativeTabHelper {
         BitsNTracksBlocks.ATMEREK_HEAD,
         BitsNTracksBlocks.CUBESTER_HEAD,
         BitsNTracksBlocks.ALESRR_HEAD,
+        BitsNTracksBlocks.HANAHAKI_HEAD,
         BitsNTracksBlocks.SPECIAL_THANKS_HEAD
     );
 
