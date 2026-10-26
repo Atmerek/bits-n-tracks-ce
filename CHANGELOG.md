@@ -8,6 +8,10 @@
 - New item icons for the Industrial Belt and the Tank Tread.
 - Contributor heads sit higher in inventory slots.
 
+### Fixed
+
+- Vehicles on cogwheels without a track no longer slide endlessly: bare cogwheels roll freely, hold sideways and lock under a brake signal.
+
 ## 3.0.0
 
 Requires NeoForge 21.1.228 or newer, Create Aeronautics 1.3.1 or newer and Bits 'n' Bobs 2.3.5 or newer.

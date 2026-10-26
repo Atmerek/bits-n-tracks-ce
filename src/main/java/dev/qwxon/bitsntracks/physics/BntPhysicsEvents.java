@@ -6,6 +6,7 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
+import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
@@ -431,6 +432,15 @@ public final class BntPhysicsEvents {
         return signal / 15.0;
     }
 
+    private static double bareBrake(Level level, BlockPos pos) {
+        int signal = level.getSignal(pos.above(), Direction.DOWN);
+        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+        if (partnerPos != null) {
+            signal = Math.max(signal, brakeSignal(level, partnerPos));
+        }
+        return signal / 15.0;
+    }
+
     private static int brakeSignal(Level level, BlockPos pos) {
         return level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isPhysicsEnabled()
             ? level.getSignal(pos.above(), Direction.DOWN)
@@ -588,7 +598,14 @@ public final class BntPhysicsEvents {
         contact.ground = ground;
         contact.patch = BntGround.patch(radius) * (BntCogwheelPairing.isWide(state) ? 0.5 : 1.0);
         contact.normalMass = 1.0 / inverseNormalMass;
-        contact.tread = isConnected && BntChainEngagement.isEngaged(behaviour) ? BntChains.controllerPos(track) : null;
+        contact.tread = !isConnected ? kbe.getBlockPos()
+            : BntChainEngagement.isEngaged(behaviour) ? BntChains.controllerPos(track) : null;
+        contact.bare = !isConnected;
+        if (contact.bare) {
+            contact.brakeStrength = bareBrake(kbe.getLevel(), kbe.getBlockPos());
+            contact.touchingFriction = BntGround.grip(ground, null, false);
+            contact.width = BntCogwheelWidth.trackPixels(BntCogwheelWidth.quarters(state)) / 16.0;
+        }
         contact.hasTraction = axis != Axis.Y && contact.tread != null;
         contact.loaded = true;
         contact.verticalSpeed = verticalSpeed;
@@ -709,6 +726,9 @@ public final class BntPhysicsEvents {
     }
 
     private static void joinTread(BntPhysicsEvents.WheelContact contact, Map<BlockPos, BntBeltContacts.BntTread> treads) {
+        if (contact.bare) {
+            return;
+        }
         BntBeltContacts.BntTread tread = contact.tread == null ? null : treads.get(contact.tread);
         if (tread == null) {
             contact.hasTraction = false;
@@ -1233,7 +1253,7 @@ public final class BntPhysicsEvents {
             line.append(String.format(" [%s %s %s comp%.2f hold%.2f floor%.2f push%.2f vy%.2f %s tgt%.2f grip%.2f pressure%.1f slide%.2f lon%.2f lat%.2f]",
                 contact.pos.toShortString(), contact.loaded ? "on" : "off", contact.arm ? "arm" : "rigid", contact.compression,
                 contact.hold, contact.carried, contact.push, contact.verticalSpeed,
-                contact.tread == null ? "none" : contact.isDriven ? "drive" : "free",
+                contact.tread == null ? "none" : contact.bare ? "bare" : contact.isDriven ? "drive" : "free",
                 contact.targetSpeed, contact.grip, contact.pressure, contact.slide, contact.longitudinalImpulse, contact.lateralImpulse));
         }
 
@@ -1535,6 +1555,7 @@ public final class BntPhysicsEvents {
         BlockPos tread;
         boolean hasTraction;
         boolean isDriven;
+        boolean bare;
         boolean loaded;
         boolean belt;
         boolean arm;
