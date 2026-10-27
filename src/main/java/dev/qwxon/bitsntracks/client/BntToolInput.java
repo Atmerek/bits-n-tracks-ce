@@ -104,20 +104,49 @@ public final class BntToolInput {
         int steps = (int)scrollCarry;
         scrollCarry -= steps;
         boolean focused = menuKeyDown();
-        boolean consumes = focused
-            || lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.OFFSET && BntToolState.leverCog != null
-            || lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.TENSION && BntToolState.leverChain != null
-            || tuner && BntToolState.tunerCog != null;
-        if (!consumes) {
+        if (!consumes(stack, lever, tuner, focused)) {
             scrollCarry = 0.0;
             return;
         }
         event.setCanceled(true);
-        if (steps == 0) {
+        if (steps != 0) {
+            step(level, stack, lever, focused, steps);
+        }
+    }
+
+    private static void onKeys(Minecraft minecraft) {
+        int modes = BntToolKeys.presses(BntToolKeys.NEXT_MODE) - BntToolKeys.presses(BntToolKeys.PREVIOUS_MODE);
+        int steps = BntToolKeys.presses(BntToolKeys.STEP_UP) - BntToolKeys.presses(BntToolKeys.STEP_DOWN);
+        LocalPlayer player = minecraft.player;
+        ClientLevel level = minecraft.level;
+        if (player == null || level == null || minecraft.screen != null) {
             return;
         }
-        BntToolSpin.kick(steps);
+        ItemStack stack = player.getMainHandItem();
+        boolean lever = stack.getItem() instanceof CogAlignmentLeverItem;
+        boolean tuner = stack.getItem() instanceof SuspensionToolItem;
+        if (!lever && !tuner) {
+            return;
+        }
+        if (modes != 0) {
+            BntToolSpin.kick(-modes);
+            cycleMode(stack, lever, Integer.signum(modes));
+        }
+        boolean focused = menuKeyDown();
+        if (steps != 0 && consumes(stack, lever, tuner, focused)) {
+            step(level, stack, lever, focused, steps);
+        }
+    }
 
+    private static boolean consumes(ItemStack stack, boolean lever, boolean tuner, boolean focused) {
+        return focused
+            || lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.OFFSET && BntToolState.leverCog != null
+            || lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.TENSION && BntToolState.leverChain != null
+            || tuner && BntToolState.tunerCog != null;
+    }
+
+    private static void step(ClientLevel level, ItemStack stack, boolean lever, boolean focused, int steps) {
+        BntToolSpin.kick(steps);
         if (focused) {
             cycleMode(stack, lever, steps < 0 ? 1 : -1);
         } else if (lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.OFFSET) {
@@ -140,6 +169,7 @@ public final class BntToolInput {
         useWasDown = minecraft.options.keyUse.isDown();
         attackHandled = false;
         useHandled = false;
+        onKeys(minecraft);
         BntToolState.tick();
         BntToolOutlines.tick();
     }

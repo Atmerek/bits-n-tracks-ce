@@ -7,6 +7,7 @@ import dev.qwxon.bitsntracks.client.BntSqueezedModel;
 import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
 import dev.qwxon.bitsntracks.client.BntToolHud;
 import dev.qwxon.bitsntracks.client.BntToolInput;
+import dev.qwxon.bitsntracks.client.BntToolKeys;
 import dev.qwxon.bitsntracks.client.BntToolOutlines;
 import dev.qwxon.bitsntracks.client.BntToolSpin;
 import dev.qwxon.bitsntracks.client.BntTunerGauge;
@@ -43,6 +44,7 @@ public class BitsNTracksClient {
         modEventBus.addListener(BitsNTracksClient::onClientSetup);
         modEventBus.addListener(BitsNTracksClient::registerClientExtensions);
         modEventBus.addListener(BntToolHud::registerLayers);
+        modEventBus.addListener(BntToolKeys::register);
         modEventBus.addListener((RegisterClientReloadListenersEvent event) -> {
             event.registerReloadListener(BntSuspensionMeshes.INSTANCE);
             event.registerReloadListener(BntGrouserModel.INSTANCE);

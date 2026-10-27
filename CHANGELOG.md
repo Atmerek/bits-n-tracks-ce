@@ -2,6 +2,10 @@
 
 ## 3.0.2
 
+### Added
+
+- Keys for switching tool modes and for scrolling with a tool, for playing without a scroll wheel. They are unbound by default, under Bits 'n' Tracks in Controls.
+
 ### Changed
 
 - A Suspension Piece says why it can't go on: physics switched off, nothing to hang from, a hidden shaft, mismatched sizes or another piece in the way.

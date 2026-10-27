@@ -105,6 +105,7 @@ It adjusts cogwheels after they are placed, narrows or hides them, routes and te
 It only acts on Bits 'n' Tracks cogwheels and the tracks running on them, and breaks other blocks as normal.
 While you hold it, a panel beside the hotbar shows the current mode, the values of what you are working on, and what to click or scroll.
 Hold Alt (Create's tool menu key) and scroll to switch modes.
+Without a scroll wheel, bind Next and Previous Tool Mode and Scroll Up and Down with a Tool under Bits 'n' Tracks in Controls; they work with both tools.
 
 * **Offset**: right-click a cogwheel to select it, then scroll to move it one pixel at a time. Shift + scroll picks the axis: along the axle, across, or up and down.
 * **Route**: right-click a face to bring the far run of track around the cogwheel, so clicking the top wraps the bottom track over it, and reverses its spin. The centre puts its routing back to automatic.
