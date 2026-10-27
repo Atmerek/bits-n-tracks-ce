@@ -18,7 +18,7 @@ This is a community continuation of [**Bits 'n' Tracks**](https://modrinth.com/m
 
 * Minecraft 1.21.1 with NeoForge 21.1.228 or newer
 * [Create](https://modrinth.com/mod/create) 6.0.10 or newer
-* [Sable](https://modrinth.com/mod/sable) 2.0
+* [Sable](https://modrinth.com/mod/sable) 2.0.x
 * [Create: Bits 'n' Bobs](https://modrinth.com/mod/create-bits-n-bobs) 2.3.5 or newer, with its own dependencies
 * [Create Aeronautics](https://modrinth.com/mod/create-aeronautics) 1.3.1 or newer, for assembling vehicles and for the spring in the Suspension Piece recipe
 
