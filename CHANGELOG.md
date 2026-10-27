@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.2
+
+### Fixed
+
+- Grousers show their texture the right way round, on a track and in the inventory.
+
 ## 3.0.1
 
 ### Added

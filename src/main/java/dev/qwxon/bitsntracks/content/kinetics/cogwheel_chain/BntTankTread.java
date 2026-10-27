@@ -194,7 +194,20 @@ public final class BntTankTread {
         return Part.of(
             fromX, from[1] + BELT_FACE, from[2] - MODEL_CENTRE + CELL_START,
             toX, to[1] + BELT_FACE, to[2] - MODEL_CENTRE + CELL_START,
-            uv);
+            trackFaces(uv));
+    }
+
+    private static float[][] trackFaces(float[][] uv) {
+        return new float[][]{turned(uv[0]), turned(uv[1]), uv[3], uv[2], uv[4], uv[5]};
+    }
+
+    private static float[] turned(float[] uv) {
+        if (uv == null) {
+            return null;
+        }
+        float[] turned = uv.clone();
+        turned[4] = ((int)uv[4] + 2) & 3;
+        return turned;
     }
 
     private BntTankTread() {
