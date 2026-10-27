@@ -26,12 +26,23 @@
 		{
 			"name": "cube",
 			"from": [5, 4.5, 5],
-			"to": [11, 16, 11],
+			"to": [11, 11.5, 11],
 			"faces": {
 				"north": {"uv": [7, 8, 14, 14], "rotation": 90, "texture": "#belt"},
 				"east": {"uv": [7, 8, 14, 14], "rotation": 90, "texture": "#belt"},
 				"south": {"uv": [7, 8, 14, 14], "rotation": 90, "texture": "#belt"},
 				"west": {"uv": [7, 8, 14, 14], "rotation": 90, "texture": "#belt"}
+			}
+		},
+		{
+			"name": "cube",
+			"from": [5, 11.5, 5],
+			"to": [11, 16, 11],
+			"faces": {
+				"north": {"uv": [7, 8, 11, 14], "rotation": 90, "texture": "#belt"},
+				"east": {"uv": [7, 8, 11, 14], "rotation": 90, "texture": "#belt"},
+				"south": {"uv": [7, 8, 11, 14], "rotation": 90, "texture": "#belt"},
+				"west": {"uv": [7, 8, 11, 14], "rotation": 90, "texture": "#belt"}
 			}
 		},
 		{
