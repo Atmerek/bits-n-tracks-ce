@@ -2,6 +2,12 @@
 
 ## 3.0.2
 
+### Changed
+
+- A Suspension Piece says why it can't go on: physics switched off, nothing to hang from, a hidden shaft, mismatched sizes or another piece in the way.
+- Cogwheels with physics off are outlined in red while holding a Suspension Piece, and an arm or bogie with nothing to hang from is previewed in red.
+- The Suspension Tool's panel says when the aimed cogwheel has physics off or no Suspension Piece.
+
 ### Fixed
 
 - Grousers show their texture the right way round, on a track and in the inventory.

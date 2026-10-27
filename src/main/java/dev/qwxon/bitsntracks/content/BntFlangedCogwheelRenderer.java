@@ -65,10 +65,12 @@ public class BntFlangedCogwheelRenderer extends KineticBlockEntityRenderer<BntFl
             BntSuspensionPieceRenderer.renderAttached(be, partialTicks, ms, buffer, light, overlay);
         }
         if (BntSuspensionPlacement.previewAt(be.getBlockPos())) {
-            BntSuspensionPieceRenderer.renderGhost(be, BntSuspensionPlacement.side(), BntSuspensionPlacement.facing(), partialTicks, ms, buffer);
+            BntSuspensionPieceRenderer.renderGhost(be, BntSuspensionPlacement.side(), BntSuspensionPlacement.facing(),
+                BntSuspensionPlacement.previewFits(), partialTicks, ms, buffer);
         }
         if (BntSuspensionPlacement.bogiePreviewAt(be.getBlockPos())) {
-            BntBogieRenderer.renderGhost(be, BntSuspensionPlacement.bogieFacing(), BntSuspensionPlacement.bogieDrop(), ms, buffer);
+            BntBogieRenderer.renderGhost(be, BntSuspensionPlacement.bogieFacing(), BntSuspensionPlacement.bogieDrop(),
+                BntSuspensionPlacement.bogiePreviewFits(), ms, buffer);
         }
     }
 

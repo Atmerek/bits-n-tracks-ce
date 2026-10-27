@@ -39,6 +39,11 @@ public final class BntSuspensionPlacement {
     private static int toward;
     private static int bogieFacing;
     private static float bogieDrop;
+    private static String armRefusal;
+    private static String bogieRefusal;
+    private static int ghostFacing;
+    private static int bogieGhostFacing;
+    private static BlockPos physicsOff;
     private static boolean useHandled;
     private static boolean useWasDown;
 
@@ -46,11 +51,19 @@ public final class BntSuspensionPlacement {
     }
 
     public static boolean previewAt(BlockPos pos) {
-        return toward == 0 && selected != null && selected.equals(pos) && side != 0 && facing != 0;
+        return toward == 0 && selected != null && selected.equals(pos) && side != 0 && ghostFacing != 0;
     }
 
     public static boolean bogiePreviewAt(BlockPos pos) {
-        return lead != null && lead.equals(pos) && bogieFacing != 0;
+        return lead != null && lead.equals(pos) && bogieGhostFacing != 0;
+    }
+
+    public static boolean previewFits() {
+        return facing != 0;
+    }
+
+    public static boolean bogiePreviewFits() {
+        return bogieFacing != 0;
     }
 
     public static int side() {
@@ -58,11 +71,11 @@ public final class BntSuspensionPlacement {
     }
 
     public static int facing() {
-        return facing;
+        return ghostFacing;
     }
 
     public static int bogieFacing() {
-        return bogieFacing;
+        return bogieGhostFacing;
     }
 
     public static double bogieDrop() {
@@ -77,6 +90,7 @@ public final class BntSuspensionPlacement {
         Level level = minecraft.level;
         if (player == null || level == null || held(player).isEmpty()) {
             first = null;
+            physicsOff = null;
             clear();
             return;
         }
@@ -87,9 +101,19 @@ public final class BntSuspensionPlacement {
             BntToolVisuals.selected("bnt_suspension_first", clientLevel, first);
         }
 
-        if (minecraft.hitResult instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK
-            && BntSuspension.canCarry(level.getBlockEntity(hit.getBlockPos()))) {
-            selected = hit.getBlockPos();
+        physicsOff = null;
+        if (minecraft.hitResult instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK) {
+            if (BntSuspension.needsPhysics(level.getBlockState(hit.getBlockPos()))) {
+                physicsOff = hit.getBlockPos();
+                clear();
+                if (level instanceof ClientLevel clientLevel) {
+                    BntToolVisuals.cog("bnt_suspension_target", clientLevel, physicsOff, BntToolVisuals.WARNING, BntToolVisuals.THIN);
+                }
+                return;
+            }
+            if (BntSuspension.canCarry(level.getBlockEntity(hit.getBlockPos()))) {
+                selected = hit.getBlockPos();
+            }
         }
         if (selected == null) {
             return;
@@ -131,13 +155,19 @@ public final class BntSuspensionPlacement {
         preferred = (int)Math.signum(facingRay);
         side = !chosen ? 0 : across > SIDE_DEAD_ZONE ? 1 : across < -SIDE_DEAD_ZONE ? -1 : 0;
         facing = side == 0 ? 0 : BntSuspension.facingFor(level, selected, state, side, preferred);
+        armRefusal = side == 0 || facing != 0 ? null : BntSuspension.armRefusal(level, selected, state, side);
+        ghostFacing = facing != 0 ? facing
+            : "arm.support".equals(armRefusal) ? BntSuspension.armShaftFacing(level, selected, state, preferred) : 0;
         toward = first == null || chosen ? 0 : BntSuspension.towards(level, first, selected);
         lead = toward > 0 ? first : toward < 0 ? selected : null;
         bogieFacing = toward == 0 || !enough(player) ? 0 : BntSuspension.bogieFacing(level, first, toward, preferred);
+        bogieRefusal = toward == 0 || !enough(player) || bogieFacing != 0 ? null : BntSuspension.bogieRefusal(level, first, toward);
+        bogieGhostFacing = bogieFacing != 0 ? bogieFacing
+            : "bogie.support".equals(bogieRefusal) ? BntSuspension.bogieShaftFacing(level, first, toward, preferred) : 0;
         bogieDrop = toward == 0 ? 0.0F : BntSuspension.bogieDrop(level.getBlockEntity(first), be);
         if (!chosen && level instanceof ClientLevel clientLevel) {
             BntToolVisuals.cog("bnt_suspension_target", clientLevel, selected,
-                toward != 0 ? BntToolVisuals.GOOD : BntToolVisuals.HOVER, BntToolVisuals.THIN);
+                toward == 0 ? BntToolVisuals.HOVER : bogieFacing != 0 ? BntToolVisuals.GOOD : BntToolVisuals.WARNING, BntToolVisuals.THIN);
         }
     }
 
@@ -147,12 +177,21 @@ public final class BntSuspensionPlacement {
         if (player == null || !event.isUseItem() || !(player.getItemInHand(event.getHand()).getItem() instanceof BntSuspensionPieceItem)) {
             return;
         }
+        boolean fresh = !useHandled && !useWasDown;
+        if (physicsOff != null) {
+            event.setCanceled(true);
+            event.setSwingHand(false);
+            if (fresh) {
+                useHandled = true;
+                refuse(player, "physics");
+            }
+            return;
+        }
         if (selected == null) {
             return;
         }
 
         event.setCanceled(true);
-        boolean fresh = !useHandled && !useWasDown;
         if (toward != 0) {
             event.setSwingHand(bogieFacing != 0);
             if (fresh) {
@@ -161,18 +200,23 @@ public final class BntSuspensionPlacement {
                     PacketDistributor.sendToServer(new BntSuspensionPayload(first, toward * BntSuspension.BOGIE, preferred));
                     first = null;
                 } else if (!enough(player)) {
-                    player.displayClientMessage(Component.translatable("chat.bits_n_tracks.suspension.bogie.pieces"), true);
-                    BntToolCues.refuse();
+                    refuse(player, "bogie.pieces");
+                } else if (bogieRefusal != null) {
+                    refuse(player, bogieRefusal);
                 }
             }
             return;
         }
         if (side != 0) {
             event.setSwingHand(facing != 0);
-            if (facing != 0 && fresh) {
+            if (fresh) {
                 useHandled = true;
-                PacketDistributor.sendToServer(new BntSuspensionPayload(selected, side, preferred));
-                first = null;
+                if (facing != 0) {
+                    PacketDistributor.sendToServer(new BntSuspensionPayload(selected, side, preferred));
+                    first = null;
+                } else if (armRefusal != null) {
+                    refuse(player, armRefusal);
+                }
             }
             return;
         }
@@ -200,6 +244,11 @@ public final class BntSuspensionPlacement {
             : ItemStack.EMPTY;
     }
 
+    private static void refuse(LocalPlayer player, String reason) {
+        player.displayClientMessage(Component.translatable("chat.bits_n_tracks.suspension." + reason), true);
+        BntToolCues.refuse();
+    }
+
     private static boolean enough(LocalPlayer player) {
         return player.getAbilities().instabuild || held(player).getCount() >= BntSuspension.BOGIE;
     }
@@ -212,5 +261,9 @@ public final class BntSuspensionPlacement {
         lead = null;
         toward = 0;
         bogieFacing = 0;
+        armRefusal = null;
+        bogieRefusal = null;
+        ghostFacing = 0;
+        bogieGhostFacing = 0;
     }
 }

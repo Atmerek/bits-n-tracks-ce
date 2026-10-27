@@ -18,6 +18,7 @@ public final class BntSuspensionPieceRenderer {
     public static final ResourceLocation TEXTURE = BitsNTracks.asResource("textures/block/suspension_piece.png");
     private static final int SOLID = 0xFFFFFFFF;
     private static final int GHOST = 0x90000000 | BntToolVisuals.GOOD;
+    private static final int REFUSED = 0x90000000 | BntToolVisuals.WARNING;
     private static final Vec3 CENTRE = new Vec3(0.5, 0.5, 0.5);
 
     private BntSuspensionPieceRenderer() {
@@ -27,12 +28,14 @@ public final class BntSuspensionPieceRenderer {
         BntSuspensionParts.attached(be, partialTicks, BntSuspensionParts.emitter(ms.last(), buffer, false, SOLID, light, overlay));
     }
 
-    public static void renderGhost(KineticBlockEntity be, int side, int facing, float partialTicks, PoseStack ms, MultiBufferSource buffer) {
+    public static void renderGhost(
+        KineticBlockEntity be, int side, int facing, boolean fits, float partialTicks, PoseStack ms, MultiBufferSource buffer
+    ) {
         if (!BntSuspension.supports(be.getBlockState())) {
             return;
         }
         Vec3 cog = CENTRE.add(BntCogwheels.getModelTranslation(be, partialTicks));
         BntSuspensionParts.arm(be, cog, side, facing,
-            BntSuspensionParts.emitter(ms.last(), buffer, true, GHOST, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY));
+            BntSuspensionParts.emitter(ms.last(), buffer, true, fits ? GHOST : REFUSED, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY));
     }
 }

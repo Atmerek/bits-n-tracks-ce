@@ -316,12 +316,22 @@ public final class BntToolHud {
         List<Control> actions = new ArrayList<>();
         BlockPos selected = BntToolState.tunerCog;
         BlockPos shown = selected;
+        BlockPos aimed = shown == null ? BntToolInput.aimedBlock(level) : null;
         if (shown == null) {
-            BlockPos aimed = BntToolInput.aimedBlock(level);
             shown = aimed != null && BntSuspension.hasPiece(level.getBlockEntity(aimed)) ? aimed : null;
         }
         if (shown == null) {
-            rows.add(none("piece"));
+            BlockState state = aimed == null ? null : level.getBlockState(aimed);
+            if (state != null && BntSuspension.needsPhysics(state)) {
+                rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.physics"), Component.translatable("bits_n_tracks.tool_panel.off"), WARNING, false));
+                rows.add(none("physics"));
+            } else if (state != null && BntSuspension.supports(state)) {
+                rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.suspension"),
+                    Component.translatable("bits_n_tracks.tool_panel.suspension.none"), WARNING, false));
+                rows.add(none("fitted"));
+            } else {
+                rows.add(none("piece"));
+            }
         } else {
             for (BntTuning each : BntTuning.values()) {
                 boolean current = each == setting;

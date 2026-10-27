@@ -17,11 +17,12 @@ import net.neoforged.api.distmarker.OnlyIn;
 public final class BntBogieRenderer {
     public static final ResourceLocation TEXTURE = BitsNTracks.asResource("textures/block/bogie_suspension.png");
     private static final int GHOST = 0x90000000 | BntToolVisuals.GOOD;
+    private static final int REFUSED = 0x90000000 | BntToolVisuals.WARNING;
 
     private BntBogieRenderer() {
     }
 
-    public static void renderGhost(KineticBlockEntity be, int facing, double drop, PoseStack ms, MultiBufferSource buffer) {
+    public static void renderGhost(KineticBlockEntity be, int facing, double drop, boolean fits, PoseStack ms, MultiBufferSource buffer) {
         boolean wide = BntSuspension.supportsWideBogie(be.getBlockState());
         if (!wide && !BntSuspension.supportsBogie(be.getBlockState()) || be.getLevel() == null) {
             return;
@@ -30,6 +31,6 @@ public final class BntBogieRenderer {
         Vec3 away = BntSuspension.across(axis).scale(-1.0);
         Vec3 shift = Vec3.atLowerCornerOf(BntSuspension.armEnd(be.getLevel(), be.getBlockPos(), axis, facing).subtract(be.getBlockPos()));
         BntSuspensionParts.bogie(be, away, facing, wide, wide ? shift : Vec3.ZERO, new BntBogiePose(0.0, 0.0, 0.0, 0.0, drop),
-            BntSuspensionParts.emitter(ms.last(), buffer, true, GHOST, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY));
+            BntSuspensionParts.emitter(ms.last(), buffer, true, fits ? GHOST : REFUSED, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY));
     }
 }

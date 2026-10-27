@@ -36,6 +36,11 @@ public final class BntSuspension {
         return BntFlangedCogwheelBlock.physics(state) && state.getValue(BlockStateProperties.AXIS) != Axis.Y;
     }
 
+    public static boolean needsPhysics(BlockState state) {
+        return state.getBlock() instanceof BntFlangedCogwheelBlock && !BntFlangedCogwheelBlock.physics(state)
+            && state.getValue(BlockStateProperties.AXIS) != Axis.Y;
+    }
+
     public static boolean supportsBogie(BlockState state) {
         return pairable(state) && !BntCogwheelPairing.isWide(state);
     }
@@ -96,9 +101,7 @@ public final class BntSuspension {
             return 0;
         }
         Axis axis = axis(state);
-        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
-        if (isBogie(level.getBlockEntity(pos.offset(step(axis, side))))
-            || partnerPos != null && isBogie(level.getBlockEntity(partnerPos.offset(step(axis, side))))) {
+        if (bogieBeside(level, pos, axis, side)) {
             return 0;
         }
         for (int facing : facingOrder(preferred)) {
@@ -108,6 +111,33 @@ public final class BntSuspension {
             }
         }
         return 0;
+    }
+
+    public static String armRefusal(Level level, BlockPos pos, BlockState state, int side) {
+        if (side == 0 || !supports(state)) {
+            return null;
+        }
+        Axis axis = axis(state);
+        if (bogieBeside(level, pos, axis, side)) {
+            return "arm.blocked";
+        }
+        return armShaftFacing(level, pos, state, 1) != 0 ? "arm.support" : "shaft";
+    }
+
+    public static int armShaftFacing(Level level, BlockPos pos, BlockState state, int preferred) {
+        Axis axis = axis(state);
+        for (int facing : facingOrder(preferred)) {
+            if (shaftAt(level, armEnd(level, pos, axis, facing), axis, facing)) {
+                return facing;
+            }
+        }
+        return 0;
+    }
+
+    private static boolean bogieBeside(Level level, BlockPos pos, Axis axis, int side) {
+        BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
+        return isBogie(level.getBlockEntity(pos.offset(step(axis, side))))
+            || partnerPos != null && isBogie(level.getBlockEntity(partnerPos.offset(step(axis, side))));
     }
 
     public static Direction shaftSide(Axis axis, int facing) {
@@ -176,27 +206,11 @@ public final class BntSuspension {
     }
 
     public static int bogieFacing(Level level, BlockPos pos, int toward, int preferred) {
-        BlockEntity be = level.getBlockEntity(pos);
-        if (toward == 0 || !canPair(be)) {
+        if (bogieBlocker(level, pos, toward) != null) {
             return 0;
         }
-        Axis axis = axis(be.getBlockState());
+        Axis axis = axis(level.getBlockState(pos));
         BlockPos partnerPos = pos.offset(step(axis, toward));
-        BlockEntity partner = level.getBlockEntity(partnerPos);
-        if (!canPair(partner) || towards(level, pos, partnerPos) != toward
-            || CogwheelSize.of(be.getBlockState().getBlock()) != CogwheelSize.of(partner.getBlockState().getBlock())) {
-            return 0;
-        }
-        for (BlockPos half : station(level, pos)) {
-            if (!canCarry(level.getBlockEntity(half)) || facingPiece(level, half.offset(step(axis, -toward)), axis, toward)) {
-                return 0;
-            }
-        }
-        for (BlockPos half : station(level, partnerPos)) {
-            if (!canCarry(level.getBlockEntity(half)) || facingPiece(level, half.offset(step(axis, toward)), axis, -toward)) {
-                return 0;
-            }
-        }
         for (int facing : facingOrder(preferred)) {
             if (shaftsAt(level, pos, partnerPos, axis, facing) && heldAtEnd(level, pos, partnerPos, axis, facing)) {
                 return facing;
@@ -210,6 +224,52 @@ public final class BntSuspension {
             }
         }
         return 0;
+    }
+
+    public static String bogieRefusal(Level level, BlockPos pos, int toward) {
+        String blocker = bogieBlocker(level, pos, toward);
+        if (blocker != null) {
+            return blocker;
+        }
+        return bogieShaftFacing(level, pos, toward, 1) != 0 ? "bogie.support" : "shaft";
+    }
+
+    public static int bogieShaftFacing(Level level, BlockPos pos, int toward, int preferred) {
+        Axis axis = axis(level.getBlockState(pos));
+        BlockPos partnerPos = pos.offset(step(axis, toward));
+        for (int facing : facingOrder(preferred)) {
+            if (shaftsAt(level, pos, partnerPos, axis, facing)) {
+                return facing;
+            }
+        }
+        return 0;
+    }
+
+    private static String bogieBlocker(Level level, BlockPos pos, int toward) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (toward == 0 || !canPair(be)) {
+            return "bogie.blocked";
+        }
+        Axis axis = axis(be.getBlockState());
+        BlockPos partnerPos = pos.offset(step(axis, toward));
+        BlockEntity partner = level.getBlockEntity(partnerPos);
+        if (!canPair(partner) || towards(level, pos, partnerPos) != toward) {
+            return "bogie.blocked";
+        }
+        if (CogwheelSize.of(be.getBlockState().getBlock()) != CogwheelSize.of(partner.getBlockState().getBlock())) {
+            return "bogie.size";
+        }
+        for (BlockPos half : station(level, pos)) {
+            if (!canCarry(level.getBlockEntity(half)) || facingPiece(level, half.offset(step(axis, -toward)), axis, toward)) {
+                return "bogie.blocked";
+            }
+        }
+        for (BlockPos half : station(level, partnerPos)) {
+            if (!canCarry(level.getBlockEntity(half)) || facingPiece(level, half.offset(step(axis, toward)), axis, -toward)) {
+                return "bogie.blocked";
+            }
+        }
+        return null;
     }
 
     private static boolean bogieMounted(Level level, BlockPos pos, BlockPos partnerPos, Axis axis, int facing) {
