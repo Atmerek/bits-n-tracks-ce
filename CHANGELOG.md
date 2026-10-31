@@ -16,6 +16,7 @@
 
 - Grousers show their texture the right way round, on a track and in the inventory.
 - The hub of 2-wide tiny cogwheels no longer has a stretched texture.
+- Tracks no longer flicker with stretched black plates when drawn through Colorwheel.
 
 ## 3.0.1
 

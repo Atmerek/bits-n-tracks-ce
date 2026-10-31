@@ -47,6 +47,7 @@
         "BntItemPickerMenuMixin",
         "BntGameRendererPickMixin",
         "PonderSceneTransformMixin",
+        "compat.ColorwheelInstancePageMixin",
         "compat.IrisHandRendererMixin",
         "accessor.CogwheelChainShapeAccessor",
         "accessor.CreativeModeInventoryScreenAccessor",
