@@ -12,6 +12,8 @@ import dev.qwxon.bitsntracks.client.BntClientCompat;
 import dev.qwxon.bitsntracks.client.BntClientConfig;
 import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackSink;
 import java.util.Arrays;
@@ -167,7 +169,10 @@ final class BntTrackVisual implements BntTrackSink {
             Direction route = BntChainEngagement.routeSide(level, nodePos);
             hash = 31 * hash + (route == null ? -1 : route.ordinal());
             hash = 31 * hash + BntCogwheelWidth.quarters(level.getBlockState(nodePos));
+            hash = 31 * hash + node.side();
         }
+        hash = 31 * hash + BntBeltLinks.at(level, be.getBlockPos());
+        hash = 31 * hash + Float.hashCode(BntBeltTension.at(level, be.getBlockPos()));
         return 31 * hash + Arrays.hashCode(BntBeltDrape.surfaceKey(level, be.getBlockPos()));
     }
 

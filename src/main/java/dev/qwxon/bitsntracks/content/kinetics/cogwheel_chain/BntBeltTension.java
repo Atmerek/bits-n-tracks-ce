@@ -118,7 +118,7 @@ public final class BntBeltTension {
     }
 
     @Nullable
-    private static BlockPos trackController(Level level, BlockPos pos) {
+    static BlockPos trackController(Level level, BlockPos pos) {
         BlockPos controller = BntChains.controllerPos(level, pos);
         if (controller != null) {
             return controller;

@@ -119,7 +119,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
             Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, this.getBlockPos());
             BntSuspension.detach(level, this.getBlockPos(), this, true);
             BntChainEngagement.refresh(level, this.getBlockPos(), engagementBefore);
-            BntBeltRefit.queue(level, this.getBlockPos());
+            BntBeltRefit.refit(level, this.getBlockPos());
         }
     }
 

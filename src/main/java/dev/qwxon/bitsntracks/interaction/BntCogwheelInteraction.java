@@ -76,7 +76,7 @@ public class BntCogwheelInteraction {
         }
 
         BntChainEngagement.refresh(level, pos, engagementBefore);
-        BntBeltRefit.queue(level, pos);
+        BntBeltRefit.refit(level, pos);
         BntToolSounds.physics(level, pos, newState);
         Component status = trackStatus(level, pos);
         if (status != null) {
@@ -140,6 +140,11 @@ public class BntCogwheelInteraction {
             ? null
             : Direction.values()[payload.zone()];
         int side = zone == null || zone.ordinal() == access.bnt$getTrackRouteSide() ? -1 : zone.ordinal();
+        if (side >= 0 && !BntChainEngagement.reachableRoutes(level, pos).contains(zone)) {
+            BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.route_unreachable"));
+            BntToolSounds.refuse(player);
+            return;
+        }
         Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
         setRouteAt(level, pos, side);
         BlockPos partnerPos = BntCogwheelPairing.partnerPos(level, pos);
@@ -148,7 +153,7 @@ public class BntCogwheelInteraction {
         }
 
         BntChainEngagement.refresh(level, pos, engagementBefore);
-        BntBeltRefit.queue(level, pos);
+        BntBeltRefit.refit(level, pos);
         BntToolSounds.toggle(level, pos, side >= 0);
     }
 

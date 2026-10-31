@@ -11,6 +11,7 @@ import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceItem;
 import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
@@ -41,6 +42,11 @@ public final class BntToolOutlines {
     private static final int MAX_OUTLINES = 64;
     private static final double SHAFT_STUB = 2.0 / 16.0;
     private static final double SHAFT_RADIUS = 2.0 / 16.0;
+    private static final long REACHABLE_REFRESH = 10L;
+    private static BlockPos reachablePos;
+    private static int reachableRoute;
+    private static long reachableTick;
+    private static Set<Direction> reachable = Set.of();
 
     private BntToolOutlines() {
     }
@@ -272,8 +278,21 @@ public final class BntToolOutlines {
         if (result == null && pinnedSide == null) {
             return;
         }
+        boolean reachable = result == null || reachableRoutes(level, pos).contains(result);
         BntToolVisuals.box("bnt_tool_route_aim", BntToolVisuals.marker(at(centre, result, reach), blockAxis, halfDepth),
-            BntToolVisuals.HOVER, BntToolVisuals.THIN);
+            reachable ? BntToolVisuals.HOVER : BntToolVisuals.WARNING, BntToolVisuals.THIN);
+    }
+
+    private static Set<Direction> reachableRoutes(ClientLevel level, BlockPos pos) {
+        long now = level.getGameTime();
+        int route = level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access ? access.bnt$getTrackRouteSide() : -1;
+        if (!pos.equals(reachablePos) || route != reachableRoute || now - reachableTick >= REACHABLE_REFRESH || now < reachableTick) {
+            reachablePos = pos.immutable();
+            reachableRoute = route;
+            reachableTick = now;
+            reachable = BntChainEngagement.reachableRoutes(level, pos);
+        }
+        return reachable;
     }
 
     private static Vec3 at(Vec3 centre, @Nullable Direction side, double reach) {

@@ -162,6 +162,7 @@
     "bits_n_tracks.tool_panel.message.bogie.farthest": "Koła wózka nie mogą być dalej",
     "bits_n_tracks.tool_panel.message.shaft.piece": "Wały z elementem zawieszenia zostają",
     "bits_n_tracks.tool_panel.message.flat_face": "Wskaż płaską ścianę, aby wybrać bok",
+    "bits_n_tracks.tool_panel.message.route_unreachable": "Gąsienica nie sięga tego boku",
     "bits_n_tracks.tool_panel.message.on_track": "Na gąsienicy",
     "bits_n_tracks.tool_panel.message.off_track": "Poza gąsienicą",
     "chat.bits_n_tracks.suspension.first": "PPM obok niego, aby zamontować wahacz",

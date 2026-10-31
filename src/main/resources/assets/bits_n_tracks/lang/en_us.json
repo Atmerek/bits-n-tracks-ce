@@ -162,6 +162,7 @@
     "bits_n_tracks.tool_panel.message.bogie.farthest": "Bogies can't move further apart",
     "bits_n_tracks.tool_panel.message.shaft.piece": "Shafts holding a Suspension Piece stay",
     "bits_n_tracks.tool_panel.message.flat_face": "Aim at the flat face to pick a side",
+    "bits_n_tracks.tool_panel.message.route_unreachable": "The track can't reach this side",
     "bits_n_tracks.tool_panel.message.on_track": "On the track",
     "bits_n_tracks.tool_panel.message.off_track": "Off the track",
     "chat.bits_n_tracks.suspension.first": "Right-click beside it to mount an arm",

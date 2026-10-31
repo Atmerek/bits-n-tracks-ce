@@ -10,6 +10,7 @@ import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
@@ -17,11 +18,13 @@ import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.mixin.accessor.RotationPropagatorAccessor;
 import dev.qwxon.bitsntracks.physics.BntDebugLog;
 import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
+import dev.qwxon.bitsntracks.physics.BntRadiusProvider;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -120,7 +123,7 @@ public final class BntChainEngagement {
         Function<BlockPos, Direction> previousRoutes = BntChainMotion.swapRouteSource(
             localPos -> routeSide(level, controllerPos.offset(localPos)));
 
-        try {
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             return BntChainGeometry.stillHolds(nodes, layout);
         } finally {
             BntChainMotion.swapDisplacementSource(previous);
@@ -133,7 +136,7 @@ public final class BntChainEngagement {
         Function<BlockPos, Vec3> previous = BntChainMotion.swapDisplacementSource(
             localPos -> alignmentDisplacement(level, controllerPos.offset(localPos)));
 
-        try {
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             return BntChainGeometry.tangled(nodes, layout);
         } finally {
             BntChainMotion.swapDisplacementSource(previous);
@@ -151,12 +154,66 @@ public final class BntChainEngagement {
         Function<BlockPos, Direction> previousRoutes = BntChainMotion.swapRouteSource(
             localPos -> routeSide(level, controllerPos.offset(localPos)));
 
-        try {
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
             return BntChainGeometry.resolve(nodes, held);
         } finally {
             BntChainMotion.swapDisplacementSource(previous);
             BntChainMotion.swapRouteSource(previousRoutes);
         }
+    }
+
+    public static Set<Direction> reachableRoutes(Level level, BlockPos pos) {
+        BlockPos controllerPos = BntChains.controllerPos(level, pos);
+        CogwheelChain chain = BntChains.chainAt(level, controllerPos);
+        if (controllerPos == null || chain == null) {
+            return Set.of();
+        }
+        List<PathedCogwheelNode> nodes = chain.getChainPathCogwheelNodes();
+        Axis axis = BntChainGeometry.sharedAxis(nodes);
+        int index = nodeIndex(nodes, pos.subtract(controllerPos));
+        BlockPos partnerPos = index < 0 ? BntCogwheelPairing.partnerPos(level, pos) : null;
+        if (partnerPos != null) {
+            index = nodeIndex(nodes, partnerPos.subtract(controllerPos));
+        }
+        if (axis == null || index < 0) {
+            return Set.of();
+        }
+
+        BntChainGeometry.Layout held = chain instanceof BntChainGeometryRefresh refresh ? refresh.bnt$heldLayout() : null;
+        if (held != null && held.sides().length != nodes.size()) {
+            held = null;
+        }
+        BlockPos target = nodes.get(index).localPos();
+        Set<Direction> reachable = EnumSet.noneOf(Direction.class);
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
+            for (Direction face : Direction.values()) {
+                if (face.getAxis() == axis) {
+                    continue;
+                }
+                Function<BlockPos, Vec3> previous = BntChainMotion.swapDisplacementSource(
+                    localPos -> alignmentDisplacement(level, controllerPos.offset(localPos)));
+                Function<BlockPos, Direction> previousRoutes = BntChainMotion.swapRouteSource(
+                    localPos -> localPos.equals(target) ? face : routeSide(level, controllerPos.offset(localPos)));
+                try {
+                    if (BntChainGeometry.reaches(nodes, BntChainGeometry.resolve(nodes, held), nodeIndex(nodes, target), face)) {
+                        reachable.add(face);
+                    }
+                } finally {
+                    BntChainMotion.swapDisplacementSource(previous);
+                    BntChainMotion.swapRouteSource(previousRoutes);
+                }
+            }
+        }
+        return reachable;
+    }
+
+    private static int nodeIndex(List<PathedCogwheelNode> nodes, BlockPos localPos) {
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes.get(i).localPos().equals(localPos)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public static boolean agreesWithSolver(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes,

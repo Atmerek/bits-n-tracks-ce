@@ -14,12 +14,17 @@
 - Cogwheels with physics off are outlined in red while holding a Suspension Piece, and an arm or bogie with nothing to hang from is previewed in red.
 - The Suspension Tool's panel says when the aimed cogwheel has physics off or no Suspension Piece.
 - Track particles come from where the belt touches the ground, and a track sliding sideways throws them out to the side along its whole length.
+- In Route mode the aimed side of a cogwheel is marked red when the track can't reach it, and clicking it says so.
 
 ### Fixed
 
 - Grousers show their texture the right way round, on a track and in the inventory.
 - The hub of 2-wide tiny cogwheels no longer has a stretched texture.
 - Tracks no longer flicker with stretched black plates when drawn through Colorwheel.
+- Route mode can wrap the track around any side of a cogwheel it can reach, including a cogwheel centred between two others, instead of only the side facing its nearest run.
+- A cogwheel added to a track run without touching the track no longer pulls that run straight: it keeps its sag and lies on the ground.
+- A track refits its length when a cogwheel joins or leaves it, instead of keeping the old length until its tension is changed.
+- Tracks no longer briefly sag, turn inside out or flicker between two shapes after a cogwheel on them is moved, rerouted or changed.
 
 ## 3.0.1
 

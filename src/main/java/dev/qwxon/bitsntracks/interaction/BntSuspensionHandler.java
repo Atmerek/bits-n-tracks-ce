@@ -52,7 +52,7 @@ public final class BntSuspensionHandler {
         Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
         BntSuspension.attach(kinetic, side, facing);
         BntChainEngagement.refresh(level, pos, engagementBefore);
-        BntBeltRefit.queue(level, pos);
+        BntBeltRefit.refit(level, pos);
         if (!player.getAbilities().instabuild) {
             player.getItemInHand(hand).shrink(1);
         }
@@ -78,7 +78,7 @@ public final class BntSuspensionHandler {
         Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
         BntSuspension.attachBogie(kinetic, partner, toward, facing);
         BntChainEngagement.refresh(level, pos, engagementBefore);
-        BntBeltRefit.queue(level, pos);
+        BntBeltRefit.refit(level, pos);
         if (!player.getAbilities().instabuild) {
             stack.shrink(BntSuspension.BOGIE);
         }
@@ -106,7 +106,7 @@ public final class BntSuspensionHandler {
         Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
         int pieces = BntSuspension.detach(level, pos, kinetic, false);
         BntChainEngagement.refresh(level, pos, engagementBefore);
-        BntBeltRefit.queue(level, pos);
+        BntBeltRefit.refit(level, pos);
         if (!player.getAbilities().instabuild && pieces > 0) {
             player.getInventory().placeItemBackInInventory(new ItemStack(BitsNTracksItems.SUSPENSION_PIECE.get(), pieces));
         }

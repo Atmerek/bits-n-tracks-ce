@@ -78,7 +78,7 @@ public final class BntTuningHandler {
         }
         if (engagementBefore != null) {
             BntChainEngagement.refresh(level, pos, engagementBefore);
-            BntBeltRefit.queue(level, pos);
+            BntBeltRefit.refit(level, pos);
         }
         BntToolSounds.adjust(level, pos, (float)(value - BntTuning.MIN) / (BntTuning.MAX - BntTuning.MIN));
 

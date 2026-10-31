@@ -148,7 +148,7 @@ public class CogAlignmentLeverItem extends Item {
         }
 
         BntChainEngagement.refresh(level, pos, engagementBefore);
-        BntBeltRefit.queue(level, pos);
+        BntBeltRefit.refit(level, pos);
         if (!changed) {
             BntToolSounds.refuse(player);
             return;
@@ -242,7 +242,7 @@ public class CogAlignmentLeverItem extends Item {
         }
 
         BntChainEngagement.refresh(level, pos, engagementBefore);
-        BntBeltRefit.queue(level, pos);
+        BntBeltRefit.refit(level, pos);
         BntToolSounds.reset(level, pos);
         BntToolMessages.send(player, Component.translatable(wholeTrack
             ? "bits_n_tracks.tool_panel.message.reset"

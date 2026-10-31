@@ -15,6 +15,8 @@ import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainGeometry;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainMotion;
@@ -128,6 +130,18 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     private BntChainGeometry.Layout bnt$restoredLayout;
 
     @Unique
+    private double[] bnt$restoredSignature;
+
+    @Unique
+    private double[] bnt$preReadSignature;
+
+    @Unique
+    private List<BlockPos> bnt$fittedCogwheels;
+
+    @Unique
+    private BntChainGeometry.Layout bnt$builtLayout;
+
+    @Unique
     private boolean bnt$sidesPending;
 
     @Unique
@@ -153,13 +167,23 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
 
     @Unique
     private BntChainGeometry.Layout bnt$latchedLayout(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
+            return this.bnt$latchedLayoutScoped(level, controllerPos, nodes);
+        }
+    }
+
+    @Unique
+    private BntChainGeometry.Layout bnt$latchedLayoutScoped(Level level, BlockPos controllerPos, List<PathedCogwheelNode> nodes) {
         double[] signature = BntChainEngagement.signature(level, controllerPos, nodes);
         BntChainGeometry.Layout restored = this.bnt$restoredLayout;
+        double[] restoredSignature = this.bnt$restoredSignature;
         if (restored != null) {
             this.bnt$restoredLayout = null;
+            this.bnt$restoredSignature = null;
             if (BntChainEngagement.tangled(level, controllerPos, nodes, restored)) {
                 restored = null;
-            } else if (BntChainEngagement.stillHolds(level, controllerPos, nodes, restored)
+            } else if ((restoredSignature == null || Arrays.equals(signature, restoredSignature))
+                && BntChainEngagement.stillHolds(level, controllerPos, nodes, restored)
                 && BntChainEngagement.agreesWithSolver(level, controllerPos, nodes, restored)) {
                 this.bnt$engagedDisplacements = signature;
                 this.bnt$repairAttempted = false;
@@ -261,6 +285,22 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     }
 
     @Override
+    public BntChainGeometry.Layout bnt$heldLayout() {
+        return this.bnt$latched;
+    }
+
+    @Override
+    public void bnt$relatch(Level level, BlockPos controllerPos) {
+        List<PathedCogwheelNode> nodes = this.cogwheelNodes;
+        if (level == null || controllerPos == null || nodes == null || nodes.size() < 2 || !this.bnt$claim(level, controllerPos)) {
+            return;
+        }
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
+            this.bnt$latchedLayout(level, controllerPos, nodes);
+        }
+    }
+
+    @Override
     public boolean bnt$isNodeEngaged(Level level, BlockPos controllerPos, BlockPos nodeLocalPos) {
         List<PathedCogwheelNode> nodes = this.cogwheelNodes;
         if (level == null || controllerPos == null || nodes == null || nodes.size() < 2 || !this.bnt$claim(level, controllerPos)) {
@@ -292,6 +332,11 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         boolean claimed = this.bnt$own;
         if (!this.bnt$claim(level, controllerPos)) {
             return;
+        }
+        List<BlockPos> cogwheels = nodes.stream().map(PathedCogwheelNode::localPos).toList();
+        if (!cogwheels.equals(this.bnt$fittedCogwheels)) {
+            this.bnt$fittedCogwheels = cogwheels;
+            BntBeltRefit.refit(level, controllerPos);
         }
         if (!claimed) {
             this.bnt$refreshWithLevel(level, controllerPos);
@@ -351,6 +396,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$own = tag.getBoolean("BNT_Own");
         this.bnt$preReadNodes = this.cogwheelNodes == null ? List.of() : List.copyOf(this.cogwheelNodes);
         this.bnt$preReadLatch = this.bnt$latched;
+        this.bnt$preReadSignature = this.bnt$engagedDisplacements;
         this.bnt$preReadRendered = this.renderedNodes == null ? List.of() : List.copyOf(this.renderedNodes);
     }
 
@@ -383,6 +429,8 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$sidesPending = false;
         this.bnt$appliedLayout = null;
         this.bnt$engagedDisplacements = null;
+        this.bnt$restoredSignature = kept != null ? this.bnt$preReadSignature : null;
+        this.bnt$preReadSignature = null;
         this.bnt$restoredLayout = kept != null ? kept : bnt$readLayout(tag, this.cogwheelNodes.size());
     }
 
@@ -488,17 +536,22 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
 
         double[] displacements = BntChainMotion.displacementSignature(nodes);
         double[] surface = BntBeltDrape.surfaceKey(level, controllerPos);
-        double[] signature = Arrays.copyOf(displacements, displacements.length + 2 + surface.length);
+        double[] signature = Arrays.copyOf(displacements, displacements.length + 3 + nodes.size() + surface.length);
         signature[displacements.length] = BntBeltTension.at(level, controllerPos);
         BntPonderPhysics.Stage stage = BntPonderPhysics.stage(level);
         signature[displacements.length + 1] = stage == null ? 0.0 : stage.epoch();
-        System.arraycopy(surface, 0, signature, displacements.length + 2, surface.length);
-        if (Arrays.equals(signature, this.bnt$builtDisplacements)) {
+        signature[displacements.length + 2] = BntBeltLinks.at(level, controllerPos);
+        for (int i = 0; i < nodes.size(); i++) {
+            signature[displacements.length + 3 + i] = nodes.get(i).side();
+        }
+        System.arraycopy(surface, 0, signature, displacements.length + 3 + nodes.size(), surface.length);
+        if (Arrays.equals(signature, this.bnt$builtDisplacements) && bnt$sameLayout(this.bnt$latched, this.bnt$builtLayout)) {
             return;
         }
 
         this.bnt$builtDisplacements = signature;
         BntChainGeometry.Layout layout = this.bnt$latchedLayout(level, controllerPos, nodes);
+        this.bnt$builtLayout = layout;
         BntChainGeometry.Layout previous = BntChainMotion.swapLayout(layout);
         boolean wasOwn = BntChainGeometry.beginOwn(true);
 
