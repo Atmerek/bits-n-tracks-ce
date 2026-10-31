@@ -355,15 +355,21 @@ public final class BntPhysicsEvents {
     }
 
     public record GroundContact(
-        @Nullable BlockPos ground, Vec3 point, Vec3 travel, Vec3 side, double rolling, double target, double vertical
+        @Nullable BlockPos ground, Vec3 point, Drive drive, double rolling, double sideways, double vertical
     ) {
         public boolean grounded() {
             return this.ground != null;
         }
     }
 
+    public record Drive(Vec3 travel, Vec3 side, double speed, boolean driven) {
+        public double target(double rolling) {
+            return this.driven ? this.speed : rolling;
+        }
+    }
+
     @Nullable
-    public static GroundContact groundContact(KineticBlockEntity kbe, SubLevel subLevel) {
+    public static Drive drive(KineticBlockEntity kbe, SubLevel subLevel) {
         BlockState state = kbe.getBlockState();
         Level level = kbe.getLevel();
         if (level == null || !state.hasProperty(BlockStateProperties.AXIS)) {
@@ -374,9 +380,32 @@ public final class BntPhysicsEvents {
             return null;
         }
 
+        Pose3dc pose = subLevel.logicalPose();
+        Vector3dc groundNormalD = groundAxis(getTravelDirection(axis), pose.transformNormalInverse(new Vector3d(0.0, 1.0, 0.0)));
+        Vector3d travelWorld = pose.transformNormal(new Vector3d(groundNormalD));
+        Vec3i sideVec = Direction.get(AxisDirection.POSITIVE, axis).getNormal();
+        Vector3d sideWorld = pose.transformNormal(new Vector3d(sideVec.getX(), sideVec.getY(), sideVec.getZ()));
+        KineticBlockEntity track = BntCogwheelPairing.beltTwin(kbe);
+        boolean driven = isInTrack(kbe) && track.getSpeed() != 0.0F;
+        double speed = driven
+            ? surfaceSpeed(CogwheelSizeHelper.getChainRadius(state.getBlock()), track.getSpeed()) * (1.0 - treadBrake(level, track))
+            : 0.0;
+        return new Drive(
+            new Vec3(travelWorld.x, travelWorld.y, travelWorld.z), new Vec3(sideWorld.x, sideWorld.y, sideWorld.z), speed, driven);
+    }
+
+    @Nullable
+    public static GroundContact groundContact(KineticBlockEntity kbe, SubLevel subLevel) {
+        Drive drive = drive(kbe, subLevel);
+        if (drive == null) {
+            return null;
+        }
+        BlockState state = kbe.getBlockState();
+        Level level = kbe.getLevel();
+        Axis axis = state.getValue(BlockStateProperties.AXIS);
+
         Block block = state.getBlock();
         Pose3dc pose = subLevel.logicalPose();
-        KineticBlockEntity track = BntCogwheelPairing.beltTwin(kbe);
         boolean inTrack = isInTrack(kbe);
         BntSuspension.Arm arm = BntSuspension.arm(kbe);
         double travel = arm == null ? 0.0 : BntSuspension.travel(kbe);
@@ -393,24 +422,13 @@ public final class BntPhysicsEvents {
         Vec3 centre = arm == null ? seat : seat.add(arm.displacement(settled));
         Vec3 point = pose.transformPosition(centre.subtract(0.0, radius, 0.0));
         Vector3d velocity = Sable.HELPER.getVelocity(level, new Vector3d(centre.x, centre.y, centre.z));
-        Vector3d localVelocity = pose.transformNormalInverse(new Vector3d(velocity));
-        Vector3dc groundNormalD = groundAxis(normalD, pose.transformNormalInverse(new Vector3d(0.0, 1.0, 0.0)));
-        double rolling = localVelocity.dot(groundNormalD);
-        double target = rolling;
-        if (inTrack && track.getSpeed() != 0.0F) {
-            target = surfaceSpeed(CogwheelSizeHelper.getChainRadius(block), track.getSpeed()) * (1.0 - treadBrake(level, track));
-        }
-
-        Vec3i sideVec = Direction.get(AxisDirection.POSITIVE, axis).getNormal();
-        Vector3d travelWorld = pose.transformNormal(new Vector3d(groundNormalD));
-        Vector3d sideWorld = pose.transformNormal(new Vector3d(sideVec.getX(), sideVec.getY(), sideVec.getZ()));
+        Vec3 worldVelocity = new Vec3(velocity.x, velocity.y, velocity.z);
         return new GroundContact(
             grounded ? reach.cast().minInteractingBlock : null,
             point,
-            new Vec3(travelWorld.x, travelWorld.y, travelWorld.z),
-            new Vec3(sideWorld.x, sideWorld.y, sideWorld.z),
-            rolling,
-            target,
+            drive,
+            worldVelocity.dot(drive.travel()),
+            worldVelocity.dot(drive.side()),
             velocity.y
         );
     }

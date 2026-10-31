@@ -8,6 +8,8 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelCh
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import java.util.Optional;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -40,6 +42,7 @@ public final class BntGround {
 
     public static final DataMapType<Block, Grip> GRIP = DataMapType.builder(BitsNTracks.asResource("ground"), Registries.BLOCK, Grip.CODEC).build();
     public static final Surface UNKNOWN = new Surface(1.0, false);
+    public static final TagKey<Block> SPARKS = TagKey.create(Registries.BLOCK, BitsNTracks.asResource("sparks"));
 
     private BntGround() {
     }
@@ -53,6 +56,10 @@ public final class BntGround {
         double sable = friction < 1.0 ? SLIPPERY_FLOOR + (1.0 - SLIPPERY_FLOOR) * friction : friction;
         Grip mapped = state.getBlockHolder().getData(GRIP);
         return mapped == null ? new Surface(sable, false) : new Surface(mapped.grip().orElse(sable), mapped.soft());
+    }
+
+    public static boolean sparks(BlockState state) {
+        return state.is(SPARKS) && !state.is(BlockTags.ICE);
     }
 
     public static double patch(double radius) {

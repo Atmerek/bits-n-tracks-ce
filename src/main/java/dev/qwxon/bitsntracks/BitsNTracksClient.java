@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import dev.qwxon.bitsntracks.client.BntBeltClick;
 import dev.qwxon.bitsntracks.client.BntShaderHand;
+import dev.qwxon.bitsntracks.client.BntSparkParticle;
 import dev.qwxon.bitsntracks.client.BntSqueezedModel;
 import dev.qwxon.bitsntracks.client.BntSuspensionPlacement;
 import dev.qwxon.bitsntracks.client.BntToolHud;
@@ -45,6 +46,7 @@ public class BitsNTracksClient {
         modEventBus.addListener(BitsNTracksClient::registerClientExtensions);
         modEventBus.addListener(BntToolHud::registerLayers);
         modEventBus.addListener(BntToolKeys::register);
+        modEventBus.addListener(BntSparkParticle::register);
         modEventBus.addListener((RegisterClientReloadListenersEvent event) -> {
             event.registerReloadListener(BntSuspensionMeshes.INSTANCE);
             event.registerReloadListener(BntGrouserModel.INSTANCE);

@@ -10,6 +10,7 @@ import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksDataComponents;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
+import dev.qwxon.bitsntracks.index.BitsNTracksParticles;
 import dev.qwxon.bitsntracks.interaction.BntNetwork;
 import dev.qwxon.bitsntracks.physics.BntGround;
 import dev.qwxon.bitsntracks.physics.BntPhysicsEvents;
@@ -34,6 +35,7 @@ public class BitsNTracks {
         modContainer.registerConfig(Type.SERVER, BntPhysicsTuning.SPEC);
         REGISTRATE.setTooltipModifierFactory(item -> new Modifier(item, Palette.STANDARD_CREATE).andThen(TooltipModifier.mapNull(KineticStats.create(item))));
         BitsNTracksDataComponents.register(modEventBus);
+        BitsNTracksParticles.register(modEventBus);
         BitsNTracksItems.init();
         BitsNTracksBlocks.init();
         BntStressValues.register();

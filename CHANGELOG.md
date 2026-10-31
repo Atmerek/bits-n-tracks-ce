@@ -5,12 +5,14 @@
 ### Added
 
 - Keys for switching tool modes and for scrolling with a tool, for playing without a scroll wheel. They are unbound by default, under Bits 'n' Tracks in Controls.
+- Tank Treads and tracks with grousers throw sparks when they slip or land on stone, metal and other pickaxe blocks, mixed with some of the ground's own particles. The blocks are listed in the `bits_n_tracks:sparks` block tag.
 
 ### Changed
 
 - A Suspension Piece says why it can't go on: physics switched off, nothing to hang from, a hidden shaft, mismatched sizes or another piece in the way.
 - Cogwheels with physics off are outlined in red while holding a Suspension Piece, and an arm or bogie with nothing to hang from is previewed in red.
 - The Suspension Tool's panel says when the aimed cogwheel has physics off or no Suspension Piece.
+- Track particles come from where the belt touches the ground, and a track sliding sideways throws them out to the side along its whole length.
 
 ### Fixed
 
