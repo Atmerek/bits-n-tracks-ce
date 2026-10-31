@@ -310,7 +310,7 @@ public final class BntBeltContacts {
         contact.penetration = lift;
         contact.velocity = Sable.HELPER.getVelocity(level, JOMLConversion.toJOML(new Vec3(chord.x, localHit.y, chord.z)));
         contact.normalMass = 1.0 / inverseNormalMass;
-        contact.ground = BntGround.of(level.getBlockState(hit.getBlockPos()));
+        contact.ground = BntGround.of(level, hit.getBlockPos());
         return contact;
     }
 

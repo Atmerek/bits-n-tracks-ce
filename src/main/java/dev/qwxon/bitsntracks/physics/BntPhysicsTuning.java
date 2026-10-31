@@ -39,6 +39,7 @@ public final class BntPhysicsTuning {
     private static final DoubleValue TRACK_GRIP;
     private static final DoubleValue SOFT_GROUND_PRESSURE;
     private static final DoubleValue SLIDING_GRIP;
+    private static final DoubleValue WET_SOFT_GRIP;
     private static final DoubleValue PIVOT_SCRUB;
     private static final DoubleValue ROLLING_RESISTANCE;
 
@@ -119,6 +120,9 @@ public final class BntPhysicsTuning {
         SLIDING_GRIP = builder
             .comment("Share of its grip a track keeps once it skids sideways over the ground. It fades in as the skid grows from a quarter of a block per second to one block per second, and grip returns as the skid stops.")
             .defineInRange("slidingGrip", 0.8, 0.0, 1.0);
+        WET_SOFT_GRIP = builder
+            .comment("Share of its grip soft ground keeps while rain falls on it. It eases in and out with the rain, and ground under a roof or in a biome where it does not rain stays dry.")
+            .defineInRange("wetSoftGrip", 0.75, 0.0, 1.0);
         PIVOT_SCRUB = builder
             .comment("How much of the turn the drive asks for the tracks may scrub through. At 0 they resist that turn as hard as any other sideways slide, which is what stops a vehicle from turning in place. At 1 the vehicle turns at exactly the rate its two track speeds work out to, which is quicker than a real tracked vehicle manages, since real tracks slip. Either way the vehicle stops turning as soon as the track speeds match again.")
             .defineInRange("pivotScrub", 0.7, 0.0, 1.0);
@@ -346,6 +350,10 @@ public final class BntPhysicsTuning {
 
     public static double getTractionResponse() {
         return TRACTION_RESPONSE.get();
+    }
+
+    public static double getWetSoftGrip() {
+        return WET_SOFT_GRIP.get();
     }
 
     public static double getPivotScrub() {

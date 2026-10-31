@@ -246,6 +246,7 @@
     "bits_n_tracks.configuration.trackGrip": "Chwyt gąsienicy",
     "bits_n_tracks.configuration.softGroundPressure": "Nacisk na miękki grunt",
     "bits_n_tracks.configuration.slidingGrip": "Chwyt w poślizgu",
+    "bits_n_tracks.configuration.wetSoftGrip": "Chwyt na mokrym miękkim gruncie",
     "bits_n_tracks.configuration.pivotScrub": "Tarcie przy obrocie w miejscu",
     "bits_n_tracks.configuration.trackRollingResistance": "Opór toczenia",
 

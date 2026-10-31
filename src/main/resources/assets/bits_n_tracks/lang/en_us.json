@@ -246,6 +246,7 @@
     "bits_n_tracks.configuration.trackGrip": "Track Grip",
     "bits_n_tracks.configuration.softGroundPressure": "Soft Ground Pressure",
     "bits_n_tracks.configuration.slidingGrip": "Sliding Grip",
+    "bits_n_tracks.configuration.wetSoftGrip": "Wet Soft Ground Grip",
     "bits_n_tracks.configuration.pivotScrub": "Pivot Scrub",
     "bits_n_tracks.configuration.trackRollingResistance": "Rolling Resistance",
 

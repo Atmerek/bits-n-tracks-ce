@@ -6,6 +6,7 @@
 
 - Keys for switching tool modes and for scrolling with a tool, for playing without a scroll wheel. They are unbound by default, under Bits 'n' Tracks in Controls.
 - Tank Treads and tracks with grousers throw sparks when they slip or land on stone, metal and other pickaxe blocks, mixed with some of the ground's own particles. The blocks are listed in the `bits_n_tracks:sparks` block tag.
+- Soft ground grips less while it is raining on it, set by the new Wet Soft Ground Grip setting.
 
 ### Changed
 

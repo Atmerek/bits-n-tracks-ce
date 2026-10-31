@@ -593,7 +593,7 @@ public final class BntPhysicsEvents {
 
         BntGround.Surface ground = reach.cast().minInteractingBlock == null
             ? BntGround.UNKNOWN
-            : BntGround.of(kbe.getLevel().getBlockState(reach.cast().minInteractingBlock));
+            : BntGround.of(kbe.getLevel(), reach.cast().minInteractingBlock);
         mixin.bnt$setExtension(-settled);
 
         Vec3i hitNormal = reach.cast().normal.getNormal();

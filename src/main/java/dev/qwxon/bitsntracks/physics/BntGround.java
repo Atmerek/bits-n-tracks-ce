@@ -5,14 +5,18 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
+import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.registries.datamaps.DataMapType;
 import net.neoforged.neoforge.registries.datamaps.RegisterDataMapTypesEvent;
 import org.jetbrains.annotations.Nullable;
@@ -56,6 +60,16 @@ public final class BntGround {
         double sable = friction < 1.0 ? SLIPPERY_FLOOR + (1.0 - SLIPPERY_FLOOR) * friction : friction;
         Grip mapped = state.getBlockHolder().getData(GRIP);
         return mapped == null ? new Surface(sable, false) : new Surface(mapped.grip().orElse(sable), mapped.soft());
+    }
+
+    public static Surface of(Level level, BlockPos pos) {
+        Surface surface = of(level.getBlockState(pos));
+        BlockPos above = pos.above();
+        if (!surface.soft() || !level.isRainingAt(above) || Sable.HELPER.getContaining(level, Vec3.atCenterOf(pos)) != null) {
+            return surface;
+        }
+        double wet = 1.0 - (1.0 - BntPhysicsTuning.getWetSoftGrip()) * level.getRainLevel(1.0F);
+        return new Surface(surface.grip() * wet, true);
     }
 
     public static boolean sparks(BlockState state) {
