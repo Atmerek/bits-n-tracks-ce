@@ -34,10 +34,6 @@ public final class CogwheelSizeHelper {
         return BntCogwheels.isOwnOrLegacyCogwheel(block);
     }
 
-    public static double getToolHighlightRadius(Block block) {
-        return BntPhysicsTuning.toolHighlightRadius(CogwheelSize.of(block));
-    }
-
     public static double getSuspensionRest(Block block, Object blockEntity) {
         return CogwheelSize.of(block).suspensionRest() * BntTuning.TRAVEL.scale(blockEntity);
     }

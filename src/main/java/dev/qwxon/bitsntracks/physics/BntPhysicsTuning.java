@@ -32,7 +32,6 @@ public final class BntPhysicsTuning {
     private static final Map<CogwheelSize, DoubleValue> TRACK_RADIUS;
     private static final Map<CogwheelSize, DoubleValue> VERTICAL_OFFSET;
     private static final Map<CogwheelSize, DoubleValue> VISUAL_VERTICAL_OFFSET;
-    private static final Map<CogwheelSize, DoubleValue> TOOL_HIGHLIGHT_RADIUS;
 
     private static final DoubleValue TRACTION_RESPONSE;
 
@@ -99,8 +98,6 @@ public final class BntPhysicsTuning {
         VISUAL_VERTICAL_OFFSET = perSize(builder, "VisualVerticalOffset",
             "How much higher than its collision radius a cogwheel rests above the ground, in blocks. Set so the outside of the track rests on the ground: track radius plus half a track link, plus the vertical offset, less the collision radius.",
             -8.0, new double[]{0.0625, 0.0225, 0.0325, 0.0525, 0.1625, 0.4625});
-        TOOL_HIGHLIGHT_RADIUS = perSize(builder, "ToolHighlightRadius", "Radius of the alignment tool's outline.", 0.01,
-            new double[]{0.34, 0.38, 0.42, 0.56, 0.62, 0.68});
         builder.pop();
 
         builder.comment("How fast a track carries the vehicle. The speed a track aims for is fixed by its cogwheel sizes and its rotational speed, so a track always travels at the speed its links are moving. How hard it may push to get there is its grip.")
@@ -326,10 +323,6 @@ public final class BntPhysicsTuning {
 
     public static double visualVerticalOffset(CogwheelSize size) {
         return VISUAL_VERTICAL_OFFSET.get(size).get();
-    }
-
-    public static double toolHighlightRadius(CogwheelSize size) {
-        return TOOL_HIGHLIGHT_RADIUS.get(size).get();
     }
 
     public static double stressImpact(CogwheelSize size) {

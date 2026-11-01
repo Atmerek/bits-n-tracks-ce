@@ -34,8 +34,6 @@ import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
 
 @EventBusSubscriber
 public class BntCogwheelInteraction {
-    public static final int FLAT_FACE = -2;
-
     public static void alignmentModeFromClient(Player player, BntAlignmentModePayload payload) {
         if (player == null) {
             return;
@@ -130,12 +128,6 @@ public class BntCogwheelInteraction {
             || !(level.getBlockEntity(pos) instanceof KineticBlockEntityPhysicsAccess access)) {
             return;
         }
-        if (payload.zone() == FLAT_FACE) {
-            BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.flat_face"));
-            BntToolSounds.refuse(player);
-            return;
-        }
-
         Direction zone = payload.zone() < 0 || payload.zone() >= Direction.values().length
             ? null
             : Direction.values()[payload.zone()];

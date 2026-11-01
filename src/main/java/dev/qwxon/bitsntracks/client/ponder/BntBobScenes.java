@@ -650,8 +650,7 @@ public final class BntBobScenes {
 
     private static AABB zoneBox(Level level, BlockPos pos, Direction face, Direction zone) {
         BlockState state = level.getBlockState(pos);
-        double radius = CogwheelSizeHelper.getToolHighlightRadius(state.getBlock());
-        Vec3 hit = zone == null ? Vec3.ZERO : Vec3.atLowerCornerOf(zone.getNormal()).scale(0.75 * radius);
+        Vec3 hit = zone == null ? Vec3.ZERO : Vec3.atLowerCornerOf(zone.getNormal()).scale(BntToolVisuals.markerReach(state.getBlock()));
         Vec3 centre = Vec3.atCenterOf(pos).add(hit).add(BntCogwheels.getModelTranslation(level.getBlockEntity(pos), 1.0F));
         return BntToolVisuals.marker(centre, state.getValue(BlockStateProperties.AXIS), ZONE_DEPTH);
     }

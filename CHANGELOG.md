@@ -15,6 +15,8 @@
 - The Suspension Tool's panel says when the aimed cogwheel has physics off or no Suspension Piece.
 - Track particles come from where the belt touches the ground, and a track sliding sideways throws them out to the side along its whole length.
 - In Route mode the aimed side of a cogwheel is marked red when the track can't reach it, and clicking it says so.
+- In Route mode a side can also be picked by aiming at the cogwheel's rim or shaft, and the centre that returns it to automatic is smaller, so small cogwheels are easier to aim at.
+- Route mode's side markers sit inside the cogwheel's outline, so aiming at a marker always picks it. The Highlight Radius settings are gone.
 
 ### Fixed
 

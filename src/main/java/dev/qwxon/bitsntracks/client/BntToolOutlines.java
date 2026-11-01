@@ -15,7 +15,6 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceItem;
 import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import net.minecraft.client.Minecraft;
@@ -38,7 +37,6 @@ import org.jetbrains.annotations.Nullable;
 
 @OnlyIn(Dist.CLIENT)
 public final class BntToolOutlines {
-    private static final double MARKER_REACH = 0.75;
     private static final int MAX_OUTLINES = 64;
     private static final double SHAFT_STUB = 2.0 / 16.0;
     private static final double SHAFT_RADIUS = 2.0 / 16.0;
@@ -258,7 +256,7 @@ public final class BntToolOutlines {
         AABB box = BntToolVisuals.shapeBox(level, pos);
         double halfDepth = (box.max(blockAxis) - box.min(blockAxis)) * 0.5;
         Vec3 centre = BntToolVisuals.drawnCentre(level, pos);
-        double reach = CogwheelSizeHelper.getToolHighlightRadius(level.getBlockState(pos).getBlock()) * MARKER_REACH;
+        double reach = BntToolVisuals.markerReach(level.getBlockState(pos).getBlock());
 
         int pinned = access.bnt$getTrackRouteSide();
         Direction pinnedSide = pinned < 0 || pinned >= Direction.values().length ? null : Direction.values()[pinned];
@@ -268,12 +266,11 @@ public final class BntToolOutlines {
         }
 
         HitResult hit = Minecraft.getInstance().hitResult;
-        if (!(hit instanceof BlockHitResult blockHit) || !blockHit.getBlockPos().equals(pos) || blockHit.getDirection().getAxis() != blockAxis) {
+        if (!(hit instanceof BlockHitResult blockHit) || !blockHit.getBlockPos().equals(pos)) {
             return;
         }
         Vec3 local = blockHit.getLocation().subtract(centre);
-        Direction zone = BntLeverZone.of(blockAxis, local.x, local.y, local.z,
-            CogwheelSizeHelper.getToolHighlightRadius(level.getBlockState(pos).getBlock()));
+        Direction zone = BntLeverZone.of(blockAxis, local.x, local.y, local.z, level.getBlockState(pos).getBlock());
         Direction result = zone == pinnedSide ? null : zone;
         if (result == null && pinnedSide == null) {
             return;

@@ -1,11 +1,13 @@
 package dev.qwxon.bitsntracks.client;
 
 import dev.qwxon.bitsntracks.content.BntCogwheels;
+import dev.qwxon.bitsntracks.content.CogwheelSize;
 import net.createmod.catnip.outliner.Outliner;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -60,6 +62,10 @@ public final class BntToolVisuals {
         double y = cogAxis == Axis.Y ? halfDepth + MARKER_DEPTH : MARKER;
         double z = cogAxis == Axis.Z ? halfDepth + MARKER_DEPTH : MARKER;
         return new AABB(centre.x - x, centre.y - y, centre.z - z, centre.x + x, centre.y + y, centre.z + z);
+    }
+
+    public static double markerReach(Block block) {
+        return CogwheelSize.of(block).shapeRadius() / 16.0 - MARKER;
     }
 
     public static Vec3 drawnCentre(ClientLevel level, BlockPos pos) {
