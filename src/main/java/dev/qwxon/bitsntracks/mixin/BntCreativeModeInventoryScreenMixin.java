@@ -1,7 +1,7 @@
 package dev.qwxon.bitsntracks.mixin;
 
-import com.kipti.bnb.registry.datagen.BnbCreativeTabs;
 import dev.qwxon.bitsntracks.client.BntCreativeTabRenderer;
+import dev.qwxon.bitsntracks.index.BitsNTracksCreativeTabs;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.world.item.CreativeModeTab;
@@ -18,7 +18,7 @@ public class BntCreativeModeInventoryScreenMixin {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void bnt$renderBanners(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        if (selectedTab == BnbCreativeTabs.BASE_CREATIVE_TAB.get()) {
+        if (selectedTab == BitsNTracksCreativeTabs.BASE.get()) {
             BntCreativeTabRenderer.renderBanners((CreativeModeInventoryScreen)(Object)this, guiGraphics, mouseX, mouseY);
         }
     }

@@ -30,30 +30,34 @@ public class BntCreativeTabRenderer {
         int left = ((CreativeModeInventoryScreenAccessor)screen).getLeftPos() + 8;
         int top = ((CreativeModeInventoryScreenAccessor)screen).getTopPos() + 17;
         graphics.pose().translate(left, top, 0.0F);
-        int bntRow = BntCreativeTabHelper.tracksRow - BntCreativeTabHelper.currentRow;
-        if (bntRow >= 0 && bntRow <= 4) {
-            int y = bntRow * 18;
-            int x = 0;
-            int w = 162;
-            int h = 18;
-            boolean isHovering = mouseX >= left + x && mouseX <= left + x + w && mouseY >= top + y && mouseY <= top + y + h;
-            long now = Util.getMillis();
-            if (isHovering) {
-                hoveredMillis += Math.min(now - lastFrameMillis, FRAME_MILLIS);
-                int frame = (int)(hoveredMillis / FRAME_MILLIS % BANNER_FRAMES);
-                graphics.blit(BANNER, x, y, w, h, 0.0F, frame * h, w, h, w, h * BANNER_FRAMES);
-            } else {
-                graphics.blitSprite(BANNER_STILL, x, y, w, h);
-            }
-            lastFrameMillis = now;
-            Component title = Component.translatable("tab.bits_n_tracks.base");
-            int textWidth = font.width(title);
-            graphics.fill(2, y + 2, textWidth + 8, y + 16, -1441262572);
-            drawAuraText(graphics, title, -8224383, -1907998, 5, y + 5);
-        }
+        long now = Util.getMillis();
+        banner(graphics, font, BntCreativeTabHelper.tracksRow, Component.translatable("tab.bits_n_tracks.base"), left, top, mouseX, mouseY, now);
+        banner(graphics, font, BntCreativeTabHelper.teamRow, Component.translatable("tab.bits_n_tracks.team"), left, top, mouseX, mouseY, now);
+        lastFrameMillis = now;
 
         graphics.pose().popPose();
         RenderSystem.disableDepthTest();
+    }
+
+    private static void banner(GuiGraphics graphics, Font font, int row, Component title, int left, int top, int mouseX, int mouseY, long now) {
+        int shown = row - BntCreativeTabHelper.currentRow;
+        if (shown < 0 || shown > 4) {
+            return;
+        }
+        int y = shown * 18;
+        int w = 162;
+        int h = 18;
+        boolean isHovering = mouseX >= left && mouseX <= left + w && mouseY >= top + y && mouseY <= top + y + h;
+        if (isHovering) {
+            hoveredMillis += Math.min(now - lastFrameMillis, FRAME_MILLIS);
+            int frame = (int)(hoveredMillis / FRAME_MILLIS % BANNER_FRAMES);
+            graphics.blit(BANNER, 0, y, w, h, 0.0F, frame * h, w, h, w, h * BANNER_FRAMES);
+        } else {
+            graphics.blitSprite(BANNER_STILL, 0, y, w, h);
+        }
+        int textWidth = font.width(title);
+        graphics.fill(2, y + 2, textWidth + 8, y + 16, -1441262572);
+        drawAuraText(graphics, title, -8224383, -1907998, 5, y + 5);
     }
 
     public static void drawAuraText(GuiGraphics graphics, Component text, int color1, int color2, int x, int y) {

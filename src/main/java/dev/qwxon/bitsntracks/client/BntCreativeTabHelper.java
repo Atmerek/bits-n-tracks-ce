@@ -2,15 +2,17 @@ package dev.qwxon.bitsntracks.client;
 
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 
 public final class BntCreativeTabHelper {
     private static final int ROW = 9;
-    private static final List<Supplier<? extends ItemLike>> ITEMS = List.of(
+    private static final List<Supplier<? extends ItemLike>> TRACKS = List.of(
         BitsNTracksItems.INDUSTRIAL_BELT,
         BitsNTracksItems.TANK_TREAD,
         BitsNTracksItems.GROUSER,
@@ -28,7 +30,9 @@ public final class BntCreativeTabHelper {
         BitsNTracksBlocks.INDUSTRIAL_FLANGED_COGWHEEL,
         BitsNTracksBlocks.MEDIUM_INDUSTRIAL_FLANGED_COGWHEEL,
         BitsNTracksBlocks.MEDIUM_LARGE_INDUSTRIAL_FLANGED_COGWHEEL,
-        BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL,
+        BitsNTracksBlocks.LARGE_INDUSTRIAL_FLANGED_COGWHEEL
+    );
+    private static final List<Supplier<? extends ItemLike>> TEAM = List.of(
         BitsNTracksBlocks.QWXONN_HEAD,
         BitsNTracksBlocks.ATMEREK_HEAD,
         BitsNTracksBlocks.CUBESTER_HEAD,
@@ -39,33 +43,56 @@ public final class BntCreativeTabHelper {
 
     public static int currentRow;
     public static int tracksRow;
+    public static int teamRow;
 
     private BntCreativeTabHelper() {
     }
 
-    public static void processItems(List<ItemStack> baseItems, List<ItemStack> displayItems, Set<ItemStack> searchItems) {
-        int baseCount = 0;
-        for (ItemStack item : baseItems) {
-            if (!item.isEmpty()) {
-                displayItems.add(item);
-                searchItems.add(item);
-                baseCount++;
+    public static void accept(CreativeModeTab.Output output) {
+        for (Supplier<? extends ItemLike> entry : TRACKS) {
+            output.accept(entry.get());
+        }
+        for (Supplier<? extends ItemLike> entry : TEAM) {
+            output.accept(entry.get());
+        }
+    }
+
+    public static List<ItemStack> layout(Collection<ItemStack> items) {
+        List<ItemStack> team = new ArrayList<>();
+        List<ItemStack> tracks = new ArrayList<>();
+        for (ItemStack item : items) {
+            (isTeam(item) ? team : tracks).add(item);
+        }
+
+        List<ItemStack> slots = new ArrayList<>();
+        tracksRow = 0;
+        bannerRow(slots);
+        slots.addAll(tracks);
+        endRow(slots);
+        teamRow = slots.size() / ROW;
+        bannerRow(slots);
+        slots.addAll(team);
+        return slots;
+    }
+
+    private static boolean isTeam(ItemStack item) {
+        for (Supplier<? extends ItemLike> entry : TEAM) {
+            if (item.is(entry.get().asItem())) {
+                return true;
             }
         }
+        return false;
+    }
 
-        int padding = ROW - baseCount % ROW;
-        if (padding < ROW) {
-            padding += ROW;
+    private static void bannerRow(List<ItemStack> slots) {
+        for (int i = 0; i < ROW; i++) {
+            slots.add(ItemStack.EMPTY);
         }
-        for (int i = 0; i < padding; i++) {
-            displayItems.add(ItemStack.EMPTY);
-        }
-        tracksRow = (baseCount + ROW - 1) / ROW + padding / ROW - 1;
+    }
 
-        for (Supplier<? extends ItemLike> entry : ITEMS) {
-            ItemStack item = new ItemStack(entry.get());
-            displayItems.add(item);
-            searchItems.add(item);
+    private static void endRow(List<ItemStack> slots) {
+        while (slots.size() % ROW != 0) {
+            slots.add(ItemStack.EMPTY);
         }
     }
 }

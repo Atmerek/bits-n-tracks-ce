@@ -10,6 +10,7 @@
 
 ### Changed
 
+- Bits 'n' Tracks has its own creative tab after the Bits 'n' Bobs tabs, with its banner at the top and a second banner over the team's heads.
 - A Suspension Piece says why it can't go on: physics switched off, nothing to hang from, a hidden shaft, mismatched sizes or another piece in the way.
 - Cogwheels with physics off are outlined in red while holding a Suspension Piece, and an arm or bogie with nothing to hang from is previewed in red.
 - The Suspension Tool's panel says when the aimed cogwheel has physics off or no Suspension Piece.

@@ -183,6 +183,7 @@
     "block.bits_n_tracks.medium_large_flanged_cogwheel": "Medium-Large Physical Flanged Cogwheel",
     "block.bits_n_tracks.medium_large_industrial_flanged_cogwheel": "Medium-Large Industrial Flanged Cogwheel",
     "tab.bits_n_tracks.base": "Bits 'n' Tracks CE",
+    "tab.bits_n_tracks.team": "The Team",
 
     "message.bits_n_bobs.cogwheel_chain.chain_addition_aborted.invalid_cogwheel_type.cogwheel_chain_type.bits_n_bobs.chain": "Chain cogwheel drives must be placed on a flanged cogwheel",
     "message.bits_n_bobs.cogwheel_chain.chain_addition_aborted.invalid_cogwheel_type.cogwheel_chain_type.bits_n_tracks.industrial_belt": "Industrial belt drives must be placed on a physical flanged cogwheel",
