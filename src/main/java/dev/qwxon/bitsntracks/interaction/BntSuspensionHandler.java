@@ -5,6 +5,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionPieceItem;
+import dev.qwxon.bitsntracks.index.BitsNTracksAdvancements;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -57,6 +58,7 @@ public final class BntSuspensionHandler {
             player.getItemInHand(hand).shrink(1);
         }
         BntToolSounds.mount(level, pos, true);
+        BitsNTracksAdvancements.SUSPENSION_ARM.award(player);
     }
 
     private static void placeBogie(
@@ -83,6 +85,7 @@ public final class BntSuspensionHandler {
             stack.shrink(BntSuspension.BOGIE);
         }
         BntToolSounds.mount(level, pos, true);
+        BitsNTracksAdvancements.BOGIE.award(player);
     }
 
     @SubscribeEvent

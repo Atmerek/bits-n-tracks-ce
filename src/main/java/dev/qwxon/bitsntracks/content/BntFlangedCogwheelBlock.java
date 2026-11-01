@@ -7,6 +7,7 @@ import com.simibubi.create.foundation.block.IBE;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
+import dev.qwxon.bitsntracks.index.BitsNTracksAdvancements;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlockEntityTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.ArrayList;
@@ -125,6 +126,9 @@ public class BntFlangedCogwheelBlock extends RotatedPillarKineticBlock implement
         super.setPlacedBy(level, pos, state, placer, stack);
         BntCogwheelPairing.linkPartner(level, pos, state);
         BntCogwheelPairing.adoptPartnerSettings(level, pos);
+        if (placer instanceof Player player && BntCogwheelPairing.sideOf(state) != BntWideSide.NONE) {
+            BitsNTracksAdvancements.WIDE.award(player);
+        }
     }
 
     protected BlockState updateShape(

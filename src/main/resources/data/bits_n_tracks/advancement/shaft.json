@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:width",
+  "display": {
+    "icon": {
+      "id": "create:shaft"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.shaft"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.shaft.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "shaft"
+      }
+    }
+  }
+}

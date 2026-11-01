@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:industrial_belt",
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:tank_tread"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.tank_tread"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.tank_tread.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "tank_tread"
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "parent": "bits_n_tracks:root",
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:tiny_flanged_cogwheel"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.all_sizes"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.all_sizes.desc",
+      "color": "#DBA213"
+    },
+    "frame": "goal"
+  },
+  "criteria": {
+    "tiny": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["bits_n_tracks:tiny_flanged_cogwheel", "bits_n_tracks:industrial_tiny_flanged_cogwheel"]
+          }
+        ]
+      }
+    },
+    "intermediate": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["bits_n_tracks:intermediate_flanged_cogwheel", "bits_n_tracks:intermediate_industrial_flanged_cogwheel"]
+          }
+        ]
+      }
+    },
+    "small": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["bits_n_tracks:flanged_cogwheel", "bits_n_tracks:industrial_flanged_cogwheel"]
+          }
+        ]
+      }
+    },
+    "medium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["bits_n_tracks:medium_flanged_cogwheel", "bits_n_tracks:medium_industrial_flanged_cogwheel"]
+          }
+        ]
+      }
+    },
+    "medium_large": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["bits_n_tracks:medium_large_flanged_cogwheel", "bits_n_tracks:medium_large_industrial_flanged_cogwheel"]
+          }
+        ]
+      }
+    },
+    "large": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["bits_n_tracks:large_flanged_cogwheel", "bits_n_tracks:large_industrial_flanged_cogwheel"]
+          }
+        ]
+      }
+    }
+  }
+}

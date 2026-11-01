@@ -8,6 +8,7 @@ import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.index.BitsNTracksAdvancements;
 import dev.qwxon.bitsntracks.physics.BntTuning;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -81,6 +82,9 @@ public final class BntTuningHandler {
             BntBeltRefit.refit(level, pos);
         }
         BntToolSounds.adjust(level, pos, (float)(value - BntTuning.MIN) / (BntTuning.MAX - BntTuning.MIN));
+        if (!tuned.isEmpty()) {
+            BitsNTracksAdvancements.TUNING.award(player);
+        }
 
         if (payload.wholeTrack()) {
             int wheels = BntCogwheelPairing.countWheels(level, tuned);

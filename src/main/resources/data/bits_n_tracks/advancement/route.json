@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:track",
+  "display": {
+    "icon": {
+      "id": "minecraft:compass"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.route"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.route.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "route"
+      }
+    }
+  }
+}

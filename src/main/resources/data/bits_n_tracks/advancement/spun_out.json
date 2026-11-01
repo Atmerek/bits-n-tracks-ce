@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:track",
+  "display": {
+    "icon": {
+      "id": "minecraft:fire_charge"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.spun_out"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.spun_out.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "spun_out"
+      }
+    }
+  }
+}

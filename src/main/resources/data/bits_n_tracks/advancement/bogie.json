@@ -1,0 +1,25 @@
+{
+  "parent": "bits_n_tracks:suspension_arm",
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:suspension_piece",
+      "count": 2
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.bogie"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.bogie.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "bogie"
+      }
+    }
+  }
+}

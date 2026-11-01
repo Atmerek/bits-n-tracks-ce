@@ -2,6 +2,7 @@ package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.infrastructure.config.AllConfigs;
+import dev.qwxon.bitsntracks.index.BitsNTracksAdvancements;
 import dev.qwxon.bitsntracks.physics.BntDebugLog;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -144,6 +145,14 @@ public final class BntChainStops {
                 }
             }
             if (now - this.last > CALM_TICKS) {
+                for (BlockPos pos : this.members) {
+                    if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic
+                        && BntChainEngagement.partOfChain(kinetic) && kinetic.getSpeed() != 0.0F
+                        && Math.abs(kinetic.getTheoreticalSpeed()) <= limit) {
+                        BitsNTracksAdvancements.CLOSE_SHAVE.awardNearby(level, pos);
+                        break;
+                    }
+                }
                 return true;
             }
             if (now - this.start < OVERSPEED_GRACE || this.fastest == null) {
@@ -153,6 +162,7 @@ public final class BntChainStops {
             BntDebugLog.LOG.warn("Breaking {}: its track ran too fast for {} ticks", broken.toShortString(), OVERSPEED_GRACE);
             pending.breaks.add(broken);
             pending.stops.addAll(this.members);
+            BitsNTracksAdvancements.SPUN_OUT.awardNearby(level, broken);
             return true;
         }
 

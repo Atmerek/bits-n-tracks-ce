@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:root",
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:medium_industrial_flanged_cogwheel"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.wide"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.wide.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "wide"
+      }
+    }
+  }
+}

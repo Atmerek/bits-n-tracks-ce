@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:grousers",
+  "display": {
+    "icon": {
+      "id": "minecraft:mud"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.mud_season"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.mud_season.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "mud_season"
+      }
+    }
+  }
+}

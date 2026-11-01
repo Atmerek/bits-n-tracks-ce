@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:physics",
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:suspension_piece"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.suspension_arm"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.suspension_arm.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "suspension_arm"
+      }
+    }
+  }
+}

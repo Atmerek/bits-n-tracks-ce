@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:track",
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:industrial_belt"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.industrial_belt"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.industrial_belt.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "industrial_belt"
+      }
+    }
+  }
+}

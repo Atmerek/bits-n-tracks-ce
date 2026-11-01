@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:spun_out",
+  "display": {
+    "icon": {
+      "id": "minecraft:shears"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.close_shave"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.close_shave.desc",
+      "color": "#DBA213"
+    },
+    "frame": "goal"
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "close_shave"
+      }
+    }
+  }
+}

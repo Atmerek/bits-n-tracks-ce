@@ -4,6 +4,7 @@ import com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorBlockEnti
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntGrousers;
+import dev.qwxon.bitsntracks.index.BitsNTracksAdvancements;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
@@ -39,5 +40,6 @@ public final class BntGrouserHandler {
         }
         BntGrousers.write(level, controllerPos, cost);
         level.playSound(null, controllerPos, SoundEvents.NETHERITE_BLOCK_PLACE, SoundSource.BLOCKS, 1.0F, 1.0F);
+        BitsNTracksAdvancements.GROUSERS.award(player);
     }
 }

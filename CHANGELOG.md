@@ -8,6 +8,7 @@
 - Tank Treads and tracks with grousers throw sparks when they slip or land on stone, metal and other pickaxe blocks, mixed with some of the ground's own particles. The blocks are listed in the `bits_n_tracks:sparks` block tag.
 - Soft ground grips less while it is raining on it, set by the new Wet Soft Ground Grip setting.
 - A track turning faster than the speed limit smokes and throws sparks for three seconds before it breaks, and slowing it down in that time saves it.
+- 19 advancements in their own Bits 'n' Tracks tab, for building tracks, using the tools, saving or breaking an overspeeding track, and driving 10,000 blocks on your own tracks.
 
 ### Changed
 

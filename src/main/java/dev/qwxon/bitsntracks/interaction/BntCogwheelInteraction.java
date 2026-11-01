@@ -14,6 +14,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntGrousers;
+import dev.qwxon.bitsntracks.index.BitsNTracksAdvancements;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -76,6 +77,9 @@ public class BntCogwheelInteraction {
         BntChainEngagement.refresh(level, pos, engagementBefore);
         BntBeltRefit.refit(level, pos);
         BntToolSounds.physics(level, pos, newState);
+        if (newState) {
+            BitsNTracksAdvancements.PHYSICS.award(player);
+        }
         Component status = trackStatus(level, pos);
         if (status != null) {
             BntToolMessages.send(player, status);
@@ -147,6 +151,9 @@ public class BntCogwheelInteraction {
         BntChainEngagement.refresh(level, pos, engagementBefore);
         BntBeltRefit.refit(level, pos);
         BntToolSounds.toggle(level, pos, side >= 0);
+        if (side >= 0) {
+            BitsNTracksAdvancements.ROUTE.award(player);
+        }
     }
 
     public static Component trackStatus(Level level, BlockPos pos) {

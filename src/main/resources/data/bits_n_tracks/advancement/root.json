@@ -1,0 +1,42 @@
+{
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:large_flanged_cogwheel"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.root"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.root.desc",
+      "color": "#DBA213"
+    },
+    "background": "create:textures/block/industrial_iron_block.png",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "cogwheel": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bits_n_tracks:tiny_flanged_cogwheel",
+              "bits_n_tracks:intermediate_flanged_cogwheel",
+              "bits_n_tracks:flanged_cogwheel",
+              "bits_n_tracks:medium_flanged_cogwheel",
+              "bits_n_tracks:medium_large_flanged_cogwheel",
+              "bits_n_tracks:large_flanged_cogwheel",
+              "bits_n_tracks:industrial_tiny_flanged_cogwheel",
+              "bits_n_tracks:intermediate_industrial_flanged_cogwheel",
+              "bits_n_tracks:industrial_flanged_cogwheel",
+              "bits_n_tracks:medium_industrial_flanged_cogwheel",
+              "bits_n_tracks:medium_large_industrial_flanged_cogwheel",
+              "bits_n_tracks:large_industrial_flanged_cogwheel"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "parent": "bits_n_tracks:physics",
+  "display": {
+    "icon": {
+      "id": "minecraft:lightning_rod"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.rolling_thunder"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.rolling_thunder.desc",
+      "color": "#DBA213"
+    },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "1000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 1000
+      }
+    },
+    "2000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 2000
+      }
+    },
+    "3000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 3000
+      }
+    },
+    "4000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 4000
+      }
+    },
+    "5000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 5000
+      }
+    },
+    "6000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 6000
+      }
+    },
+    "7000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 7000
+      }
+    },
+    "8000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 8000
+      }
+    },
+    "9000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 9000
+      }
+    },
+    "10000": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "rolling_thunder",
+        "at_least": 10000
+      }
+    }
+  }
+}

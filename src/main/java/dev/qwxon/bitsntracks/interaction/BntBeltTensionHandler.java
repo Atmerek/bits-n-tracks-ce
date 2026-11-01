@@ -2,6 +2,7 @@ package dev.qwxon.bitsntracks.interaction;
 
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
+import dev.qwxon.bitsntracks.index.BitsNTracksAdvancements;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
@@ -28,6 +29,9 @@ public final class BntBeltTensionHandler {
             BntToolSounds.refuse(player);
         } else {
             BntToolSounds.adjust(level, controllerPos, after);
+            if (payload.tighten()) {
+                BitsNTracksAdvancements.TENSION.award(player);
+            }
         }
     }
 }

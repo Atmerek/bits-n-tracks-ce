@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:root",
+  "display": {
+    "icon": {
+      "id": "create:belt_connector"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.track"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.track.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "track"
+      }
+    }
+  }
+}

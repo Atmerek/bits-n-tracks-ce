@@ -6,6 +6,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
+import dev.qwxon.bitsntracks.index.BitsNTracksAdvancements;
 import dev.qwxon.bitsntracks.index.BitsNTracksDataComponents;
 import dev.qwxon.bitsntracks.interaction.BntToolMessages;
 import dev.qwxon.bitsntracks.interaction.BntToolSounds;
@@ -203,6 +204,7 @@ public class CogAlignmentLeverItem extends Item {
         }
         BlockState state = level.getBlockState(pos);
         BntToolSounds.adjust(level, pos, BntCogwheelWidth.quarters(state) / (float)BntCogwheelWidth.full(state));
+        BitsNTracksAdvancements.WIDTH.award(player);
     }
 
     public static void toggleShaft(Level level, Player player, BlockPos pos, Direction end, boolean wholeTrack) {
@@ -221,6 +223,9 @@ public class CogAlignmentLeverItem extends Item {
             return;
         }
         BntToolSounds.toggle(level, pos, kept);
+        if (!kept) {
+            BitsNTracksAdvancements.SHAFT.award(player);
+        }
     }
 
     public static void reset(Level level, Player player, BlockPos pos, boolean wholeTrack) {

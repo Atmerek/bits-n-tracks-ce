@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:suspension_arm",
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:suspension_tool"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.tuning"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.tuning.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "tuning"
+      }
+    }
+  }
+}

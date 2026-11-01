@@ -1,0 +1,24 @@
+{
+  "parent": "bits_n_tracks:route",
+  "display": {
+    "icon": {
+      "id": "minecraft:string"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.tension"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.tension.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "bits_n_tracks:action",
+      "conditions": {
+        "action": "tension"
+      }
+    }
+  }
+}

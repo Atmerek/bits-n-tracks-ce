@@ -10,6 +10,7 @@ import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.math.OrientedBoundingBox3d;
@@ -103,6 +104,17 @@ public final class BntPhysicsEvents {
 
     public static void register() {
         SableEventPlatform.INSTANCE.onPhysicsTick(BntPhysicsEvents::onPhysicsTick);
+    }
+
+    private static boolean driven(List<ServerSubLevel> assembly, Map<ServerSubLevel, List<KineticBlockEntity>> wheelsByBody) {
+        for (ServerSubLevel subLevel : assembly) {
+            for (KineticBlockEntity wheel : wheelsByBody.getOrDefault(subLevel, List.of())) {
+                if (wheel.getSpeed() != 0.0F && BntChains.controllerPos(wheel) != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static void onPhysicsTick(SubLevelPhysicsSystem physicsSystem, double timeStep) {
@@ -203,6 +215,15 @@ public final class BntPhysicsEvents {
             }
 
             share = Math.max(share, 1.0);
+            if (!contacts.isEmpty() && driven(assembly, wheelsByBody)) {
+                boolean muddy = muddy(level, bodies);
+                for (ServerSubLevel subLevel : assembly) {
+                    BntDrivingDistance.moving(subLevel, level.getGameTime());
+                    if (muddy) {
+                        BntDrivingDistance.muddy(subLevel, level.getGameTime());
+                    }
+                }
+            }
             if (!contacts.isEmpty()) {
                 if (frame != null && solveSupport(level, frame.logicalPose(), massData, contacts, share, beltShare, timeStep, articulation)) {
                     for (ServerSubLevel subLevel : assembly) {
@@ -247,6 +268,26 @@ public final class BntPhysicsEvents {
         double rate = Math.min(owed / timeStep, crossing);
         CLIMB.put(wheel, new double[]{step, contact.rise, owed - rate * timeStep});
         return rate;
+    }
+
+    private static boolean muddy(ServerLevel level, List<BodyLoads> bodies) {
+        if (!level.isRaining()) {
+            return false;
+        }
+        for (BodyLoads body : bodies) {
+            Vector3dc position = body.subLevel().logicalPose().position();
+            if (!level.isRainingAt(BlockPos.containing(position.x(), position.y(), position.z()))) {
+                continue;
+            }
+            for (BntPhysicsEvents.WheelContact contact : body.contacts()) {
+                BntBeltContacts.BntTread tread = contact.tread == null ? null : body.belt().treads().get(contact.tread);
+                boolean bites = tread != null && (tread.grousers() || tread.type() == BntCogwheelChainTypes.TANK_TREAD_CHAIN.get());
+                if (bites && tread.driven() && contact.ground.soft()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private record BodyLoads(
