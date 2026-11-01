@@ -20,6 +20,7 @@
 - In Route mode a side can also be picked by aiming at the cogwheel's rim or shaft, and the centre that returns it to automatic is smaller, so small cogwheels are easier to aim at.
 - Route mode's side markers sit inside the cogwheel's outline, so aiming at a marker always picks it. The Highlight Radius settings are gone.
 - A jammed drive network with a track in it breaks a block right away, as in Create, instead of stopping and restarting the track up to three times first.
+- The Powering Tracks Ponder scene is remade with all six cogwheel sizes and covers speed, stress, the speed limit and the overspeed warning.
 
 ### Fixed
 

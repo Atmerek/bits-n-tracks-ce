@@ -59,13 +59,16 @@ public final class BntOverspeedEffects {
             return;
         }
 
-        double heat = heat(level, kbe.getBlockPos());
+        spray(level, subLevel, state, center, kbe.getSpeed(), heat(level, kbe.getBlockPos()));
+    }
+
+    public static void spray(Level level, SubLevel subLevel, BlockState state, Vec3 center, float speed, double heat) {
         RandomSource random = level.getRandom();
         Axis axis = state.getValue(BlockStateProperties.AXIS);
         Vec3 u = Vec3.atLowerCornerOf(Direction.fromAxisAndDirection(next(axis), Direction.AxisDirection.POSITIVE).getNormal());
         Vec3 v = Vec3.atLowerCornerOf(Direction.fromAxisAndDirection(next(next(axis)), Direction.AxisDirection.POSITIVE).getNormal());
         double radius = CogwheelSize.of(state.getBlock()).chainRadius();
-        double turning = Math.signum(kbe.getSpeed());
+        double turning = Math.signum(speed);
 
         int sparks = count(random, SPARKS * heat);
         for (int i = 0; i < sparks; i++) {
@@ -83,7 +86,7 @@ public final class BntOverspeedEffects {
         }
     }
 
-    private static void emit(Level level, SubLevel subLevel, ParticleOptions particle,Vec3 at, Vec3 velocity, double lift) {
+    private static void emit(Level level, SubLevel subLevel, ParticleOptions particle, Vec3 at, Vec3 velocity, double lift) {
         Vec3 pos = subLevel == null ? at : subLevel.logicalPose().transformPosition(at);
         Vec3 moving = subLevel == null ? velocity : subLevel.logicalPose().transformNormal(velocity);
         level.addParticle(particle, pos.x, pos.y, pos.z, moving.x, moving.y + lift, moving.z);
@@ -100,7 +103,11 @@ public final class BntOverspeedEffects {
             heat.since = now;
         }
         heat.last = now;
-        double share = (double)(now - heat.since) / BntChainStops.OVERSPEED_GRACE;
+        return heat(now - heat.since);
+    }
+
+    public static double heat(long overspeedTicks) {
+        double share = (double)overspeedTicks / BntChainStops.OVERSPEED_GRACE;
         return Mth.clamp(MIN_HEAT + (1.0 - MIN_HEAT) * share, MIN_HEAT, 1.0);
     }
 

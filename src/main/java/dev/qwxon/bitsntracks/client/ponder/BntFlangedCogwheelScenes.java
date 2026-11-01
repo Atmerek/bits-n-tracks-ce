@@ -1,35 +1,38 @@
 package dev.qwxon.bitsntracks.client.ponder;
 
-import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.client.BntOverspeedEffects;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntWideSide;
+import dev.qwxon.bitsntracks.content.CogwheelSize;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainStops;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import dev.qwxon.bitsntracks.index.BitsNTracksBlocks;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
-import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
+import dev.qwxon.bitsntracks.physics.BntPhysicsTuning;
 import java.util.List;
 import java.util.Locale;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
+import net.createmod.ponder.api.level.PonderLevel;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
 import net.createmod.ponder.foundation.PonderScene;
 import net.createmod.ponder.foundation.element.TextWindowElement;
 import net.createmod.ponder.foundation.instruction.PonderInstruction;
+import net.createmod.ponder.foundation.instruction.TickingInstruction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 
 public final class BntFlangedCogwheelScenes {
@@ -40,6 +43,11 @@ public final class BntFlangedCogwheelScenes {
     private static final int[] INTRODUCTION_COLUMNS = {1, 4, 6, 8, 10, 12};
     private static final int WOODEN_ROW = 8;
     private static final int INDUSTRIAL_ROW = 4;
+    private static final int POWERING_PLATE = 13;
+    private static final int LABEL_TICKS = 90;
+    private static final int LABEL_DELAY = 10;
+    private static final int SAVED_TICKS = 55;
+    private static final float SPEED_LIMIT = 256.0F;
 
     private BntFlangedCogwheelScenes() {
     }
@@ -129,100 +137,122 @@ public final class BntFlangedCogwheelScenes {
 
     public static void powering(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
-        scene.title("flanged_cogwheel_powering", "Powering and managing Physical Flanged Cogwheels");
-        scene.configureBasePlate(1, 1, 10);
-        scene.scaleSceneView(0.75F);
+        scene.title("flanged_cogwheel_powering", "Powering Tracks");
+        scene.configureBasePlate(0, 0, POWERING_PLATE);
+        scene.scaleSceneView(0.7F);
+        scene.setSceneOffsetY(-1.0F);
 
-        Wheel tiny = new Wheel(util.grid().at(7, 1, 7), BitsNTracksBlocks.TINY_FLANGED_COGWHEEL.get());
-        Wheel small = new Wheel(util.grid().at(7, 1, 4), BitsNTracksBlocks.SMALL_FLANGED_COGWHEEL.get());
-        Wheel medium = new Wheel(util.grid().at(4, 1, 7), BitsNTracksBlocks.MEDIUM_FLANGED_COGWHEEL.get());
-        Wheel large = new Wheel(util.grid().at(4, 1, 4), BitsNTracksBlocks.LARGE_FLANGED_COGWHEEL.get());
-        List<Wheel> bySize = List.of(tiny, small, medium, large);
-        List<Wheel> aroundLoop = List.of(tiny, small, large, medium);
-        Selection tinyDrive = util.select().fromTo(11, 0, 7, 11, 2, 7).add(util.select().position(7, 2, 7));
-        Selection largeDrive = util.select().fromTo(0, 0, 4, 0, 2, 4).add(util.select().position(4, 2, 4));
-        Vec3 tinyGauge = util.vector().blockSurface(util.grid().at(11, 1, 7), Direction.NORTH);
-        Vec3 largeGauge = util.vector().blockSurface(util.grid().at(0, 1, 4), Direction.NORTH);
+        Wheel large = new Wheel(util.grid().at(2, 1, 6), CogwheelSize.LARGE);
+        Wheel mediumLarge = new Wheel(util.grid().at(4, 1, 2), CogwheelSize.MEDIUM_LARGE);
+        Wheel medium = new Wheel(util.grid().at(8, 1, 2), CogwheelSize.MEDIUM);
+        Wheel small = new Wheel(util.grid().at(10, 1, 6), CogwheelSize.SMALL);
+        Wheel intermediate = new Wheel(util.grid().at(8, 1, 10), CogwheelSize.INTERMEDIATE);
+        Wheel tiny = new Wheel(util.grid().at(4, 1, 10), CogwheelSize.TINY);
+        List<Wheel> track = List.of(large, mediumLarge, medium, small, intermediate, tiny);
+        Selection largeDrive = util.select().fromTo(2, 2, 6, 2, 3, 6);
+        Selection tinyDrive = util.select().fromTo(4, 2, 10, 4, 3, 10);
+        Vec3 largeGauge = util.vector().blockSurface(util.grid().at(2, 2, 6), Direction.NORTH);
+        Vec3 tinyGauge = util.vector().blockSurface(util.grid().at(4, 2, 10), Direction.NORTH);
 
-        hideTread(scene, util.select().position(medium.pos()));
         scene.showBasePlate();
         scene.idle(10);
-        scene.world().showSection(util.select().fromTo(4, 1, 4, 7, 1, 7), Direction.DOWN);
+        scene.world().showSection(util.select().fromTo(0, 1, 0, POWERING_PLATE - 1, 1, POWERING_PLATE - 1), Direction.DOWN);
         scene.idle(20);
-        caption(scene, "Before powering your track, you need to be aware of how it behaves");
-        caption(scene, "Physical Flanged Cogwheels have distinct rotation ratios, and you will need to keep that in mind when creating a run of track");
+        caption(scene, "A track runs over all of its cogwheels at the same speed");
         scene.addKeyframe();
 
-        BlockState shaft = AllBlocks.ANDESITE_ENCASED_SHAFT.getDefaultState()
-            .setValue(RotatedPillarKineticBlock.AXIS, Direction.Axis.Y);
-        for (Wheel wheel : bySize) {
-            scene.world().setBlock(wheel.pos().below(), shaft, false);
-            scene.world().setKineticSpeed(util.select().fromTo(wheel.pos().below(), wheel.pos()), 16.0F);
-        }
+        scene.world().showSection(largeDrive, Direction.DOWN);
         scene.idle(20);
-        caption(scene, "Each cogwheel size has a different impact on stress. The bigger the cogwheel, the bigger the impact");
-
-        label(scene, "2x", PonderPalette.SLOW, util.vector().topOf(tiny.pos()));
-        label(scene, "4x", PonderPalette.GREEN, util.vector().topOf(small.pos()));
-        label(scene, "6x", PonderPalette.OUTPUT, util.vector().topOf(medium.pos()));
-        label(scene, "8x", PonderPalette.RED, util.vector().topOf(large.pos()));
-        scene.idle(70);
+        drive(scene, util, largeDrive, large, 16.0F, track);
+        note(scene, "So the smaller a cogwheel is, the faster it turns: a tiny cogwheel turns four times as fast as a large one", LABEL_TICKS);
+        rpmLabels(scene, util, large, 16.0F, largeGauge, track, LABEL_TICKS);
+        scene.idle(10);
         scene.addKeyframe();
 
-        for (Wheel wheel : bySize) {
-            scene.world().setKineticSpeed(util.select().fromTo(wheel.pos().below(), wheel.pos()), 0.0F);
-            scene.world().restoreBlocks(util.select().position(wheel.pos().below()));
+        note(scene, "A bigger cogwheel has a bigger stress impact...", LABEL_TICKS);
+        for (Wheel wheel : track) {
+            label(scene, LABEL_TICKS, PonderPalette.WHITE, util.vector().topOf(wheel.pos()), impactText(wheel.impact()));
         }
+        scene.idle(LABEL_TICKS + 10);
+        note(scene, "... but it turns slower, so on a track every cogwheel costs the same stress", LABEL_TICKS);
+        for (Wheel wheel : track) {
+            label(scene, LABEL_TICKS, PonderPalette.GREEN, util.vector().topOf(wheel.pos()), "%s su",
+                Math.round(wheel.impact() * wheel.speed(large, 16.0F)));
+        }
+        scene.idle(LABEL_TICKS + 10);
+        scene.addKeyframe();
+
+        drive(scene, util, largeDrive, large, 0.0F, track);
+        scene.world().hideSection(largeDrive, Direction.UP);
         scene.idle(15);
-        ItemStack mechanicalBelt = AllItems.BELT_CONNECTOR.asStack();
-        for (Wheel wheel : aroundLoop) {
-            scene.overlay().showControls(util.vector().topOf(wheel.pos()), Pointing.DOWN, 20).rightClick().withItem(mechanicalBelt);
-            scene.idle(12);
-        }
-        scene.overlay().showControls(util.vector().topOf(tiny.pos()), Pointing.DOWN, 20).rightClick().withItem(mechanicalBelt);
+        scene.world().showSection(tinyDrive, Direction.DOWN);
+        scene.idle(20);
+        drive(scene, util, tinyDrive, tiny, 16.0F, track);
+        note(scene, "Power can go into any cogwheel of the track, and driving a small one gears the bigger ones down", LABEL_TICKS);
+        rpmLabels(scene, util, tiny, 16.0F, tinyGauge, track, LABEL_TICKS);
+        scene.idle(10);
+        scene.addKeyframe();
+
+        drive(scene, util, tinyDrive, tiny, 0.0F, track);
+        scene.world().hideSection(tinyDrive, Direction.UP);
         scene.idle(15);
-        scene.world().restoreBlocks(util.select().position(medium.pos()));
+        scene.world().showSection(largeDrive, Direction.DOWN);
         scene.idle(20);
-        caption(scene, "When connected together, the cogwheels will spin relative to the size of the powered cogwheel");
+        drive(scene, util, largeDrive, large, 64.0F, track);
+        note(scene, "The speed limit counts for the fastest cogwheel, not for the one you power", LABEL_TICKS);
+        rpmLabels(scene, util, large, 64.0F, largeGauge, track, LABEL_TICKS);
+        scene.idle(10);
         scene.addKeyframe();
 
-        scene.world().showSection(tinyDrive, Direction.UP);
-        scene.idle(20);
-        drive(scene, util, tinyDrive, tiny, 16.0F, bySize);
-        rpmLabel(scene, 16.0F, tinyGauge);
-        scene.idle(40);
-        for (Wheel wheel : bySize) {
-            rpmLabel(scene, wheel.speed(tiny, 16.0F), util.vector().topOf(wheel.pos()));
-        }
-        scene.idle(70);
-        caption(scene, "And this is where you have to watch out");
+        drive(scene, util, largeDrive, large, 128.0F, track);
+        overspeed(scene, large, 128.0F, track, SAVED_TICKS);
+        note(scene, "Past the speed limit, a cogwheel throws sparks and smokes", SAVED_TICKS);
+        rpmLabels(scene, util, large, 128.0F, largeGauge, track, SAVED_TICKS);
+        drive(scene, util, largeDrive, large, 64.0F, track);
+        note(scene, "Slow it down within three seconds, and nothing breaks", LABEL_TICKS);
+        rpmLabels(scene, util, large, 64.0F, largeGauge, track, LABEL_TICKS);
+        scene.idle(10);
         scene.addKeyframe();
 
-        drive(scene, util, tinyDrive, tiny, 0.0F, bySize);
-        scene.world().hideSection(tinyDrive, Direction.DOWN);
-        scene.idle(15);
-        scene.world().showSection(largeDrive, Direction.UP);
-        scene.idle(20);
-        caption(scene, "Because if you spin a larger cogwheel too fast...");
-
-        drive(scene, util, largeDrive, large, 64.0F, bySize);
-        rpmLabel(scene, 64.0F, largeGauge);
-        scene.idle(40);
-        for (Wheel wheel : bySize) {
-            rpmLabel(scene, wheel.speed(large, 64.0F), util.vector().topOf(wheel.pos()));
-        }
-        scene.idle(70);
-        scene.addKeyframe();
-
-        drive(scene, util, largeDrive, large, 256.0F, bySize);
-        rpmLabel(scene, 256.0F, largeGauge);
-        scene.idle(30);
-        for (Wheel wheel : List.of(tiny, small, medium)) {
-            scene.world().destroyBlock(wheel.pos());
+        int grace = (int)BntChainStops.OVERSPEED_GRACE;
+        drive(scene, util, largeDrive, large, 128.0F, track);
+        overspeed(scene, large, 128.0F, track, grace);
+        note(scene, "If it keeps running too fast...", grace);
+        rpmLabels(scene, util, large, 128.0F, largeGauge, track, grace);
+        scene.world().destroyBlock(tiny.pos());
+        hideTread(scene, util.select().position(large.pos()));
+        for (Wheel wheel : track) {
+            if (wheel != large && wheel != tiny) {
+                scene.world().setKineticSpeed(util.select().position(wheel.pos()), 0.0F);
+            }
         }
         scene.idle(20);
-        caption(scene, "You can make the smaller cogwheels break!");
+        caption(scene, "... the fastest cogwheel breaks, and the track comes off");
         scene.markAsFinished();
+    }
+
+    private static void rpmLabels(CreateSceneBuilder scene, SceneBuildingUtil util, Wheel driven, float rpm, Vec3 gauge,
+                                  List<Wheel> track, int ticks) {
+        rpmLabel(scene, rpm, gauge, ticks);
+        scene.idle(LABEL_DELAY);
+        for (Wheel wheel : track) {
+            if (wheel != driven) {
+                rpmLabel(scene, wheel.speed(driven, rpm), util.vector().topOf(wheel.pos()), ticks - LABEL_DELAY);
+            }
+        }
+        scene.idle(ticks - LABEL_DELAY);
+    }
+
+    private static void overspeed(CreateSceneBuilder scene, Wheel driven, float rpm, List<Wheel> track, int ticks) {
+        List<BlockPos> sparking = track.stream()
+            .filter(wheel -> Math.abs(wheel.speed(driven, rpm)) > SPEED_LIMIT)
+            .map(Wheel::pos)
+            .toList();
+        scene.addInstruction(new Overspeed(sparking, ticks));
+    }
+
+    private static String impactText(double impact) {
+        return impact == Math.rint(impact) ? (long)impact + "x" : String.format(Locale.ROOT, "%.1fx", impact);
     }
 
     public static void tracks(SceneBuilder builder, SceneBuildingUtil util) {
@@ -341,13 +371,17 @@ public final class BntFlangedCogwheelScenes {
         scene.overlay().showText(60).text(text).placeNearTarget().pointAt(target);
     }
 
-    private static void label(CreateSceneBuilder scene, String text, PonderPalette colour, Vec3 target) {
-        scene.overlay().showText(60).colored(colour).text(text).placeNearTarget().pointAt(target);
+    private static void note(CreateSceneBuilder scene, String text, int ticks) {
+        scene.overlay().showText(ticks).text(text);
     }
 
-    private static void rpmLabel(CreateSceneBuilder scene, float rpm, Vec3 target) {
+    private static void label(CreateSceneBuilder scene, int ticks, PonderPalette colour, Vec3 target, String text, Object... args) {
+        scene.overlay().showText(ticks).colored(colour).text(text, args).placeNearTarget().pointAt(target);
+    }
+
+    private static void rpmLabel(CreateSceneBuilder scene, float rpm, Vec3 target, int ticks) {
         String value = rpm == Math.round(rpm) ? Integer.toString(Math.round(rpm)) : String.format(Locale.ROOT, "%.1f", rpm);
-        scene.overlay().showText(60).colored(speedColour(rpm)).text("%s RPM", value).placeNearTarget().pointAt(target);
+        label(scene, ticks, speedColour(rpm), target, "%s RPM", value);
     }
 
     static TextWindowElement percentLabel(SceneBuilder builder, int percent, Vec3 target) {
@@ -435,13 +469,35 @@ public final class BntFlangedCogwheelScenes {
         scene.world().modifyBlockEntityNBT(selection, KineticBlockEntity.class, tag -> tag.remove("Chain"), true);
     }
 
-    private record Wheel(BlockPos pos, double radius) {
-        Wheel(BlockPos pos, Block block) {
-            this(pos, CogwheelSizeHelper.getChainRadius(block));
+    private record Wheel(BlockPos pos, CogwheelSize size) {
+        float speed(Wheel driven, float rpm) {
+            return (float)(rpm * driven.size.chainRadius() / this.size.chainRadius());
         }
 
-        float speed(Wheel driven, float rpm) {
-            return (float)(rpm * driven.radius / radius);
+        double impact() {
+            return BntPhysicsTuning.defaultStressImpact(this.size);
+        }
+    }
+
+    private static final class Overspeed extends TickingInstruction {
+        private final List<BlockPos> wheels;
+
+        private Overspeed(List<BlockPos> wheels, int ticks) {
+            super(false, ticks);
+            this.wheels = wheels;
+        }
+
+        @Override
+        public void tick(PonderScene scene) {
+            super.tick(scene);
+            PonderLevel world = scene.getWorld();
+            double heat = BntOverspeedEffects.heat(this.totalTicks - this.remainingTicks);
+            for (BlockPos pos : this.wheels) {
+                BlockState state = world.getBlockState(pos);
+                if (state.hasProperty(BlockStateProperties.AXIS) && world.getBlockEntity(pos) instanceof KineticBlockEntity kinetic) {
+                    BntOverspeedEffects.spray(world, null, state, Vec3.atCenterOf(pos), kinetic.getSpeed(), heat);
+                }
+            }
         }
     }
 }

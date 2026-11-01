@@ -329,6 +329,10 @@ public final class BntPhysicsTuning {
         return STRESS_IMPACT.get(size).get();
     }
 
+    public static double defaultStressImpact(CogwheelSize size) {
+        return STRESS_IMPACT.get(size).getDefault();
+    }
+
     public static double getTrackGrip() {
         return TRACK_GRIP.get();
     }
