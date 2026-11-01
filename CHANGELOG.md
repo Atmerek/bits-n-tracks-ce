@@ -7,6 +7,7 @@
 - Keys for switching tool modes and for scrolling with a tool, for playing without a scroll wheel. They are unbound by default, under Bits 'n' Tracks in Controls.
 - Tank Treads and tracks with grousers throw sparks when they slip or land on stone, metal and other pickaxe blocks, mixed with some of the ground's own particles. The blocks are listed in the `bits_n_tracks:sparks` block tag.
 - Soft ground grips less while it is raining on it, set by the new Wet Soft Ground Grip setting.
+- A track turning faster than the speed limit smokes and throws sparks for three seconds before it breaks, and slowing it down in that time saves it.
 
 ### Changed
 
@@ -18,6 +19,7 @@
 - In Route mode the aimed side of a cogwheel is marked red when the track can't reach it, and clicking it says so.
 - In Route mode a side can also be picked by aiming at the cogwheel's rim or shaft, and the centre that returns it to automatic is smaller, so small cogwheels are easier to aim at.
 - Route mode's side markers sit inside the cogwheel's outline, so aiming at a marker always picks it. The Highlight Radius settings are gone.
+- A jammed drive network with a track in it breaks a block right away, as in Create, instead of stopping and restarting the track up to three times first.
 
 ### Fixed
 

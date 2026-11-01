@@ -1,7 +1,9 @@
 package dev.qwxon.bitsntracks.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.simibubi.create.content.kinetics.RotationPropagator;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
@@ -47,16 +49,30 @@ public class RotationPropagatorMixin {
         method = {"propagateNewSource(Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;)V"},
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;Z)Z"
+            target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;Z)Z",
+            ordinal = 0
         ),
         require = 0,
         remap = false
     )
-    private static boolean bnt$stopInsteadOfBreaking(Level level, BlockPos pos, boolean drop, Operation<Boolean> original) {
-        if (level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic && BntChainStops.intercept(level, kinetic)) {
+    private static boolean bnt$delayOverspeedBreak(Level level, BlockPos pos, boolean drop, Operation<Boolean> original) {
+        if (level.getBlockEntity(pos) instanceof KineticBlockEntity kinetic && BntChainStops.overspeed(level, kinetic)) {
             return false;
         }
         return original.call(level, pos, drop);
+    }
+
+    @ModifyExpressionValue(
+        method = {"propagateNewSource(Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;)V"},
+        at = @At(
+            value = "INVOKE",
+            target = "Ljava/lang/Integer;intValue()I"
+        ),
+        require = 0,
+        remap = false
+    )
+    private static int bnt$overspeedLimit(int limit, @Local(argsOnly = true) KineticBlockEntity current) {
+        return BntChainStops.speedLimit(current, limit);
     }
 
     @WrapOperation(

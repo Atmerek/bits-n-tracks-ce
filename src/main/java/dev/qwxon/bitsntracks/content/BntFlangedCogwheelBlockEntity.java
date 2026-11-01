@@ -9,6 +9,7 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUs
 import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
+import dev.qwxon.bitsntracks.client.BntOverspeedEffects;
 import dev.qwxon.bitsntracks.client.BntWheelEffects;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
@@ -100,6 +101,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     }
 
     private void clientTick() {
+        BntOverspeedEffects.tick(this);
         if (this.bnt$isPhysicsEnabled() && Sable.HELPER.getContainingClient(this) instanceof SubLevel subLevel) {
             BntPhysicsEvents.updateClientRollingSpeed(this, this, subLevel);
             BntWheelEffects.tick(this, subLevel);
