@@ -1,0 +1,22 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {
+      "item": "minecraft:carved_pumpkin"
+    },
+    {
+      "item": "minecraft:item_frame"
+    },
+    {
+      "item": "bits_n_tracks:cog_alignment_lever"
+    }
+  ],
+  "results": [
+    {
+      "id": "bits_n_tracks:cubester_head"
+    },
+    {
+      "id": "bits_n_tracks:cog_alignment_lever"
+    }
+  ]
+}

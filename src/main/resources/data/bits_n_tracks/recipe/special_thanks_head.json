@@ -1,0 +1,14 @@
+{
+  "type": "create:splashing",
+  "ingredients": [
+    {
+      "item": "minecraft:short_grass"
+    }
+  ],
+  "results": [
+    {
+      "chance": 0.01,
+      "id": "bits_n_tracks:special_thanks_head"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": false,
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "bits_n_tracks:industrial_belt"
+    },
+    "P": {
+      "item": "minecraft:carved_pumpkin"
+    },
+    "T": {
+      "item": "bits_n_tracks:tiny_flanged_cogwheel"
+    }
+  },
+  "pattern": [
+    "T T",
+    " P ",
+    "BBB"
+  ],
+  "result": {
+    "id": "bits_n_tracks:qwxonn_head"
+  },
+  "show_notification": false
+}

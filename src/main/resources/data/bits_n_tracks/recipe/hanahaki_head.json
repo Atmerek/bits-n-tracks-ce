@@ -1,0 +1,17 @@
+{
+  "type": "create:deploying",
+  "ingredients": [
+    {
+      "item": "bits_n_tracks:atmerek_head"
+    },
+    {
+      "item": "minecraft:writable_book"
+    }
+  ],
+  "keep_held_item": true,
+  "results": [
+    {
+      "id": "bits_n_tracks:hanahaki_head"
+    }
+  ]
+}

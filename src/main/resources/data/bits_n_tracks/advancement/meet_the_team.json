@@ -1,0 +1,78 @@
+{
+  "parent": "bits_n_tracks:qwxonn_head",
+  "display": {
+    "icon": {
+      "id": "minecraft:cake"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.meet_the_team"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.meet_the_team.desc",
+      "color": "#DBA213"
+    },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "qwxonn": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "bits_n_tracks:qwxonn_head"
+          }
+        ]
+      }
+    },
+    "atmerek": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "bits_n_tracks:atmerek_head"
+          }
+        ]
+      }
+    },
+    "cubester": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "bits_n_tracks:cubester_head"
+          }
+        ]
+      }
+    },
+    "alesrr": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "bits_n_tracks:alesrr_head"
+          }
+        ]
+      }
+    },
+    "hanahaki": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "bits_n_tracks:hanahaki_head"
+          }
+        ]
+      }
+    },
+    "special_thanks": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "bits_n_tracks:special_thanks_head"
+          }
+        ]
+      }
+    }
+  }
+}

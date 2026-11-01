@@ -161,3 +161,5 @@ Gradle needs JDK 21.
 
 Original mod and all original code by **qwxon**.
 Community Edition by **Atmerek** and **Alesrr**, with contributions from **Cubester**, the Russian translation by **Hanahaki** and art by **CloverKeep**.
+
+Made with love.

@@ -1,5 +1,6 @@
 package dev.qwxon.bitsntracks.index;
 
+import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
@@ -22,6 +23,10 @@ public class BitsNTracksItems {
 
     public static final ItemEntry<BntSuspensionPieceItem> SUSPENSION_PIECE = BitsNTracks.REGISTRATE
         .item("suspension_piece", BntSuspensionPieceItem::new)
+        .register();
+
+    public static final ItemEntry<SequencedAssemblyItem> INCOMPLETE_ATMEREK_HEAD = BitsNTracks.REGISTRATE
+        .item("incomplete_atmerek_head", SequencedAssemblyItem::new)
         .register();
 
     public static void init() {

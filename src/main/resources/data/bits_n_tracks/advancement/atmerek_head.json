@@ -1,0 +1,28 @@
+{
+  "parent": "bits_n_tracks:qwxonn_head",
+  "display": {
+    "icon": {
+      "id": "bits_n_tracks:atmerek_head"
+    },
+    "title": {
+      "translate": "advancement.bits_n_tracks.atmerek_head"
+    },
+    "description": {
+      "translate": "advancement.bits_n_tracks.atmerek_head.desc",
+      "color": "#DBA213"
+    },
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "head": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "bits_n_tracks:atmerek_head"
+          }
+        ]
+      }
+    }
+  }
+}

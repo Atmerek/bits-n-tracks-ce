@@ -1,0 +1,68 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "minecraft:carved_pumpkin"
+  },
+  "loops": 3,
+  "results": [
+    {
+      "chance": 80.0,
+      "id": "bits_n_tracks:atmerek_head"
+    },
+    {
+      "chance": 20.0,
+      "id": "minecraft:spider_eye"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "bits_n_tracks:incomplete_atmerek_head"
+        },
+        {
+          "item": "minecraft:cocoa_beans"
+        }
+      ],
+      "results": [
+        {
+          "id": "bits_n_tracks:incomplete_atmerek_head"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "bits_n_tracks:incomplete_atmerek_head"
+        },
+        {
+          "item": "bits_n_tracks:cog_alignment_lever"
+        }
+      ],
+      "keep_held_item": true,
+      "results": [
+        {
+          "id": "bits_n_tracks:incomplete_atmerek_head"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "bits_n_tracks:incomplete_atmerek_head"
+        }
+      ],
+      "results": [
+        {
+          "id": "bits_n_tracks:incomplete_atmerek_head"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "bits_n_tracks:incomplete_atmerek_head"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "type": "create:mixing",
+  "heat_requirement": "heated",
+  "ingredients": [
+    {
+      "item": "minecraft:carved_pumpkin"
+    },
+    {
+      "item": "bits_n_tracks:suspension_piece"
+    },
+    {
+      "item": "minecraft:book"
+    },
+    {
+      "item": "minecraft:clock"
+    },
+    {
+      "item": "minecraft:painting"
+    },
+    {
+      "item": "bits_n_tracks:tank_tread"
+    }
+  ],
+  "results": [
+    {
+      "id": "bits_n_tracks:alesrr_head"
+    }
+  ]
+}
