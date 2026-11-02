@@ -29,6 +29,7 @@
         "RapierPhysicsPipelineMixin",
         "SubLevelAssemblyHelperMixin",
         "WrenchCogwheelChainPacketMixin",
+        "BlockHelperMixin",
         "accessor.RotationPropagatorAccessor"
     ],
     "client": [

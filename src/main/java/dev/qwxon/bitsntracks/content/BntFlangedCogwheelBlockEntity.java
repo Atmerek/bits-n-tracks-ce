@@ -77,6 +77,8 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     private int suspensionFacing;
     private final ForceTotal forceTotal = new ForceTotal();
     private boolean queuedForForceApplication;
+    private boolean awaitingSupport;
+    private boolean awaitingTrack;
 
     public BntFlangedCogwheelBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -115,9 +117,12 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         }
         BntPhysicsRegistry.add(this);
         this.lastExtension = this.extension;
-        if (this.suspensionSide != 0
-            && (level.getGameTime() + this.getBlockPos().hashCode()) % DETACH_CHECK_TICKS == 0L
-            && !BntSuspension.stillHolds(level, this.getBlockPos(), this)) {
+        if (this.suspensionSide == 0 || (level.getGameTime() + this.getBlockPos().hashCode()) % DETACH_CHECK_TICKS != 0L) {
+            return;
+        }
+        if (BntSuspension.stillHolds(level, this.getBlockPos(), this)) {
+            this.awaitingSupport = false;
+        } else if (!this.awaitingSupport) {
             Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, this.getBlockPos());
             BntSuspension.detach(level, this.getBlockPos(), this, true);
             BntChainEngagement.refresh(level, this.getBlockPos(), engagementBefore);
@@ -177,6 +182,18 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
             this.extension = tag.contains("BntExtension", Tag.TAG_DOUBLE) ? tag.getDouble("BntExtension") : this.restExtension(this.getBlockState());
             this.lastExtension = this.extension;
         }
+        if (!clientPacket && BntCogwheels.isPrinting()) {
+            this.awaitingSupport = this.suspensionSide != 0;
+            this.awaitingTrack = true;
+        }
+    }
+
+    public boolean awaitingTrack() {
+        return this.awaitingTrack;
+    }
+
+    public void trackSettled() {
+        this.awaitingTrack = false;
     }
 
     @Override

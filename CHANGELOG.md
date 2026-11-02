@@ -33,6 +33,7 @@
 - A cogwheel added to a track run without touching the track no longer pulls that run straight: it keeps its sag and lies on the ground.
 - A track refits its length when a cogwheel joins or leaves it, instead of keeping the old length until its tension is changed.
 - Tracks no longer briefly sag, turn inside out or flicker between two shapes after a cogwheel on them is moved, rerouted or changed.
+- Tracks printed by a Schematicannon drive like the original, and printed arms and bogies stay on until the blocks they hang from are placed.
 
 ## 3.0.1
 

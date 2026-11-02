@@ -1,10 +1,12 @@
 package dev.qwxon.bitsntracks.mixin;
 
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.TrackModelBehaviourAccess;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlockEntity;
 import dev.qwxon.bitsntracks.content.BntVisualized;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
@@ -126,13 +128,42 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
     }
 
     @Inject(
+        method = {"checkIntegrity"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
+    private void bnt$awaitPrintedTrack(CallbackInfo ci) {
+        CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
+        if (!(self.getBlockEntity() instanceof BntFlangedCogwheelBlockEntity cogwheel) || !cogwheel.awaitingTrack()) {
+            return;
+        }
+        if (bnt$printedTrackComplete(self)) {
+            cogwheel.trackSettled();
+        } else {
+            ci.cancel();
+        }
+    }
+
+    @Unique
+    private static boolean bnt$printedTrackComplete(CogwheelChainBehaviour self) {
+        Level level = self.getLevel();
+        BlockPos controllerPos = BntChains.controllerPos(self);
+        if (level == null || controllerPos == null) {
+            return true;
+        }
+        CogwheelChain chain = BntChains.chainAt(level, controllerPos);
+        return chain != null && chain.checkIntegrity(level, controllerPos);
+    }
+
+    @Inject(
         method = {"lazyTick"},
         at = {@At("TAIL")}
     )
     private void bnt$verifyChainKinetics(CallbackInfo ci) {
         CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
         Level level = self.getLevel();
-        if (level == null || level.isClientSide || !self.isController() || self.getBlockEntity() == null) {
+        if (level == null || level.isClientSide || !self.isController() || self.getBlockEntity() == null
+            || self.getBlockEntity() instanceof BntFlangedCogwheelBlockEntity cogwheel && cogwheel.awaitingTrack()) {
             return;
         }
 

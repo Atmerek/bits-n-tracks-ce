@@ -21,6 +21,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class BntCogwheels {
     private static final ThreadLocal<Integer> CHAIN_SWAP_DEPTH = ThreadLocal.withInitial(() -> 0);
+    private static final ThreadLocal<Integer> PRINT_DEPTH = ThreadLocal.withInitial(() -> 0);
     private static final ThreadLocal<Level> PLACEMENT_LEVEL = new ThreadLocal<>();
     private static final ThreadLocal<Boolean> RESTING = ThreadLocal.withInitial(() -> false);
 
@@ -130,6 +131,24 @@ public final class BntCogwheels {
                 CHAIN_SWAP_DEPTH.remove();
             } else {
                 CHAIN_SWAP_DEPTH.set(depth);
+            }
+        }
+    }
+
+    public static boolean isPrinting() {
+        return PRINT_DEPTH.get() > 0;
+    }
+
+    public static void print(Runnable placement) {
+        int depth = PRINT_DEPTH.get();
+        PRINT_DEPTH.set(depth + 1);
+        try {
+            placement.run();
+        } finally {
+            if (depth == 0) {
+                PRINT_DEPTH.remove();
+            } else {
+                PRINT_DEPTH.set(depth);
             }
         }
     }
