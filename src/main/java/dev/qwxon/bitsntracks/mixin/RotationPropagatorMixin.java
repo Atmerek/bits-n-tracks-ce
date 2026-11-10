@@ -9,6 +9,9 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainStops;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,9 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin({RotationPropagator.class})
 public class RotationPropagatorMixin {
     @Unique
-    private static KineticBlockEntity bnt$reentered;
-    @Unique
-    private static int bnt$reentries;
+    private static final ThreadLocal<Set<KineticBlockEntity>> bnt$onStack =
+            ThreadLocal.withInitial(() -> Collections.newSetFromMap(new IdentityHashMap<KineticBlockEntity, Boolean>()));
 
     @Inject(
         method = {"getRotationSpeedModifier(Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;)F"},
@@ -98,19 +100,15 @@ public class RotationPropagatorMixin {
         remap = false
     )
     private static void bnt$cutRunawayResourcing(KineticBlockEntity next, Operation<Void> original) {
-        KineticBlockEntity outer = bnt$reentered;
-        int outerCount = bnt$reentries;
-        bnt$reentries = next == outer ? outerCount + 1 : 1;
-        bnt$reentered = next;
+        Set<KineticBlockEntity> onStack = bnt$onStack.get();
+        if (!onStack.add(next)) {
+            BntChainStops.runaway(next.getLevel(), next);
+            return;
+        }
         try {
-            if (bnt$reentries > BntChainStops.RUNAWAY_REENTRIES) {
-                BntChainStops.runaway(next.getLevel(), next);
-                return;
-            }
             original.call(next);
         } finally {
-            bnt$reentered = outer;
-            bnt$reentries = outerCount;
+            onStack.remove(next);
         }
     }
 }
