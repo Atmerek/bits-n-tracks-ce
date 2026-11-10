@@ -2,6 +2,10 @@
 
 ## 3.0.3
 
+### Changed
+
+- The creative tab banners show the resource pack's slot outline instead of a fixed white one.
+
 ### Fixed
 
 - The Bits 'n' Tracks creative tab no longer shows empty rows around its items when ModernFix is installed.
