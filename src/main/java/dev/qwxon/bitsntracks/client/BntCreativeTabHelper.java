@@ -61,6 +61,9 @@ public final class BntCreativeTabHelper {
         List<ItemStack> team = new ArrayList<>();
         List<ItemStack> tracks = new ArrayList<>();
         for (ItemStack item : items) {
+            if (item.isEmpty()) {
+                continue;
+            }
             (isTeam(item) ? team : tracks).add(item);
         }
 

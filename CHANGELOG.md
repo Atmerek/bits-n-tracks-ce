@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.3
+
+### Fixed
+
+- The Bits 'n' Tracks creative tab no longer shows empty rows around its items when ModernFix is installed.
+
 ## 3.0.2
 
 ### Added
