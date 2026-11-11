@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -52,6 +53,7 @@ public final class BntBeltContacts {
     private static final double CAST_HEADROOM = 0.75;
     private static final double CAST_DROP = 2.0;
     private static final double ENGAGE = 1.0 / 64.0;
+    private static final int EDGE_STEPS = 5;
 
     private BntBeltContacts() {
     }
@@ -66,6 +68,7 @@ public final class BntBeltContacts {
         BntGround.Surface ground;
         double support;
         double length;
+        double coverage = 1.0;
         Axis axis;
         BlockPos tread;
     }
@@ -237,34 +240,85 @@ public final class BntBeltContacts {
             double runSupport = scale * (support[i] + support[next]) * 0.5;
             double sag = BntBeltTension.sagFromSurplus(run[0], slack[i]);
             double segmentMass = massPerBlock * run[0] / samples;
+            double fromAxis = alongAxis[i];
+            double toAxis = alongAxis[next];
+            DoubleFunction<Vec3> chordAt = along -> BntBeltPath.fromPlanar(
+                Mth.lerp(along, startU, endU),
+                Mth.lerp(along, startV, endV),
+                Mth.lerp(along, fromAxis, toAxis),
+                axis);
+            DoubleFunction<BntBeltContact> probe = along -> sample(level, subLevel, pose, massData,
+                chordAt.apply(along).subtract(0.0, CogwheelSizeHelper.TRACK_HALF_THICKNESS, 0.0), BntBeltTension.droopAt(along, sag));
+            BntBeltContact previousEdge = underside ? probe.apply(0.0) : null;
             for (int sample = 0; sample < samples; sample++) {
-                double along = (sample + 0.5) / samples;
-                Vec3 chord = BntBeltPath.fromPlanar(
-                    Mth.lerp(along, startU, endU),
-                    Mth.lerp(along, startV, endV),
-                    Mth.lerp(along, alongAxis[i], alongAxis[next]),
-                    axis);
-                double droop = BntBeltTension.droopAt(along, sag);
+                double start = (double)sample / samples;
+                double middle = (sample + 0.5) / samples;
+                double end = (sample + 1.0) / samples;
 
-                BntBeltContact contact = underside
-                    ? sample(level, subLevel, pose, massData, chord.subtract(0.0, CogwheelSizeHelper.TRACK_HALF_THICKNESS, 0.0), droop)
-                    : null;
+                BntBeltContact contact = null;
+                double coverage = 0.0;
+                if (underside) {
+                    BntBeltContact atMiddle = probe.apply(middle);
+                    BntBeltContact atEnd = probe.apply(end);
+                    double[] covered = new double[2];
+                    cover(probe, start, previousEdge != null, middle, atMiddle != null, covered);
+                    cover(probe, middle, atMiddle != null, end, atEnd != null, covered);
+                    previousEdge = atEnd;
+                    coverage = Mth.clamp(covered[0] * samples, 0.0, 1.0);
+                    if (coverage > 1.0E-6) {
+                        double centre = covered[1] / covered[0];
+                        contact = Math.abs(centre - middle) < 1.0E-9 && atMiddle != null ? atMiddle : probe.apply(centre);
+                        if (contact == null) {
+                            contact = atMiddle != null ? atMiddle : atEnd;
+                        }
+                    }
+                }
                 if (contact != null) {
-                    contact.support = runSupport;
-                    contact.length = run[0] / samples;
+                    contact.coverage = coverage;
+                    contact.support = runSupport * coverage;
+                    contact.length = run[0] / samples * coverage;
                     contact.axis = axis;
                     contact.tread = controllerPos;
                     loads.contacts().add(contact);
-                } else if (segmentMass > 0.0) {
-                    Vec3 point = chord.subtract(0.0, droop, 0.0);
+                } else {
+                    coverage = 0.0;
+                }
+                double hanging = segmentMass * (1.0 - coverage);
+                if (hanging > 0.0) {
+                    Vec3 point = chordAt.apply(middle).subtract(0.0, BntBeltTension.droopAt(middle, sag), 0.0);
                     BntBeltWeight weight = new BntBeltWeight();
                     weight.subLevel = subLevel;
                     weight.forcePoint = new Vector3d(point.x, point.y, point.z);
-                    weight.mass = segmentMass;
+                    weight.mass = hanging;
                     loads.weights().add(weight);
                 }
             }
         }
+    }
+
+    private static void cover(DoubleFunction<BntBeltContact> probe, double from, boolean fromHit, double to, boolean toHit, double[] covered) {
+        if (!fromHit && !toHit) {
+            return;
+        }
+        double lo = from;
+        double hi = to;
+        if (fromHit != toHit) {
+            double hit = fromHit ? from : to;
+            double miss = fromHit ? to : from;
+            for (int step = 0; step < EDGE_STEPS; step++) {
+                double half = (hit + miss) * 0.5;
+                if (probe.apply(half) != null) {
+                    hit = half;
+                } else {
+                    miss = half;
+                }
+            }
+            double edge = (hit + miss) * 0.5;
+            lo = fromHit ? from : edge;
+            hi = fromHit ? edge : to;
+        }
+        covered[0] += hi - lo;
+        covered[1] += (hi - lo) * (lo + hi) * 0.5;
     }
 
     private static BntBeltContact sample(
@@ -307,7 +361,7 @@ public final class BntBeltContacts {
         contact.subLevel = subLevel;
         contact.forcePoint = forcePoint;
         contact.normal = normal;
-        contact.penetration = lift;
+        contact.penetration = lift - ENGAGE;
         contact.velocity = Sable.HELPER.getVelocity(level, JOMLConversion.toJOML(new Vec3(chord.x, localHit.y, chord.z)));
         contact.normalMass = 1.0 / inverseNormalMass;
         contact.ground = BntGround.of(level, hit.getBlockPos());

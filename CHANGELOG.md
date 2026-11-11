@@ -11,7 +11,8 @@
 - The Bits 'n' Tracks creative tab no longer shows empty rows around its items when ModernFix is installed.
 - Two kinetic blocks that keep passing their rotation source back and forth, such as a linked universal joint from Create Aeronautics: Transmission & Linkage, now break instead of crashing the server.
 - Tracks grip and throw particles on a rotated physics object's upward faces, not only on the faces that were on top before it turned.
-- Wheels ride up onto other physics objects instead of sinking into them.
+- Wheels ride up onto other physics objects instead of sinking into them, and tracks drape over them instead of hanging slack.
+- Vehicles no longer twitch or bounce when resting on a block edge, carried by the track alone, or with a wheel hanging at full droop.
 
 ## 3.0.2
 

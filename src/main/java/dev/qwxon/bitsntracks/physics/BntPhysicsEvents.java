@@ -76,8 +76,11 @@ public final class BntPhysicsEvents {
         + BntPhysicsTuning.SUSPENSION_GAIN * BntPhysicsTuning.DAMPING_SCALE * BntPhysicsTuning.WHEEL_DAMPING * REFERENCE_STEP;
     private static final double DAMPING_CALIBRATION = 1.0 / Math.sqrt(LEVEL_FOUR_DENOMINATOR);
     private static final double CONTACT_GAP = 1.0 / 32.0;
-    private static final int ARM_ITERATIONS = 4;
-    private static final double ARM_TOLERANCE = 1.0E-3;
+    private static final double EDGE_RISE = 1.0 / 16.0;
+    private static final int EDGE_STEPS = 5;
+    private static final double SWING_RATE = 0.05;
+    private static final double SWING_DEADBAND = 0.1;
+    private static final double STOP_STIFFNESS = 8.0;
     private static final double RIGID_SLOP = 0.005;
     private static final double RIGID_BIAS = 0.2;
     private static final double ARM_SPRING_RATE = 0.15;
@@ -93,6 +96,7 @@ public final class BntPhysicsEvents {
     private static final Map<ServerSubLevel, Parked> PARKED = new WeakHashMap<>();
     private static final Map<KineticBlockEntity, double[]> HELD = new WeakHashMap<>();
     private static final Map<KineticBlockEntity, double[]> CLIMB = new WeakHashMap<>();
+    private static final Map<KineticBlockEntity, Double> SWING = new WeakHashMap<>();
     private static final Map<ServerLevel, long[]> STEPS = new WeakHashMap<>();
     private static final Map<Level, Map<BlockPos, double[]>> TREAD_LOADS = new WeakHashMap<>();
     private static final long PARKED_REFRESH = 20L;
@@ -162,7 +166,7 @@ public final class BntPhysicsEvents {
             List<BntPhysicsEvents.WheelContact> loaded = new ArrayList<>();
             List<BodyLoads> bodies = new ArrayList<>();
             double share = 0.0;
-            int beltShare = 0;
+            double beltShare = 0.0;
 
             for (ServerSubLevel subLevel : assembly) {
                 List<KineticBlockEntity> wheels = wheelsByBody.get(subLevel);
@@ -210,7 +214,9 @@ public final class BntPhysicsEvents {
                 }
                 contacts.addAll(bodyContacts);
                 share += wheelShare(subLevel, nearGround.size(), timeStep);
-                beltShare += belt.contacts().size();
+                for (BntBeltContacts.BntBeltContact beltContact : belt.contacts()) {
+                    beltShare += beltContact.coverage;
+                }
                 bodies.add(new BodyLoads(subLevel, wheels.size(), carrier, belt, nearGround, bodyContacts));
             }
 
@@ -556,7 +562,7 @@ public final class BntPhysicsEvents {
                     }
                     long now = level.getGameTime();
                     if (mixin.bnt$getRawDropTick() != now) {
-                        mixin.bnt$setRawDrop(now, computeRenderExtensionForPose(kbe, subLevel.renderPose(1.0F), subLevel));
+                        mixin.bnt$setRawDrop(now, computeRenderExtensionForPose(kbe, subLevel.renderPose(1.0F), subLevel, true));
                     }
                     return mixin.bnt$getRawDrop();
                 }
@@ -602,7 +608,7 @@ public final class BntPhysicsEvents {
         Vec3 seat = getContactSeat(kbe, state);
         double radius = getContactRadius(block, isConnected);
         double carried = BntTrackFloor.at(kbe.getLevel(), kbe);
-        BntPhysicsEvents.Reach reach = reachGround(kbe, normalD, pose, subLevel, seat, radius, arm, up, down, carried);
+        BntPhysicsEvents.Reach reach = reachGround(kbe, normalD, pose, subLevel, seat, radius, arm, up, down, carried, true, true);
 
         boolean wasLiftedUp = mixin.bnt$isLiftedUp();
         if (!reach.grounded() || reach.rise() < -down - (arm == null ? CONTACT_GAP : RIGID_SLOP)) {
@@ -685,6 +691,7 @@ public final class BntPhysicsEvents {
             contact.compression = sprung;
             contact.overTravel = Math.max(0.0, sprung - up);
             contact.armRise = Mth.clamp(sprung, -down, up) - arm.ride();
+            contact.stopGap = -down - sprung;
             double room = up - arm.ride();
             contact.travelUsed = room > 1.0E-6 ? Mth.clamp(contact.armRise / room, 0.0, 1.0) : 1.0;
         }
@@ -715,22 +722,40 @@ public final class BntPhysicsEvents {
         KineticBlockEntity kbe, Vector3dc normalD, Pose3dc pose, SubLevel subLevel, Vec3 seat, double radius,
         @Nullable BntSuspension.Arm arm, double up, double down, double carried, boolean shared
     ) {
-        double rise = 0.0;
-        BntPhysicsEvents.TerrainCastResult cast = null;
-        for (int iteration = 0; iteration < ARM_ITERATIONS; iteration++) {
-            double at = Mth.clamp(rise, -down, up);
-            Vec3 centre = arm == null ? seat : seat.add(arm.displacement(at));
-            cast = computeMaxExtensionToTerrain(kbe, centre, radius, radius + up - at, radius + down + at + 1.0, normalD, pose, subLevel, shared);
-            if (cast.minInteractingBlock == null && cast.maxExtension >= NO_GROUND) {
-                return new BntPhysicsEvents.Reach(-NO_GROUND, cast, false);
-            }
-            double next = at + radius - (cast.maxExtension - carried);
-            if (arm == null || Math.abs(next - rise) < ARM_TOLERANCE || next > up && at >= up || next < -down && at <= -down) {
-                return new BntPhysicsEvents.Reach(next, cast, true);
-            }
-            rise = next;
+        return reachGround(kbe, normalD, pose, subLevel, seat, radius, arm, up, down, carried, shared, false);
+    }
+
+    private static BntPhysicsEvents.Reach reachGround(
+        KineticBlockEntity kbe, Vector3dc normalD, Pose3dc pose, SubLevel subLevel, Vec3 seat, double radius,
+        @Nullable BntSuspension.Arm arm, double up, double down, double carried, boolean shared, boolean follow
+    ) {
+        double at = 0.0;
+        if (arm != null) {
+            Double swing = SWING.get(kbe);
+            at = Mth.clamp(swing == null ? arm.ride() : swing, -down, up);
         }
-        return new BntPhysicsEvents.Reach(rise, cast, true);
+        BntPhysicsEvents.TerrainCastResult cast = armCast(kbe, normalD, pose, subLevel, seat, radius, arm, up, down, at, shared);
+        boolean grounded = !noGround(cast);
+        double rise = grounded ? at + radius - (cast.maxExtension - carried) : -NO_GROUND;
+        if (follow && arm != null) {
+            double target = Mth.clamp(rise, -down, up);
+            if (Math.abs(target - at) > SWING_DEADBAND) {
+                SWING.put(kbe, at + Mth.clamp(target - at, -SWING_RATE, SWING_RATE));
+            }
+        }
+        return new BntPhysicsEvents.Reach(rise, cast, grounded);
+    }
+
+    private static boolean noGround(BntPhysicsEvents.TerrainCastResult cast) {
+        return cast.minInteractingBlock == null && cast.maxExtension >= NO_GROUND;
+    }
+
+    private static BntPhysicsEvents.TerrainCastResult armCast(
+        KineticBlockEntity kbe, Vector3dc normalD, Pose3dc pose, SubLevel subLevel, Vec3 seat, double radius,
+        @Nullable BntSuspension.Arm arm, double up, double down, double at, boolean shared
+    ) {
+        Vec3 centre = arm == null ? seat : seat.add(arm.displacement(at));
+        return computeMaxExtensionToTerrain(kbe, centre, radius, radius + up - at, radius + down + at + 1.0, normalD, pose, subLevel, shared);
     }
 
     private static Vec3 getContactSeat(KineticBlockEntity kbe, BlockState state) {
@@ -821,7 +846,7 @@ public final class BntPhysicsEvents {
 
     private static boolean solveSupport(
         Level level, Pose3dc framePose, @Nullable MassData massData, List<BntPhysicsEvents.WheelContact> contacts,
-        double wheelShare, int beltShare, double timeStep, @Nullable BntArticulation articulation
+        double wheelShare, double beltShare, double timeStep, @Nullable BntArticulation articulation
     ) {
         if (massData == null || massData.isInvalid() || massData.getCenterOfMass() == null) {
             return false;
@@ -866,6 +891,7 @@ public final class BntPhysicsEvents {
                 contact.compression = support.rise();
                 contact.overTravel = Math.max(0.0, support.rise() - support.up());
                 contact.armRise = Mth.clamp(support.rise(), -support.down(), support.up()) - support.ride();
+                contact.stopGap = -support.down() - support.rise();
             } else {
                 contact.penetration = support.rise();
                 contact.compression = support.rise();
@@ -883,7 +909,7 @@ public final class BntPhysicsEvents {
 
     private static boolean solveSupport(
         List<BntPhysicsEvents.WheelContact> contacts, double mass, double inverseMass, Matrix3dc inverseInertia,
-        Vector3dc centerOfMass, double gravity, Vector3d deltaVelocity, double wheelShare, int beltShare, double timeStep,
+        Vector3dc centerOfMass, double gravity, Vector3d deltaVelocity, double wheelShare, double beltShare, double timeStep,
         @Nullable BntArticulation articulation
     ) {
         int count = contacts.size();
@@ -902,7 +928,7 @@ public final class BntPhysicsEvents {
         for (int i = 0; i < count; i++) {
             BntPhysicsEvents.WheelContact contact = contacts.get(i);
             double massShare = contact.belt
-                ? contact.normalMass / Math.max(beltShare, 1)
+                ? contact.normalMass / Math.max(beltShare, 1.0)
                 : mass / wheelShare;
             double gain;
             double springStrength;
@@ -961,6 +987,16 @@ public final class BntPhysicsEvents {
                         RIGID_BIAS * Math.max(0.0, penetration - RIGID_SLOP) / timeStep);
                 ceiling[i] = Double.MAX_VALUE;
                 continue;
+            }
+
+            if (contact.arm && !bottomed) {
+                double aboveStop = -contact.stopGap;
+                double atStop = compression - Math.max(aboveStop, 0.0);
+                if (atStop > 0.0 && aboveStop < atStop / (STOP_STIFFNESS - 1.0)) {
+                    springStrength *= STOP_STIFFNESS;
+                    compression = aboveStop;
+                    dampingStrength = Math.max(dampingStrength, 2.0 * Math.sqrt(springStrength / inverseEffectiveMass[i]));
+                }
             }
 
             if (bottomed) {
@@ -1385,6 +1421,12 @@ public final class BntPhysicsEvents {
     private static double computeRenderExtensionForPose(
         KineticBlockEntity kbe, Pose3dc pose, SubLevel subLevel
     ) {
+        return computeRenderExtensionForPose(kbe, pose, subLevel, false);
+    }
+
+    private static double computeRenderExtensionForPose(
+        KineticBlockEntity kbe, Pose3dc pose, SubLevel subLevel, boolean follow
+    ) {
         BlockState state = kbe.getBlockState();
         BntSuspension.Arm arm = BntSuspension.arm(kbe);
         if (!state.hasProperty(BlockStateProperties.AXIS) || arm == null) {
@@ -1395,7 +1437,7 @@ public final class BntPhysicsEvents {
         double down = arm.downTravel(travel);
         Axis axis = state.getValue(BlockStateProperties.AXIS);
         BntPhysicsEvents.Reach reach = reachGround(kbe, getTravelDirection(axis), pose, subLevel, getContactSeat(kbe, state),
-            getContactRadius(state.getBlock(), isInTrack(kbe)), arm, up, down, 0.0);
+            getContactRadius(state.getBlock(), isInTrack(kbe)), arm, up, down, 0.0, true, follow);
         return reach.grounded() ? -Mth.clamp(reach.rise(), -down, up) : down;
     }
 
@@ -1419,80 +1461,60 @@ public final class BntPhysicsEvents {
         BlockPos minInteractingBlock = null;
         boolean blocked = false;
 
-        for (double sampleOffset : getTerrainSampleOffsets(radius)) {
-            Vec3 localPosO = centre.add(sampleAxis.scale(sampleOffset));
-            Vec3 localRayStart = localPosO.add(0.0, maxCastHeight, 0.0);
-            Vec3 localRayEnd = localPosO.subtract(0.0, NO_GROUND, 0.0);
-            Vec3 globalRayStart = pose.transformPosition(localRayStart);
-            Vec3 globalRayEnd = pose.transformPosition(localRayEnd);
-            List<SubLevel> ignoredSubLevels = new ArrayList<>();
+        double[] offsets = getTerrainSampleOffsets(radius);
+        BntPhysicsEvents.GroundHit[] hits = new BntPhysicsEvents.GroundHit[offsets.length];
+        for (int sample = 0; sample < offsets.length; sample++) {
+            BntPhysicsEvents.GroundHit hit = castGround(kbe, centre, sampleAxis, offsets[sample], radius, maxCastHeight, above, below, pose, containingSubLevel);
+            if (hit == BLOCKED_GROUND) {
+                blocked = true;
+                hit = null;
+            }
+            hits[sample] = hit;
+        }
 
-            for (int attempts = 0; attempts < 8; attempts++) {
-                ClipContext clipContext = new ClipContext(
-                    globalRayStart, globalRayEnd, net.minecraft.world.level.ClipContext.Block.COLLIDER, Fluid.NONE, CollisionContext.empty()
-                );
-                ((ClipContextExtension)clipContext)
-                    .sable$setSubLevelIgnoring(subLevel -> subLevel == containingSubLevel || ignoredSubLevels.contains(subLevel));
-                BlockHitResult clipResult = kbe.getLevel().clip(clipContext);
-                if (clipResult.getType() == Type.MISS) {
-                    break;
-                }
-
-                SubLevel hitSubLevel = Sable.HELPER.getContaining(kbe.getLevel(), clipResult.getLocation());
-                if (clipResult.isInside()) {
-                    if (hitSubLevel != null && hitSubLevel != containingSubLevel && !ignoredSubLevels.contains(hitSubLevel)) {
-                        ignoredSubLevels.add(hitSubLevel);
-                        continue;
-                    }
-
-                    blocked = true;
-                    break;
-                }
-
-                Vec3 localHitPos = pose.transformPositionInverse(
-                    hitSubLevel == null ? clipResult.getLocation() : hitSubLevel.logicalPose().transformPosition(clipResult.getLocation())
-                );
-                if (localHitPos.y > centre.y + above) {
-                    if (hitSubLevel == null || ignoredSubLevels.contains(hitSubLevel)) {
-                        break;
-                    }
-
-                    ignoredSubLevels.add(hitSubLevel);
-                } else if (hitSubLevel != null && hitSubLevel != containingSubLevel && localHitPos.y > centre.y + radius) {
-                    if (ignoredSubLevels.contains(hitSubLevel)) {
-                        break;
-                    }
-
-                    ignoredSubLevels.add(hitSubLevel);
+        BntPhysicsEvents.GroundHit[] candidates = new BntPhysicsEvents.GroundHit[offsets.length * 2 - 1];
+        double[] candidateOffsets = new double[candidates.length];
+        for (int sample = 0; sample < offsets.length; sample++) {
+            candidates[sample] = hits[sample];
+            candidateOffsets[sample] = offsets[sample];
+        }
+        for (int sample = 0; sample + 1 < offsets.length; sample++) {
+            BntPhysicsEvents.GroundHit first = hits[sample];
+            BntPhysicsEvents.GroundHit second = hits[sample + 1];
+            double firstY = first == null ? Double.NEGATIVE_INFINITY : first.y();
+            double secondY = second == null ? Double.NEGATIVE_INFINITY : second.y();
+            if (first == null && second == null || Math.abs(firstY - secondY) <= EDGE_RISE) {
+                continue;
+            }
+            BntPhysicsEvents.GroundHit top = firstY > secondY ? first : second;
+            double onTop = firstY > secondY ? offsets[sample] : offsets[sample + 1];
+            double offTop = firstY > secondY ? offsets[sample + 1] : offsets[sample];
+            for (int step = 0; step < EDGE_STEPS; step++) {
+                double half = (onTop + offTop) * 0.5;
+                BntPhysicsEvents.GroundHit probe = castGround(kbe, centre, sampleAxis, half, radius, maxCastHeight, above, below, pose, containingSubLevel);
+                if (probe != null && probe != BLOCKED_GROUND && probe.y() >= top.y() - EDGE_RISE * 0.5) {
+                    onTop = half;
                 } else {
-                    if (localHitPos.y < centre.y - below) {
-                        break;
-                    }
-
-                    Direction dir = clipResult.getDirection();
-                    Vector3d hitNormal = new Vector3d(dir.getStepX(), dir.getStepY(), dir.getStepZ());
-                    if (hitSubLevel != null) {
-                        hitSubLevel.logicalPose().transformNormal(hitNormal);
-                    }
-
-                    if (!(hitNormal.dot(0.0, 1.0, 0.0) < 0.5)) {
-                        double bulge = radius - Math.sqrt(Math.max(0.0, radius * radius - sampleOffset * sampleOffset));
-                        double dist = centre.y - localHitPos.y + bulge;
-                        if (dist < minExtension) {
-                            minExtension = dist;
-                            minNormal = clipResult.getDirection();
-                            minHitSubLevel = hitSubLevel;
-                            minInteractingBlock = clipResult.getBlockPos();
-                        }
-                        break;
-                    }
-
-                    if (hitSubLevel == null || ignoredSubLevels.contains(hitSubLevel)) {
-                        break;
-                    }
-
-                    ignoredSubLevels.add(hitSubLevel);
+                    offTop = half;
                 }
+            }
+            candidates[offsets.length + sample] = top;
+            candidateOffsets[offsets.length + sample] = (onTop + offTop) * 0.5;
+        }
+
+        for (int candidate = 0; candidate < candidates.length; candidate++) {
+            BntPhysicsEvents.GroundHit hit = candidates[candidate];
+            if (hit == null) {
+                continue;
+            }
+            double offset = candidateOffsets[candidate];
+            double bulge = radius - Math.sqrt(Math.max(0.0, radius * radius - offset * offset));
+            double dist = centre.y - hit.y() + bulge;
+            if (dist < minExtension) {
+                minExtension = dist;
+                minNormal = hit.face();
+                minHitSubLevel = hit.subLevel();
+                minInteractingBlock = hit.block();
             }
         }
 
@@ -1520,6 +1542,76 @@ public final class BntPhysicsEvents {
             centre.x, centre.y, centre.z, origin.x, origin.y, origin.z, along.x, along.y, along.z, up.x, up.y, up.z,
             radius, above, below
         };
+    }
+
+    private record GroundHit(double y, Direction face, @Nullable SubLevel subLevel, @Nullable BlockPos block) {
+    }
+
+    private static final BntPhysicsEvents.GroundHit BLOCKED_GROUND = new BntPhysicsEvents.GroundHit(Double.NaN, Direction.UP, null, null);
+
+    @Nullable
+    private static BntPhysicsEvents.GroundHit castGround(
+        KineticBlockEntity kbe, Vec3 centre, Vec3 sampleAxis, double sampleOffset, double radius, double maxCastHeight,
+        double above, double below, Pose3dc pose, SubLevel containingSubLevel
+    ) {
+        Vec3 localPosO = centre.add(sampleAxis.scale(sampleOffset));
+        Vec3 globalRayStart = pose.transformPosition(localPosO.add(0.0, maxCastHeight, 0.0));
+        Vec3 globalRayEnd = pose.transformPosition(localPosO.subtract(0.0, NO_GROUND, 0.0));
+        List<SubLevel> ignoredSubLevels = new ArrayList<>();
+
+        for (int attempts = 0; attempts < 8; attempts++) {
+            ClipContext clipContext = new ClipContext(
+                globalRayStart, globalRayEnd, net.minecraft.world.level.ClipContext.Block.COLLIDER, Fluid.NONE, CollisionContext.empty()
+            );
+            ((ClipContextExtension)clipContext)
+                .sable$setSubLevelIgnoring(subLevel -> subLevel == containingSubLevel || ignoredSubLevels.contains(subLevel));
+            BlockHitResult clipResult = kbe.getLevel().clip(clipContext);
+            if (clipResult.getType() == Type.MISS) {
+                return null;
+            }
+
+            SubLevel hitSubLevel = Sable.HELPER.getContaining(kbe.getLevel(), clipResult.getLocation());
+            if (clipResult.isInside()) {
+                if (hitSubLevel != null && hitSubLevel != containingSubLevel && !ignoredSubLevels.contains(hitSubLevel)) {
+                    ignoredSubLevels.add(hitSubLevel);
+                    continue;
+                }
+                return BLOCKED_GROUND;
+            }
+
+            Vec3 localHitPos = pose.transformPositionInverse(
+                hitSubLevel == null ? clipResult.getLocation() : hitSubLevel.logicalPose().transformPosition(clipResult.getLocation())
+            );
+            if (localHitPos.y > centre.y + above) {
+                if (hitSubLevel == null || ignoredSubLevels.contains(hitSubLevel)) {
+                    return null;
+                }
+                ignoredSubLevels.add(hitSubLevel);
+            } else if (hitSubLevel != null && hitSubLevel != containingSubLevel && localHitPos.y > centre.y + radius) {
+                if (ignoredSubLevels.contains(hitSubLevel)) {
+                    return null;
+                }
+                ignoredSubLevels.add(hitSubLevel);
+            } else {
+                if (localHitPos.y < centre.y - below) {
+                    return null;
+                }
+
+                Direction dir = clipResult.getDirection();
+                Vector3d hitNormal = new Vector3d(dir.getStepX(), dir.getStepY(), dir.getStepZ());
+                if (hitSubLevel != null) {
+                    hitSubLevel.logicalPose().transformNormal(hitNormal);
+                }
+                if (!(hitNormal.dot(0.0, 1.0, 0.0) < 0.5)) {
+                    return new BntPhysicsEvents.GroundHit(localHitPos.y, dir, hitSubLevel, clipResult.getBlockPos());
+                }
+                if (hitSubLevel == null || ignoredSubLevels.contains(hitSubLevel)) {
+                    return null;
+                }
+                ignoredSubLevels.add(hitSubLevel);
+            }
+        }
+        return null;
     }
 
     private static double[] getTerrainSampleOffsets(double wheelRadius) {
@@ -1572,6 +1664,7 @@ public final class BntPhysicsEvents {
         double compression;
         double overTravel;
         double armRise;
+        double stopGap;
         double rise;
         double climbRate;
         double travelUsed;
