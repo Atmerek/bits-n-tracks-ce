@@ -9,6 +9,7 @@
 ### Fixed
 
 - The Bits 'n' Tracks creative tab no longer shows empty rows around its items when ModernFix is installed.
+- Two kinetic blocks that keep passing their rotation source back and forth, such as a linked universal joint from Create Aeronautics: Transmission & Linkage, now break instead of crashing the server.
 
 ## 3.0.2
 
