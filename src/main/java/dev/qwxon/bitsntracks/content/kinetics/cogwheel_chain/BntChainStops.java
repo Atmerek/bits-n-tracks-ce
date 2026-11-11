@@ -19,7 +19,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 @EventBusSubscriber
 public final class BntChainStops {
-    public static final int RUNAWAY_REENTRIES = 64;
+    public static final int RUNAWAY_REENTRIES = 16;
     public static final long OVERSPEED_GRACE = 60L;
     private static final int FLICKER_LIMIT = 128;
     private static final long CALM_TICKS = 20L;
