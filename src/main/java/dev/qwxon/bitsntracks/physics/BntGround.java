@@ -7,8 +7,10 @@ import dev.qwxon.bitsntracks.BitsNTracks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.types.BntCogwheelChainTypes;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -16,10 +18,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.registries.datamaps.DataMapType;
 import net.neoforged.neoforge.registries.datamaps.RegisterDataMapTypesEvent;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3d;
 
 public final class BntGround {
     private static final double SLIPPERY_FLOOR = 0.1;
@@ -33,6 +37,7 @@ public final class BntGround {
     private static final double SINK = 1.0 / 16.0;
     private static final double MIN_SPREAD = 0.75;
     private static final double MAX_SPREAD = 1.3;
+    private static final double FACING_UP = 0.5;
 
     public record Grip(Optional<Double> grip, boolean soft) {
         public static final Codec<Grip> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -70,6 +75,17 @@ public final class BntGround {
         }
         double wet = 1.0 - (1.0 - BntPhysicsTuning.getWetSoftGrip()) * level.getRainLevel(1.0F);
         return new Surface(surface.grip() * wet, true);
+    }
+
+    @Nullable
+    public static Vector3d upwardFace(Level level, BlockHitResult hit) {
+        Direction face = hit.getDirection();
+        Vector3d normal = new Vector3d(face.getStepX(), face.getStepY(), face.getStepZ());
+        SubLevel subLevel = Sable.HELPER.getContaining(level, hit.getLocation());
+        if (subLevel != null) {
+            subLevel.logicalPose().transformNormal(normal);
+        }
+        return normal.y >= FACING_UP ? normal : null;
     }
 
     public static boolean sparks(BlockState state) {

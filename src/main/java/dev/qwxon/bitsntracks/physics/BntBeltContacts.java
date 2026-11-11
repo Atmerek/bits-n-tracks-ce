@@ -278,7 +278,11 @@ public final class BntBeltContacts {
         ((ClipContextExtension)clipContext).sable$setSubLevelIgnoring(other -> other == subLevel);
 
         BlockHitResult hit = level.clip(clipContext);
-        if (hit.getType() == Type.MISS || hit.isInside() || hit.getDirection().getStepY() <= 0) {
+        if (hit.getType() == Type.MISS || hit.isInside()) {
+            return null;
+        }
+        Vector3d normal = BntGround.upwardFace(level, hit);
+        if (normal == null) {
             return null;
         }
 
@@ -297,10 +301,6 @@ public final class BntBeltContacts {
             return null;
         }
 
-        Vector3d normal = new Vector3d(0.0, 1.0, 0.0);
-        if (hitSubLevel != null) {
-            hitSubLevel.logicalPose().transformNormal(normal);
-        }
         pose.transformNormalInverse(normal);
 
         BntBeltContact contact = new BntBeltContact();

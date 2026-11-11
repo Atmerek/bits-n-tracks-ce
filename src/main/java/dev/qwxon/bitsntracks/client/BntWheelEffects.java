@@ -219,7 +219,7 @@ public final class BntWheelEffects {
             ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty());
         ((ClipContextExtension)clip).sable$setSubLevelIgnoring(other -> other == subLevel);
         BlockHitResult hit = level.clip(clip);
-        if (hit.getType() == HitResult.Type.MISS || hit.isInside() || hit.getDirection().getStepY() <= 0) {
+        if (hit.getType() == HitResult.Type.MISS || hit.isInside() || BntGround.upwardFace(level, hit) == null) {
             return null;
         }
         BlockState ground = level.getBlockState(hit.getBlockPos());
