@@ -30,6 +30,7 @@ import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -96,7 +97,7 @@ public final class BntPhysicsEvents {
     private static final Map<ServerSubLevel, Parked> PARKED = new WeakHashMap<>();
     private static final Map<KineticBlockEntity, double[]> HELD = new WeakHashMap<>();
     private static final Map<KineticBlockEntity, double[]> CLIMB = new WeakHashMap<>();
-    private static final Map<KineticBlockEntity, Double> SWING = new WeakHashMap<>();
+    private static final Map<KineticBlockEntity, Double> SWING = Collections.synchronizedMap(new WeakHashMap<>());
     private static final Map<ServerLevel, long[]> STEPS = new WeakHashMap<>();
     private static final Map<Level, Map<BlockPos, double[]>> TREAD_LOADS = new WeakHashMap<>();
     private static final long PARKED_REFRESH = 20L;
