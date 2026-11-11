@@ -9,9 +9,8 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainStops;
-import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.Set;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,8 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin({RotationPropagator.class})
 public class RotationPropagatorMixin {
     @Unique
-    private static final ThreadLocal<Set<KineticBlockEntity>> bnt$onStack =
-            ThreadLocal.withInitial(() -> Collections.newSetFromMap(new IdentityHashMap<KineticBlockEntity, Boolean>()));
+    private static final ThreadLocal<Map<KineticBlockEntity, Integer>> bnt$onStack = ThreadLocal.withInitial(IdentityHashMap::new);
 
     @Inject(
         method = {"getRotationSpeedModifier(Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;Lcom/simibubi/create/content/kinetics/base/KineticBlockEntity;)F"},
@@ -100,15 +98,20 @@ public class RotationPropagatorMixin {
         remap = false
     )
     private static void bnt$cutRunawayResourcing(KineticBlockEntity next, Operation<Void> original) {
-        Set<KineticBlockEntity> onStack = bnt$onStack.get();
-        if (!onStack.add(next)) {
-            BntChainStops.runaway(next.getLevel(), next);
-            return;
-        }
+        Map<KineticBlockEntity, Integer> onStack = bnt$onStack.get();
+        int entries = onStack.merge(next, 1, Integer::sum);
         try {
+            if (entries > BntChainStops.RUNAWAY_REENTRIES) {
+                BntChainStops.runaway(next.getLevel(), next);
+                return;
+            }
             original.call(next);
         } finally {
-            onStack.remove(next);
+            if (entries == 1) {
+                onStack.remove(next);
+            } else {
+                onStack.put(next, entries - 1);
+            }
         }
     }
 }
