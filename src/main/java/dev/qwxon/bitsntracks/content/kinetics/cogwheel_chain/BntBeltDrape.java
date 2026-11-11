@@ -133,7 +133,12 @@ public final class BntBeltDrape {
         if (hit.getType() == Type.MISS) {
             return NO_SURFACE;
         }
-        return top + (bottom - top) * (hit.getLocation().distanceTo(worldTop) / reach);
+        Vec3 location = hit.getLocation();
+        SubLevel hitSubLevel = Sable.HELPER.getContaining(level, location);
+        if (hitSubLevel != null) {
+            location = (level.isClientSide ? BntClientCompat.drawnPose(hitSubLevel) : hitSubLevel.logicalPose()).transformPosition(location);
+        }
+        return top + (bottom - top) * (location.distanceTo(worldTop) / reach);
     }
 
     private static double stagedSurfaceOffset(BntPonderPhysics.Stage stage, Vec3 point, double sag) {
