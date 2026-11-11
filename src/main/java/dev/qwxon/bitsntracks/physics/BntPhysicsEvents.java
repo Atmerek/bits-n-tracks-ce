@@ -1458,7 +1458,7 @@ public final class BntPhysicsEvents {
                     }
 
                     ignoredSubLevels.add(hitSubLevel);
-                } else if (hitSubLevel != null && hitSubLevel != containingSubLevel && localHitPos.y > centre.y - radius * 0.25) {
+                } else if (hitSubLevel != null && hitSubLevel != containingSubLevel && localHitPos.y > centre.y + radius) {
                     if (ignoredSubLevels.contains(hitSubLevel)) {
                         break;
                     }
