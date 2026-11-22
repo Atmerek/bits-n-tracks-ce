@@ -237,6 +237,8 @@
 
     "bits_n_tracks.configuration.drive": "Drive",
     "bits_n_tracks.configuration.tractionResponse": "Traction Response",
+    "bits_n_tracks.configuration.trackDriveForce": "Drive Force per Stress",
+    "bits_n_tracks.configuration.maxTurnRate": "Max Turn Rate",
 
     "bits_n_tracks.configuration.friction": "Friction",
     "bits_n_tracks.configuration.trackGrip": "Track Grip",

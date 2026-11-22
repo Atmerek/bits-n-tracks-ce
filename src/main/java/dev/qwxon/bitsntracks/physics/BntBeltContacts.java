@@ -9,6 +9,8 @@ import dev.qwxon.bitsntracks.access.BntChainGeometryRefresh;
 import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntCogwheelWidth;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
+import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltDrape;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltPath;
@@ -41,6 +43,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.ClipContext.Fluid;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
@@ -74,7 +77,8 @@ public final class BntBeltContacts {
     }
 
     public record BntTread(
-        boolean driven, double surfaceSpeed, double brake, @Nullable CogwheelChainType type, double width, boolean grousers
+        boolean driven, double surfaceSpeed, double brake, @Nullable CogwheelChainType type, double width, boolean grousers,
+        double stress
     ) {
     }
 
@@ -143,11 +147,16 @@ public final class BntBeltContacts {
     ) {
         double lowest = Double.MAX_VALUE;
         double surfaceSpeed = 0.0;
+        double stress = 0.0;
         for (PathedCogwheelNode node : nodes) {
             BlockPos nodePos = controllerPos.offset(node.localPos());
             if (!(level.getBlockEntity(nodePos) instanceof KineticBlockEntity kinetic)
                 || !BntChainEngagement.isEngaged(kinetic.getBehaviour(CogwheelChainBehaviour.TYPE))) {
                 continue;
+            }
+            Block block = level.getBlockState(nodePos).getBlock();
+            if (BntCogwheels.isOwnOrLegacyCogwheel(block)) {
+                stress += BntPhysicsTuning.stressImpact(CogwheelSize.of(block));
             }
             double y = BntBeltLinks.drawnCentre(level, controllerPos, node).y + BntTrackFloor.at(level, kinetic);
             if (y < lowest) {
@@ -161,7 +170,7 @@ public final class BntBeltContacts {
             ? BntCogwheelWidth.chainQuarters(kinetic)
             : BntCogwheelWidth.SINGLE;
         return new BntTread(lowest < Double.MAX_VALUE, surfaceSpeed, brake, chain.getChainType(),
-            BntCogwheelWidth.trackPixels(quarters) / 16.0, BntGrousers.accepts(chain) && BntGrousers.fitted(controller));
+            BntCogwheelWidth.trackPixels(quarters) / 16.0, BntGrousers.accepts(chain) && BntGrousers.fitted(controller), stress);
     }
 
     private static void spans(

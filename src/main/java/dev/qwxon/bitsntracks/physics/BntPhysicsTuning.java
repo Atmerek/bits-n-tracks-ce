@@ -34,6 +34,8 @@ public final class BntPhysicsTuning {
     private static final Map<CogwheelSize, DoubleValue> VISUAL_VERTICAL_OFFSET;
 
     private static final DoubleValue TRACTION_RESPONSE;
+    private static final DoubleValue DRIVE_FORCE;
+    private static final DoubleValue MAX_TURN_RATE;
 
     private static final DoubleValue TRACK_GRIP;
     private static final DoubleValue SOFT_GROUND_PRESSURE;
@@ -105,6 +107,12 @@ public final class BntPhysicsTuning {
         TRACTION_RESPONSE = builder
             .comment("Share of the remaining difference between track speed and ground speed corrected each physics step.")
             .defineInRange("tractionResponse", 0.35, 0.0, 1.0);
+        DRIVE_FORCE = builder
+            .comment("How hard a driven track can push for each point of stress impact of the cogwheels it wraps, the same stress impact Create charges per rpm. The push does not change with speed, so a heavier vehicle on the same tracks speeds up and climbs more slowly, and more or bigger cogwheels on a track push harder. Grip still limits it, and braking and holding still on a slope are not limited. 0 removes the limit.")
+            .defineInRange("trackDriveForce", 8.0, 0.0, 10000.0);
+        MAX_TURN_RATE = builder
+            .comment("Fastest a tracked vehicle turns, in degrees per second, however different its track speeds are; faster tracks slip instead. While moving, the turn is also held to what the tracks' sideways grip can carry, so a fast vehicle runs wide instead of spinning out.")
+            .defineInRange("maxTurnRate", 120.0, 1.0, 3600.0);
         builder.pop();
 
         builder.comment("Grip of the track on the ground. Only the track grips: cogwheels shape it and carry the suspension, and a cogwheel without a track rolls freely.").push("friction");
@@ -343,6 +351,14 @@ public final class BntPhysicsTuning {
 
     public static double getSlidingGrip() {
         return SLIDING_GRIP.get();
+    }
+
+    public static double getDriveForce() {
+        return DRIVE_FORCE.get();
+    }
+
+    public static double getMaxTurnRate() {
+        return MAX_TURN_RATE.get();
     }
 
     public static double getTractionResponse() {

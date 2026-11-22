@@ -90,6 +90,8 @@ public final class BntPhysicsEvents {
     private static final double GRIP_MEMORY = 0.1;
     private static final double SLIP_GRIP = 0.25;
     private static final double SLIP_SLIDE = 1.0;
+    private static final double DRIVE_EPSILON = 1.0E-3;
+    private static final double STRAIGHT_YAW_RATE = 0.3;
     private static final long TREAD_SWEEP = 200L;
     private static final double CLIMB_CREEP = 0.25;
     private static final Map<ServerSubLevel, Long> REPORTED = new WeakHashMap<>();
@@ -824,6 +826,7 @@ public final class BntPhysicsEvents {
         contact.brakeStrength = tread.brake();
         contact.touchingFriction = BntGround.grip(contact.ground, tread.type(), tread.grousers());
         contact.width = tread.width();
+        contact.driveForce = tread.stress() * BntPhysicsTuning.getDriveForce();
     }
 
     private static double treadLoad(Level level, BlockPos tread, double pressed, double timeStep, long step) {
@@ -1145,6 +1148,7 @@ public final class BntPhysicsEvents {
             double[] tread = treads.get(contact.tread);
             double share = tread[0] > 1.0E-9 ? Math.max(0.0, contact.push) / tread[0] : 1.0 / tread[1];
             double load = tread[2] * share;
+            contact.load = load;
             contact.lever = new Vector3d(contact.forcePoint).sub(centerOfMass);
             double targetSpeed = contact.isDriven ? contact.surfaceSpeed * (1.0 - contact.brakeStrength) : 0.0;
             double longitudinalSpeed = contact.localVelocity.dot(contact.normalD);
@@ -1156,6 +1160,7 @@ public final class BntPhysicsEvents {
             contact.longitudinalCap = contact.isDriven
                 ? contact.grip
                 : Mth.lerp(contact.brakeStrength, Math.min(rollingResistance * load, contact.grip), contact.grip);
+            contact.driveCap = contact.isDriven && contact.driveForce > 0.0 ? contact.driveForce * timeStep * share : Double.MAX_VALUE;
 
             Vector3d angular = contact.lever.cross(contact.normalD, new Vector3d());
             contact.longitudinalResponse = inverseInertia.transform(angular, new Vector3d());
@@ -1173,10 +1178,33 @@ public final class BntPhysicsEvents {
             }
         }
 
-        double commandedYawRate = pivotScrub > 0.0 ? solveCommandedYawRate(contacts) : 0.0;
+        double trackYawRate = solveCommandedYawRate(contacts);
+        double commandedYawRate = trackYawRate;
+        if (commandedYawRate != 0.0) {
+            double followable = Math.min(
+                followableYawRate(contacts, gravity * BntPhysicsTuning.getSlidingGrip(), hullSpeed(contacts)),
+                Math.toRadians(BntPhysicsTuning.getMaxTurnRate()));
+            commandedYawRate = Mth.clamp(commandedYawRate, -followable, followable);
+        }
+        if (commandedYawRate != trackYawRate) {
+            double correction = commandedYawRate - trackYawRate;
+            for (BntPhysicsEvents.WheelContact contact : contacts) {
+                if (contact.hasTraction && contact.isDriven) {
+                    double turning = contact.lever.z() * contact.normalD.x() - contact.lever.x() * contact.normalD.z();
+                    double longitudinalSpeed = contact.localVelocity.dot(contact.normalD);
+                    contact.targetSpeed += correction * turning;
+                    contact.goalLongitudinal = longitudinalSpeed + response * (contact.targetSpeed - longitudinalSpeed);
+                }
+            }
+        }
+        if (pivotScrub <= 0.0) {
+            commandedYawRate = 0.0;
+        }
+        double straighten = 1.0 - Mth.smoothstep(Math.min(1.0, Math.abs(trackYawRate) / STRAIGHT_YAW_RATE));
 
         for (BntPhysicsEvents.WheelContact contact : contacts) {
             if (contact.hasTraction) {
+                contact.straighten = straighten;
                 contact.yawRate = commandedYawRate;
                 double lateralSpeed = contact.localVelocity.dot(contact.sideD);
                 double scrubSpeed = commandedYawRate
@@ -1222,6 +1250,34 @@ public final class BntPhysicsEvents {
         }
     }
 
+    private static double hullSpeed(List<BntPhysicsEvents.WheelContact> contacts) {
+        Vector3d velocity = new Vector3d();
+        int count = 0;
+        for (BntPhysicsEvents.WheelContact contact : contacts) {
+            if (contact.hasTraction) {
+                velocity.fma(contact.localVelocity.dot(contact.normalD), contact.normalD)
+                    .fma(contact.localVelocity.dot(contact.sideD), contact.sideD);
+                count++;
+            }
+        }
+        return count == 0 ? 0.0 : velocity.length() / count;
+    }
+
+    private static double followableYawRate(List<BntPhysicsEvents.WheelContact> contacts, double gravity, double speed) {
+        double grip = 0.0;
+        double load = 0.0;
+        for (BntPhysicsEvents.WheelContact contact : contacts) {
+            if (contact.hasTraction) {
+                grip += contact.grip;
+                load += contact.load;
+            }
+        }
+        if (load <= 1.0E-9 || speed <= 1.0E-6) {
+            return MAX_COMMANDED_YAW_RATE;
+        }
+        return Math.min(MAX_COMMANDED_YAW_RATE, grip / load * gravity / speed);
+    }
+
     private static boolean gripSolvable(BntPhysicsEvents.WheelContact contact) {
         return contact.longitudinalInverseMass > 0.0 && contact.lateralInverseMass > 0.0
             && Double.isFinite(contact.longitudinalInverseMass) && Double.isFinite(contact.lateralInverseMass);
@@ -1264,14 +1320,26 @@ public final class BntPhysicsEvents {
             + (contact.goalLongitudinal - longitudinalSpeed) / contact.longitudinalInverseMass;
         double lateral = contact.lateralImpulse
             + (contact.goalLateral - lateralSpeed) / contact.lateralInverseMass;
-        double magnitude = Math.hypot(longitudinal, lateral);
-        if (magnitude > contact.grip) {
-            double scale = contact.grip / magnitude;
-            longitudinal *= scale;
-            lateral *= scale;
+        double grip = contact.grip;
+        double forward = contact.targetSpeed > DRIVE_EPSILON ? contact.driveCap : contact.longitudinalCap;
+        double backward = contact.targetSpeed < -DRIVE_EPSILON ? contact.driveCap : contact.longitudinalCap;
+        forward = Math.min(forward, contact.longitudinalCap);
+        backward = Math.min(backward, contact.longitudinalCap);
+
+        double shared = Math.hypot(longitudinal, lateral);
+        double scale = shared > grip ? grip / shared : 1.0;
+        double circleLongitudinal = Mth.clamp(longitudinal * scale, -backward, forward);
+        double circleLateral = lateral * scale;
+        if (contact.straighten <= 0.0) {
+            contact.longitudinalImpulse = circleLongitudinal;
+            contact.lateralImpulse = circleLateral;
+            return;
         }
-        contact.longitudinalImpulse = Mth.clamp(longitudinal, -contact.longitudinalCap, contact.longitudinalCap);
-        contact.lateralImpulse = lateral;
+        double firstLateral = Mth.clamp(lateral, -grip, grip);
+        double room = Math.sqrt(Math.max(0.0, grip * grip - firstLateral * firstLateral));
+        double firstLongitudinal = Mth.clamp(longitudinal, -Math.min(room, backward), Math.min(room, forward));
+        contact.longitudinalImpulse = Mth.lerp(contact.straighten, circleLongitudinal, firstLongitudinal);
+        contact.lateralImpulse = Mth.lerp(contact.straighten, circleLateral, firstLateral);
     }
 
     private static double solveCommandedYawRate(List<BntPhysicsEvents.WheelContact> contacts) {
@@ -1369,8 +1437,15 @@ public final class BntPhysicsEvents {
         }
         Vector3d first = solved.isEmpty() ? nearGround.get(0).ownPoint() : solved.get(0).ownPoint();
         Vec3 at = subLevel.logicalPose().transformPosition(new Vec3(first.x, first.y, first.z));
-        BntDebugLog.LOG.info("vehicle at {} bodies {} free axes {} mass {} wheels {} near ground {} belt contacts {} belt push {} belt lon {} belt lat {} belt depth {} yaw {}{}",
-            String.format("%.1f %.1f %.1f", at.x, at.y, at.z), bodies, freeAxes, String.format("%.1f", mass), wheels, nearGround.size(), beltContacts,
+        Vector3d middle = new Vector3d();
+        List<BntPhysicsEvents.WheelContact> spread = solved.isEmpty() ? nearGround : solved;
+        for (BntPhysicsEvents.WheelContact contact : spread) {
+            middle.add(contact.ownPoint());
+        }
+        middle.div(spread.size());
+        Vec3 centre = subLevel.logicalPose().transformPosition(new Vec3(middle.x, middle.y, middle.z));
+        BntDebugLog.LOG.info("vehicle at {} centre {} bodies {} free axes {} mass {} wheels {} near ground {} belt contacts {} belt push {} belt lon {} belt lat {} belt depth {} yaw {}{}",
+            String.format("%.1f %.1f %.1f", at.x, at.y, at.z), String.format("%.2f %.2f", centre.x, centre.z), bodies, freeAxes, String.format("%.1f", mass), wheels, nearGround.size(), beltContacts,
             String.format("%.2f", beltPush), String.format("%.2f", beltLongitudinal), String.format("%.2f", beltLateral),
             String.format("%.3f", deepest), String.format("%.2f", yaw), line);
     }
@@ -1692,7 +1767,11 @@ public final class BntPhysicsEvents {
         double yawRate;
         double goalLongitudinal;
         double goalLateral;
+        double load;
         double grip;
+        double driveForce;
+        double driveCap = Double.MAX_VALUE;
+        double straighten;
         double longitudinalCap;
         double longitudinalInverseMass;
         double lateralInverseMass;

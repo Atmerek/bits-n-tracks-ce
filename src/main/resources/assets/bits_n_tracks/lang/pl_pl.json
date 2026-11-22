@@ -237,6 +237,8 @@
 
     "bits_n_tracks.configuration.drive": "Napęd",
     "bits_n_tracks.configuration.tractionResponse": "Reakcja przyczepności",
+    "bits_n_tracks.configuration.trackDriveForce": "Siła napędu na jednostkę obciążenia",
+    "bits_n_tracks.configuration.maxTurnRate": "Maksymalna prędkość skrętu",
 
     "bits_n_tracks.configuration.friction": "Tarcie",
     "bits_n_tracks.configuration.trackGrip": "Chwyt gąsienicy",
