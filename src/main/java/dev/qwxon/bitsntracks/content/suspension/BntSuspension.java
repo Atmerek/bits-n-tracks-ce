@@ -5,8 +5,10 @@ import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntCogwheelShafts;
 import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlock;
+import dev.qwxon.bitsntracks.content.BntFlangedCogwheelBlockEntity;
 import dev.qwxon.bitsntracks.content.CogwheelSize;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
+import dev.qwxon.bitsntracks.physics.BntPonderPhysics;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import java.util.ArrayList;
 import java.util.List;
@@ -480,6 +482,19 @@ public final class BntSuspension {
         if (!hasPiece(be)) {
             return null;
         }
+        if (be instanceof BntFlangedCogwheelBlockEntity own && own.getLevel() != null) {
+            long tick = BntPonderPhysics.clock(own.getLevel());
+            Arm cached = own.cachedArm(tick);
+            if (cached == null) {
+                cached = computeArm(be);
+                own.cacheArm(tick, cached);
+            }
+            return cached;
+        }
+        return computeArm(be);
+    }
+
+    private static Arm computeArm(BlockEntity be) {
         int side = ((KineticBlockEntityPhysicsAccess)be).bnt$getSuspensionSide();
         return Math.abs(side) >= BOGIE ? bogieArm(be, side) : arm(be, side);
     }

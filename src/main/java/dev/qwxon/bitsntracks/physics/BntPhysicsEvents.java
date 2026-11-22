@@ -124,6 +124,11 @@ public final class BntPhysicsEvents {
         return false;
     }
 
+    private static long physicsStep(ServerLevel level) {
+        long[] steps = STEPS.get(level);
+        return steps == null ? Long.MIN_VALUE : steps[0];
+    }
+
     public static void onPhysicsTick(SubLevelPhysicsSystem physicsSystem, double timeStep) {
         ServerLevel level = physicsSystem.getLevel();
         long step = ++STEPS.computeIfAbsent(level, ignored -> new long[1])[0];
@@ -570,10 +575,18 @@ public final class BntPhysicsEvents {
                     return mixin.bnt$getRawDrop();
                 }
             } else {
+                long step = level instanceof ServerLevel server ? physicsStep(server) : Long.MIN_VALUE;
+                if (step != Long.MIN_VALUE && mixin.bnt$getRawDropTick() == step) {
+                    return mixin.bnt$getRawDrop();
+                }
                 BlockState state = kbe.getBlockState();
-                return state.hasProperty(BlockStateProperties.AXIS) && Sable.HELPER.getContaining(kbe) instanceof SubLevel subLevel
+                double drop = state.hasProperty(BlockStateProperties.AXIS) && Sable.HELPER.getContaining(kbe) instanceof SubLevel subLevel
                     ? computeRenderExtensionForPose(kbe, subLevel.logicalPose(), subLevel)
                     : 0.0;
+                if (step != Long.MIN_VALUE) {
+                    mixin.bnt$setRawDrop(step, drop);
+                }
+                return drop;
             }
         } else {
             return 0.0;

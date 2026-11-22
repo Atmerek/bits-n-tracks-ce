@@ -150,6 +150,8 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     @Unique
     private boolean[] bnt$appliedEngaged;
 
+    @Unique
+    private long bnt$engagementCheckedAt = Long.MIN_VALUE;
 
     @Unique
     private long bnt$latchedAt = Long.MIN_VALUE;
@@ -311,8 +313,12 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
             return true;
         }
 
-        this.bnt$latchedLayout(level, controllerPos, nodes);
-        nodes = this.cogwheelNodes;
+        long now = level.getGameTime();
+        if (this.bnt$engagementCheckedAt != now) {
+            this.bnt$engagementCheckedAt = now;
+            this.bnt$latchedLayout(level, controllerPos, nodes);
+            nodes = this.cogwheelNodes;
+        }
 
         boolean[] engagement = this.bnt$appliedEngagement(nodes.size());
         if (engagement == null) {
@@ -435,6 +441,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$sidesPending = false;
         this.bnt$appliedLayout = null;
         this.bnt$appliedEngaged = null;
+        this.bnt$engagementCheckedAt = Long.MIN_VALUE;
         this.bnt$engagedDisplacements = null;
         this.bnt$restoredSignature = kept != null ? this.bnt$preReadSignature : null;
         this.bnt$preReadSignature = null;

@@ -75,6 +75,8 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     private double groundDrop;
     private long rawDropTick = Long.MIN_VALUE;
     private double rawDrop;
+    private long armTick = Long.MIN_VALUE;
+    private BntSuspension.Arm cachedArm;
     private Object terrainCast;
     private boolean liftedUp;
     private double maxAirExtension;
@@ -137,6 +139,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     }
 
     public void stateChanging(BlockState state) {
+        this.forgetArm();
         boolean enabled = BntFlangedCogwheelBlock.physics(state);
         if (BntFlangedCogwheelBlock.physics(this.getBlockState()) == enabled) {
             return;
@@ -178,6 +181,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         this.grousers = Math.max(0, tag.getInt("BntGrousers"));
         this.trackStraight = tag.getBoolean("BntTrackStraight");
         this.trackFitIgnored = tag.getBoolean("BntTrackFitIgnored");
+        this.forgetArm();
         BntTrackPlane.invalidate();
         this.pivotOffsetX = tag.getFloat("BntPivotOffsetX");
         this.pivotOffsetY = tag.getFloat("BntPivotOffsetY");
@@ -410,6 +414,21 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         this.suspensionSide = attached ? Mth.clamp(side, -BntSuspension.WIDE_BOGIE, BntSuspension.WIDE_BOGIE) : 0;
         this.suspensionFacing = attached ? Integer.signum(facing) : 0;
         this.springImpulse = 0.0;
+        this.forgetArm();
+    }
+
+    public BntSuspension.Arm cachedArm(long tick) {
+        return this.armTick == tick ? this.cachedArm : null;
+    }
+
+    public void cacheArm(long tick, BntSuspension.Arm arm) {
+        this.armTick = tick;
+        this.cachedArm = arm;
+    }
+
+    private void forgetArm() {
+        this.armTick = Long.MIN_VALUE;
+        this.cachedArm = null;
     }
 
     @Override
@@ -442,6 +461,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public void bnt$setAlignmentOffsetX(float x) {
         this.alignmentOffsetX = x;
+        this.forgetArm();
         BntTrackPlane.invalidate();
     }
 
@@ -453,6 +473,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public void bnt$setAlignmentOffsetY(float y) {
         this.alignmentOffsetY = y;
+        this.forgetArm();
         BntTrackPlane.invalidate();
     }
 
@@ -464,6 +485,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public void bnt$setAlignmentOffsetZ(float z) {
         this.alignmentOffsetZ = z;
+        this.forgetArm();
         BntTrackPlane.invalidate();
     }
 
@@ -559,6 +581,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         this.pivotOffsetX = x;
         this.pivotOffsetY = y;
         this.pivotOffsetZ = z;
+        this.forgetArm();
     }
 
     @Override

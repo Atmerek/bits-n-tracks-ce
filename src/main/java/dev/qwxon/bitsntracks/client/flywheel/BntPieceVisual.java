@@ -12,6 +12,8 @@ import dev.engine_room.flywheel.lib.material.SimpleMaterial;
 import dev.engine_room.flywheel.lib.model.QuadMesh;
 import dev.engine_room.flywheel.lib.model.SingleMeshModel;
 import dev.engine_room.flywheel.lib.util.RendererReloadCache;
+import dev.qwxon.bitsntracks.content.BntCogwheels;
+import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionMeshes;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspensionParts;
 import java.util.HashMap;
@@ -33,8 +35,11 @@ final class BntPieceVisual implements BntSuspensionParts.Sink {
     private final KineticBlockEntity be;
     private final Vec3 offset;
     private final Map<Model, BntInstancePool<TransformedInstance>> pools = new HashMap<>();
+    private static final double STILL = 1.0E-4;
     private int light;
     private boolean showing;
+    private Vec3 posedOwn;
+    private Vec3 posedPartner;
 
     BntPieceVisual(VisualizationContext context, KineticBlockEntity be, Vec3i visualPos) {
         this.context = context;
@@ -42,7 +47,15 @@ final class BntPieceVisual implements BntSuspensionParts.Sink {
         this.offset = Vec3.atLowerCornerOf(visualPos);
     }
 
-    void frame(float partialTick, int packedLight) {
+    void frame(float partialTick, int packedLight, boolean fresh) {
+        Vec3 own = BntCogwheels.getModelTranslation(be, partialTick);
+        KineticBlockEntity partner = be.getLevel() == null ? null : BntSuspension.partner(be.getLevel(), be.getBlockPos(), be);
+        Vec3 other = partner == null ? Vec3.ZERO : BntCogwheels.getModelTranslation(partner, partialTick);
+        if (!fresh && showing && packedLight == light && near(own, posedOwn) && near(other, posedPartner)) {
+            return;
+        }
+        posedOwn = own;
+        posedPartner = other;
         light = packedLight;
         for (BntInstancePool<TransformedInstance> pool : pools.values()) {
             pool.begin();
@@ -52,6 +65,10 @@ final class BntPieceVisual implements BntSuspensionParts.Sink {
             pool.settle();
         }
         showing = true;
+    }
+
+    private static boolean near(Vec3 now, Vec3 posed) {
+        return posed != null && Math.abs(now.x - posed.x) < STILL && Math.abs(now.y - posed.y) < STILL && Math.abs(now.z - posed.z) < STILL;
     }
 
     boolean showing() {

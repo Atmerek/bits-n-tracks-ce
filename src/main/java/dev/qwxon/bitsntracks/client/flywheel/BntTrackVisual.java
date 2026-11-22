@@ -38,6 +38,7 @@ final class BntTrackVisual implements BntTrackSink {
     private static final long REFRESH_TICKS = 20L;
     private static final double NEAR_SQR = 32.0 * 32.0;
     private static final double MID_SQR = 64.0 * 64.0;
+    private static final double SHAPE_STEPS = 1024.0;
     private static final long SECOND_NANOS = 1_000_000_000L;
     private static final double TICK_NANOS = 50_000_000.0;
     private static final double REACH_INTERVALS = 2.0;
@@ -79,17 +80,17 @@ final class BntTrackVisual implements BntTrackSink {
     }
 
     void frame(float partialTick, boolean resting) {
-        CogwheelChainBehaviour behaviour = be.getBehaviour(CogwheelChainBehaviour.TYPE);
-        CogwheelChain chain = behaviour == null ? null : behaviour.getControlledChain();
-        if (chain == null || be.getLevel() == null) {
-            hide();
-            return;
-        }
-
         boolean switched = resting != this.resting;
         this.resting = resting;
         long now = Util.getNanos();
         if (!switched && now < nextBuild) {
+            return;
+        }
+
+        CogwheelChainBehaviour behaviour = be.getBehaviour(CogwheelChainBehaviour.TYPE);
+        CogwheelChain chain = behaviour == null ? null : behaviour.getControlledChain();
+        if (chain == null || be.getLevel() == null) {
+            hide();
             return;
         }
 
@@ -162,9 +163,9 @@ final class BntTrackVisual implements BntTrackSink {
         int hash = 1;
         for (PathedCogwheelNode node : chain.getChainPathCogwheelNodes()) {
             Vec3 shift = BntClientCompat.getNodeDisplacement(be, node.localPos());
-            hash = 31 * hash + Double.hashCode(shift.x);
-            hash = 31 * hash + Double.hashCode(shift.y);
-            hash = 31 * hash + Double.hashCode(shift.z);
+            hash = 31 * hash + Long.hashCode(Math.round(shift.x * SHAPE_STEPS));
+            hash = 31 * hash + Long.hashCode(Math.round(shift.y * SHAPE_STEPS));
+            hash = 31 * hash + Long.hashCode(Math.round(shift.z * SHAPE_STEPS));
             BlockPos nodePos = be.getBlockPos().offset(node.localPos());
             Direction route = BntChainEngagement.routeSide(level, nodePos);
             hash = 31 * hash + (route == null ? -1 : route.ordinal());

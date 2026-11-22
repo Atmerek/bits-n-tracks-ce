@@ -73,6 +73,8 @@ public final class BntWheelEffects {
     private static final double PROBE_BELOW = 0.12;
     private static final double REAR_SHARE = 0.35;
     private static final int FORGET_TICKS = 40;
+    private static final double QUIET_SPEED = 0.25;
+    private static final int QUIET_PROBES = 3;
     private static final Map<BlockPos, Group> PENDING = new HashMap<>();
     private static final Map<BlockPos, Air> AIR = new HashMap<>();
     private static Level pendingLevel;
@@ -136,6 +138,9 @@ public final class BntWheelEffects {
         for (Group group : PENDING.values()) {
             Air air = AIR.computeIfAbsent(group.key, ignored -> new Air());
             air.seen = now;
+            if (group.belt && air.ticks == 0 && quiet(level, group)) {
+                continue;
+            }
             Patch patch = group.belt ? beltPatch(level, group) : wheelPatch(level, group);
             if (patch != null) {
                 effects(minecraft, level, random, patch, air);
@@ -143,6 +148,33 @@ public final class BntWheelEffects {
         }
         PENDING.clear();
         forget(level);
+    }
+
+    private static boolean quiet(Level level, Group group) {
+        if (group.drives.isEmpty()) {
+            return true;
+        }
+        double speed = 0.0;
+        for (BntPhysicsEvents.Drive each : group.drives) {
+            speed += each.speed();
+        }
+        if (Math.abs(speed / group.drives.size()) >= QUIET_SPEED) {
+            return false;
+        }
+        CogwheelChain chain = BntChains.chainAt(level, group.key);
+        List<RenderedChainPathNode> nodes = chain == null ? null : chain.getChainPathNodes();
+        if (nodes == null || nodes.isEmpty()) {
+            return true;
+        }
+        Vec3 base = Vec3.atLowerCornerOf(group.key);
+        for (int part = 0; part < QUIET_PROBES; part++) {
+            Vec3 point = base.add(nodes.get(part * nodes.size() / QUIET_PROBES).getPosition());
+            Vector3d velocity = Sable.HELPER.getVelocity(level, new Vector3d(point.x, point.y, point.z));
+            if (velocity.lengthSquared() >= QUIET_SPEED * QUIET_SPEED) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static Patch beltPatch(Level level, Group group) {

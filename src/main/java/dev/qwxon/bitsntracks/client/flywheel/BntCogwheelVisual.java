@@ -44,6 +44,8 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
     private final BntTrackVisual track;
     private final BntPieceVisual pieces;
     private boolean hidden;
+    @Nullable
+    private BlockState seenState;
     private int trim;
     private BntShaftEnds shafts = BntShaftEnds.BOTH;
     @Nullable
@@ -129,20 +131,24 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
             resting = far;
             dirty = true;
         }
-        boolean physics = BntFlangedCogwheelBlock.physics(blockEntity.getBlockState());
-        if (physics != hidden) {
-            hidden = physics;
-            dirty = true;
-        }
-        int trim = BntCogwheelWidth.trim(blockEntity.getBlockState());
-        if (trim != this.trim) {
-            this.trim = trim;
-            dirty = true;
-        }
-        BntShaftEnds shafts = BntCogwheelShafts.ends(blockEntity.getBlockState());
-        if (shafts != this.shafts) {
-            this.shafts = shafts;
-            dirty = true;
+        BlockState state = blockEntity.getBlockState();
+        if (state != seenState) {
+            seenState = state;
+            boolean physics = BntFlangedCogwheelBlock.physics(state);
+            if (physics != hidden) {
+                hidden = physics;
+                dirty = true;
+            }
+            int trim = BntCogwheelWidth.trim(state);
+            if (trim != this.trim) {
+                this.trim = trim;
+                dirty = true;
+            }
+            BntShaftEnds shafts = BntCogwheelShafts.ends(state);
+            if (shafts != this.shafts) {
+                this.shafts = shafts;
+                dirty = true;
+            }
         }
         BntCogwheels.drawResting(resting);
         try {
@@ -154,13 +160,14 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
             if (relight) {
                 packedLight = LevelRenderer.getLightColor(level, pos);
             }
+            boolean inView = hidden && !resting && BntFlywheel.visible(blockEntity, PIECE_BOUNDS);
             if (cog != null) {
-                drawCog(partialTick);
+                drawCog(partialTick, inView);
             }
             relight = false;
             if (hidden && !leverHidden() && BntSuspension.hasPiece(blockEntity)) {
-                if (fresh || !pieces.showing() || !resting && BntFlywheel.visible(blockEntity, PIECE_BOUNDS)) {
-                    pieces.frame(partialTick, packedLight);
+                if (fresh || !pieces.showing() || inView) {
+                    pieces.frame(partialTick, packedLight, fresh);
                 }
             } else {
                 pieces.hide();
@@ -193,10 +200,10 @@ public final class BntCogwheelVisual extends KineticBlockEntityVisual<KineticBlo
         }
     }
 
-    private void drawCog(float partialTick) {
+    private void drawCog(float partialTick, boolean inView) {
         RotatingInstance instance = cog;
         boolean changed = false;
-        if (hidden && !resting || Double.isNaN(shiftX)) {
+        if (inView || Double.isNaN(shiftX)) {
             Vec3 shift = BntCogwheels.getModelTranslation(blockEntity, partialTick);
             if (shift.x != shiftX || shift.y != shiftY || shift.z != shiftZ) {
                 shiftX = shift.x;
