@@ -208,6 +208,7 @@ modrinth {
         required.project 'sable'
         required.project 'create-bits-n-bobs'
         required.project 'create-aeronautics'
+        incompatible.project 'create-bits-n-tracks'
     }
 }
 
@@ -233,6 +234,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
     mainFile.addJavaVersion('Java 21')
     mainFile.addEnvironment('Client', 'Server')
     mainFile.addRequirement('create', 'sable', 'create-bits-n-bobs', 'create-aeronautics')
+    mainFile.addIncompatibility('create-bits-n-tracks')
     mainFile.withAdditionalFile(tasks.sourcesJar)
     doFirst {
         if (!changelogSection(mod_version)) {
