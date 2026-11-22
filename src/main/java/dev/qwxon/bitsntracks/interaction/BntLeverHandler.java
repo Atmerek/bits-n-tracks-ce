@@ -2,6 +2,7 @@ package dev.qwxon.bitsntracks.interaction;
 
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackPlane;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -41,6 +42,26 @@ public final class BntLeverHandler {
                 if (payload.axis() >= 0 && payload.axis() < Axis.values().length) {
                     int steps = Math.max(-MAX_STEPS, Math.min(MAX_STEPS, payload.steps()));
                     CogAlignmentLeverItem.nudge(level, player, pos, Axis.values()[payload.axis()], steps, payload.wholeTrack());
+                }
+            }
+            case BntLeverPayload.PIVOT -> {
+                if (payload.axis() >= 0 && payload.axis() < Axis.values().length) {
+                    int steps = Math.max(-MAX_STEPS, Math.min(MAX_STEPS, payload.steps()));
+                    CogAlignmentLeverItem.movePivot(level, player, pos, Axis.values()[payload.axis()], steps, payload.wholeTrack());
+                }
+            }
+            case BntLeverPayload.TRACK_PLANE -> {
+                if (payload.steps() != 0 && BntTrackPlane.set(level, pos, payload.steps() > 0)) {
+                    BntToolSounds.toggle(level, pos, payload.steps() > 0);
+                } else {
+                    BntToolSounds.refuse(player);
+                }
+            }
+            case BntLeverPayload.TRACK_FIT -> {
+                if (payload.steps() != 0 && BntTrackPlane.ignore(level, pos, payload.steps() < 0)) {
+                    BntToolSounds.toggle(level, pos, payload.steps() > 0);
+                } else {
+                    BntToolSounds.refuse(player);
                 }
             }
             case BntLeverPayload.VISIBILITY -> CogAlignmentLeverItem.toggleVisibility(level, player, pos);

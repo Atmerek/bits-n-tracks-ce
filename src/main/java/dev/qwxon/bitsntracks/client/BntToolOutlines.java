@@ -83,10 +83,22 @@ public final class BntToolOutlines {
         switch (mode) {
             case OFFSET -> {
                 BlockPos selected = BntToolState.leverCog;
-                Set<BlockPos> chosen = selected == null ? Set.of() : wholeTrack ? movedWith(level, selected) : withFollowers(level, selected);
+                Set<BlockPos> chosen = selected == null ? Set.of()
+                    : BntToolState.onTrackRow(level, selected) ? trackWithPartners(level, selected)
+                    : BntToolState.onFitRow(level, selected) ? withPartner(level, selected)
+                    : wholeTrack ? movedWith(level, selected) : withFollowers(level, selected);
                 selected(level, chosen, BntToolVisuals.SELECTED);
                 if (aimed != null && !chosen.contains(aimed)) {
                     hover(level, wholeTrack ? movedWith(level, aimed) : withFollowers(level, aimed));
+                }
+            }
+            case PIVOT -> {
+                BlockPos selected = BntToolState.leverCog;
+                Set<BlockPos> chosen = selected == null ? Set.of() : pivotedWith(level, selected, wholeTrack);
+                pieces(level, chosen, "bnt_tool_selected_", BntToolVisuals.SELECTED, BntToolVisuals.BOLD);
+                BlockPos piece = BntToolInput.aimedPivot(level);
+                if (piece != null && !chosen.contains(piece)) {
+                    pieces(level, pivotedWith(level, piece, wholeTrack), "bnt_tool_hover_", BntToolVisuals.HOVER, BntToolVisuals.THIN);
                 }
             }
             case ROUTE -> {
@@ -192,6 +204,19 @@ public final class BntToolOutlines {
         }
     }
 
+    private static void pieces(ClientLevel level, Set<BlockPos> positions, String slot, int colour, float width) {
+        int index = 0;
+        for (BlockPos pos : positions) {
+            if (index >= MAX_OUTLINES) {
+                return;
+            }
+            AABB box = BntPiecePicker.bounds(level, pos);
+            if (box != null) {
+                BntToolVisuals.box(slot + index++, box.inflate(width), colour, width);
+            }
+        }
+    }
+
     private static Set<BlockPos> withPartner(ClientLevel level, BlockPos pos) {
         Set<BlockPos> positions = new LinkedHashSet<>();
         positions.add(pos);
@@ -233,6 +258,12 @@ public final class BntToolOutlines {
     private static Set<BlockPos> suspendedOnTrack(ClientLevel level, BlockPos pos) {
         Set<BlockPos> positions = trackWithPartners(level, pos);
         positions.removeIf(nodePos -> !BntSuspension.hasPiece(level.getBlockEntity(nodePos)));
+        return positions;
+    }
+
+    private static Set<BlockPos> pivotedWith(ClientLevel level, BlockPos pos, boolean wholeTrack) {
+        Set<BlockPos> positions = wholeTrack ? trackWithPartners(level, pos) : withFollowers(level, pos);
+        positions.removeIf(nodePos -> !CogAlignmentLeverItem.pivotable(level.getBlockEntity(nodePos)));
         return positions;
     }
 

@@ -30,7 +30,7 @@ public final class BntBogieRenderer {
         Axis axis = BntSuspension.axis(be.getBlockState());
         Vec3 away = BntSuspension.across(axis).scale(-1.0);
         Vec3 shift = Vec3.atLowerCornerOf(BntSuspension.armEnd(be.getLevel(), be.getBlockPos(), axis, facing).subtract(be.getBlockPos()));
-        BntSuspensionParts.bogie(be, away, facing, wide, wide ? shift : Vec3.ZERO, new BntBogiePose(0.0, 0.0, 0.0, 0.0, drop),
+        BntSuspensionParts.bogie(be, away, facing, wide, wide ? shift : Vec3.ZERO, new BntBogiePose(0.0, 0.0, 0.0, 0.0, drop), Vec3.ZERO,
             BntSuspensionParts.emitter(ms.last(), buffer, true, fits ? GHOST : REFUSED, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY));
     }
 }

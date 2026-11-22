@@ -4,7 +4,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public final class BntNetwork {
-    private static final String VERSION = "4";
+    private static final String VERSION = "5";
 
     private BntNetwork() {
     }

@@ -15,6 +15,7 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltRefit;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChainEngagement;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackPlane;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.index.BitsNTracksItems;
 import dev.qwxon.bitsntracks.physics.BntCogwheelCollision;
@@ -54,6 +55,11 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     private int beltLinks = BntBeltLinks.UNSET;
     private double beltFit;
     private int grousers;
+    private boolean trackStraight;
+    private boolean trackFitIgnored;
+    private float pivotOffsetX;
+    private float pivotOffsetY;
+    private float pivotOffsetZ;
     private long drawnDropTick = Long.MIN_VALUE;
     private double drawnDrop;
     private double lastDrawnDrop;
@@ -170,6 +176,12 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         this.beltLinks = tag.getInt("BntBeltLinks");
         this.beltFit = tag.getDouble("BntBeltFit");
         this.grousers = Math.max(0, tag.getInt("BntGrousers"));
+        this.trackStraight = tag.getBoolean("BntTrackStraight");
+        this.trackFitIgnored = tag.getBoolean("BntTrackFitIgnored");
+        BntTrackPlane.invalidate();
+        this.pivotOffsetX = tag.getFloat("BntPivotOffsetX");
+        this.pivotOffsetY = tag.getFloat("BntPivotOffsetY");
+        this.pivotOffsetZ = tag.getFloat("BntPivotOffsetZ");
         this.bnt$setSuspension(tag.getInt("BntSuspensionSide"), tag.getInt("BntSuspensionFacing"));
         boolean current = tag.contains("BntTuningLevels");
         CompoundTag levels = tag.getCompound(current ? "BntTuningLevels" : "BntTuning");
@@ -222,6 +234,17 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
         tag.putDouble("BntBeltFit", this.beltFit);
         if (this.grousers > 0) {
             tag.putInt("BntGrousers", this.grousers);
+        }
+        if (this.trackStraight) {
+            tag.putBoolean("BntTrackStraight", true);
+        }
+        if (this.trackFitIgnored) {
+            tag.putBoolean("BntTrackFitIgnored", true);
+        }
+        if (this.pivotOffsetX != 0.0F || this.pivotOffsetY != 0.0F || this.pivotOffsetZ != 0.0F) {
+            tag.putFloat("BntPivotOffsetX", this.pivotOffsetX);
+            tag.putFloat("BntPivotOffsetY", this.pivotOffsetY);
+            tag.putFloat("BntPivotOffsetZ", this.pivotOffsetZ);
         }
         if (this.suspensionSide != 0) {
             tag.putInt("BntSuspensionSide", this.suspensionSide);
@@ -419,6 +442,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public void bnt$setAlignmentOffsetX(float x) {
         this.alignmentOffsetX = x;
+        BntTrackPlane.invalidate();
     }
 
     @Override
@@ -429,6 +453,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public void bnt$setAlignmentOffsetY(float y) {
         this.alignmentOffsetY = y;
+        BntTrackPlane.invalidate();
     }
 
     @Override
@@ -439,6 +464,7 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public void bnt$setAlignmentOffsetZ(float z) {
         this.alignmentOffsetZ = z;
+        BntTrackPlane.invalidate();
     }
 
     @Override
@@ -489,6 +515,50 @@ public class BntFlangedCogwheelBlockEntity extends SimpleKineticBlockEntity impl
     @Override
     public void bnt$setGrousers(int grousers) {
         this.grousers = Math.max(0, grousers);
+    }
+
+    @Override
+    public boolean bnt$isTrackStraight() {
+        return this.trackStraight;
+    }
+
+    @Override
+    public void bnt$setTrackStraight(boolean straight) {
+        this.trackStraight = straight;
+        BntTrackPlane.invalidate();
+    }
+
+    @Override
+    public boolean bnt$isTrackFitIgnored() {
+        return this.trackFitIgnored;
+    }
+
+    @Override
+    public void bnt$setTrackFitIgnored(boolean ignored) {
+        this.trackFitIgnored = ignored;
+        BntTrackPlane.invalidate();
+    }
+
+    @Override
+    public float bnt$getPivotOffsetX() {
+        return this.pivotOffsetX;
+    }
+
+    @Override
+    public float bnt$getPivotOffsetY() {
+        return this.pivotOffsetY;
+    }
+
+    @Override
+    public float bnt$getPivotOffsetZ() {
+        return this.pivotOffsetZ;
+    }
+
+    @Override
+    public void bnt$setPivotOffset(float x, float y, float z) {
+        this.pivotOffsetX = x;
+        this.pivotOffsetY = y;
+        this.pivotOffsetZ = z;
     }
 
     @Override

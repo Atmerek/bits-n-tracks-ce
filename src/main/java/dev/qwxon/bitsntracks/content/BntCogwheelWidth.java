@@ -3,7 +3,9 @@ package dev.qwxon.bitsntracks.content;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackPlane;
 import java.util.Collection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -77,6 +79,12 @@ public final class BntCogwheelWidth {
         CogwheelChain chain = level == null ? null : BntChains.chainAt(level, be.getBlockPos());
         if (chain == null) {
             return quarters(be.getBlockState());
+        }
+        if (be instanceof KineticBlockEntityPhysicsAccess access && access.bnt$isTrackStraight()) {
+            int stretched = BntTrackPlane.quarters(level, be.getBlockPos());
+            if (stretched > 0) {
+                return stretched;
+            }
         }
         int widest = 0;
         BlockPos origin = be.getBlockPos();

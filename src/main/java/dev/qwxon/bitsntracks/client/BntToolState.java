@@ -6,6 +6,7 @@ import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackPlane;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.interaction.BntBeltTensionPayload;
 import dev.qwxon.bitsntracks.interaction.BntLeverPayload;
@@ -106,19 +107,55 @@ public final class BntToolState {
         return Direction.fromAxisAndDirection(axis, local.get(axis) < 0.0 ? AxisDirection.NEGATIVE : AxisDirection.POSITIVE);
     }
 
+    static int pivotRow(ClientLevel level, BlockPos pos) {
+        Axis blockAxis = blockAxis(level, pos);
+        return blockAxis == null ? 0 : Math.min(axisRow, axes(blockAxis).length - 1);
+    }
+
+    static void cyclePivot(ClientLevel level, BlockPos pos, int direction) {
+        Axis blockAxis = blockAxis(level, pos);
+        if (blockAxis != null) {
+            axisRow = Math.floorMod(pivotRow(level, pos) + direction, axes(blockAxis).length);
+        }
+    }
+
+    static boolean hasTrackRow(ClientLevel level, BlockPos pos) {
+        return BntTrackPlane.onTrack(level, pos);
+    }
+
+    static boolean hasFitRow(ClientLevel level, BlockPos pos) {
+        return hasTrackRow(level, pos) && BntTrackPlane.straight(level, pos);
+    }
+
+    static boolean onTrackRow(ClientLevel level, BlockPos pos) {
+        Axis blockAxis = blockAxis(level, pos);
+        return blockAxis != null && axisRow(level, pos) == axes(blockAxis).length;
+    }
+
+    static boolean onFitRow(ClientLevel level, BlockPos pos) {
+        Axis blockAxis = blockAxis(level, pos);
+        return blockAxis != null && axisRow(level, pos) == axes(blockAxis).length + 1;
+    }
+
+    private static boolean rowAllowed(ClientLevel level, BlockPos pos, Axis blockAxis, int row) {
+        Axis[] axes = axes(blockAxis);
+        return row < axes.length ? axisAllowed(level, pos, blockAxis, axes[row])
+            : row == axes.length ? hasTrackRow(level, pos) : hasFitRow(level, pos);
+    }
+
     static int axisRow(ClientLevel level, BlockPos pos) {
         Axis blockAxis = blockAxis(level, pos);
         if (blockAxis == null) {
             return 0;
         }
-        Axis[] axes = axes(blockAxis);
-        for (int i = 0; i < axes.length; i++) {
-            int row = Math.floorMod(axisRow + i, axes.length);
-            if (axisAllowed(level, pos, blockAxis, axes[row])) {
+        int rows = axes(blockAxis).length + 2;
+        for (int i = 0; i < rows; i++) {
+            int row = Math.floorMod(axisRow + i, rows);
+            if (rowAllowed(level, pos, blockAxis, row)) {
                 return row;
             }
         }
-        return axisRow;
+        return 0;
     }
 
     static void cycleAxis(ClientLevel level, BlockPos pos, int direction) {
@@ -126,11 +163,11 @@ public final class BntToolState {
         if (blockAxis == null) {
             return;
         }
-        Axis[] axes = axes(blockAxis);
+        int rows = axes(blockAxis).length + 2;
         int row = axisRow(level, pos);
-        for (int i = 1; i <= axes.length; i++) {
-            int next = Math.floorMod(row + i * direction, axes.length);
-            if (axisAllowed(level, pos, blockAxis, axes[next])) {
+        for (int i = 1; i <= rows; i++) {
+            int next = Math.floorMod(row + i * direction, rows);
+            if (rowAllowed(level, pos, blockAxis, next)) {
                 axisRow = next;
                 return;
             }
@@ -194,7 +231,8 @@ public final class BntToolState {
         ItemStack stack = player.getMainHandItem();
         if (stack.getItem() instanceof CogAlignmentLeverItem) {
             BntLeverMode mode = CogAlignmentLeverItem.mode(stack);
-            if (mode != BntLeverMode.OFFSET || !validCog(level, player, leverCog)) {
+            if (mode != BntLeverMode.OFFSET && mode != BntLeverMode.PIVOT || !validCog(level, player, leverCog)
+                || mode == BntLeverMode.PIVOT && leverCog != null && !CogAlignmentLeverItem.pivotable(level.getBlockEntity(leverCog))) {
                 selectLeverCog(null);
             }
             if (mode != BntLeverMode.TENSION || leverChain != null
@@ -227,7 +265,15 @@ public final class BntToolState {
         ClientLevel level = Minecraft.getInstance().level;
         if (leverCog != null && pendingOffset != 0 && level != null) {
             Axis blockAxis = blockAxis(level, leverCog);
-            if (blockAxis != null) {
+            if (blockAxis != null && CogAlignmentLeverItem.mode(stack) == BntLeverMode.PIVOT) {
+                Axis axis = axes(blockAxis)[pivotRow(level, leverCog)];
+                PacketDistributor.sendToServer(new BntLeverPayload(
+                    leverCog, BntLeverPayload.PIVOT, axis.ordinal(), pendingOffset, CogAlignmentLeverItem.wholeTrack(stack)));
+            } else if (blockAxis != null && onTrackRow(level, leverCog)) {
+                PacketDistributor.sendToServer(new BntLeverPayload(leverCog, BntLeverPayload.TRACK_PLANE, 0, pendingOffset, true));
+            } else if (blockAxis != null && onFitRow(level, leverCog)) {
+                PacketDistributor.sendToServer(new BntLeverPayload(leverCog, BntLeverPayload.TRACK_FIT, 0, pendingOffset, false));
+            } else if (blockAxis != null) {
                 Axis axis = axes(blockAxis)[axisRow(level, leverCog)];
                 PacketDistributor.sendToServer(new BntLeverPayload(
                     leverCog, BntLeverPayload.OFFSET, axis.ordinal(), pendingOffset, CogAlignmentLeverItem.wholeTrack(stack)));

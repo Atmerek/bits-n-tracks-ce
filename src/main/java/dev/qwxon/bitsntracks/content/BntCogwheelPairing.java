@@ -87,7 +87,9 @@ public final class BntCogwheelPairing {
         to.bnt$setAlignmentOffsetX(from.bnt$getAlignmentOffsetX());
         to.bnt$setAlignmentOffsetY(from.bnt$getAlignmentOffsetY());
         to.bnt$setAlignmentOffsetZ(from.bnt$getAlignmentOffsetZ());
+        to.bnt$setPivotOffset(from.bnt$getPivotOffsetX(), from.bnt$getPivotOffsetY(), from.bnt$getPivotOffsetZ());
         to.bnt$setHiddenByLever(from.bnt$isHiddenByLever());
+        to.bnt$setTrackFitIgnored(from.bnt$isTrackFitIgnored());
         to.bnt$setTrackRouteSide(from.bnt$getTrackRouteSide());
         to.bnt$setExtension(from.bnt$getExtension());
         to.bnt$setLiftedUp(from.bnt$isLiftedUp());

@@ -2,6 +2,7 @@ package dev.qwxon.bitsntracks.content;
 
 public enum BntLeverMode {
     OFFSET("offset"),
+    PIVOT("pivot"),
     ROUTE("route"),
     TENSION("tension"),
     VISIBILITY("visibility"),

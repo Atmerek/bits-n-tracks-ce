@@ -171,6 +171,7 @@ final class BntTrackVisual implements BntTrackSink {
             hash = 31 * hash + BntCogwheelWidth.quarters(level.getBlockState(nodePos));
             hash = 31 * hash + node.side();
         }
+        hash = 31 * hash + BntCogwheelWidth.chainQuarters(be);
         hash = 31 * hash + BntBeltLinks.at(level, be.getBlockPos());
         hash = 31 * hash + Float.hashCode(BntBeltTension.at(level, be.getBlockPos()));
         return 31 * hash + Arrays.hashCode(BntBeltDrape.surfaceKey(level, be.getBlockPos()));

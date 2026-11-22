@@ -10,6 +10,7 @@ import dev.qwxon.bitsntracks.content.BntLeverMode;
 import dev.qwxon.bitsntracks.content.CogAlignmentLeverItem;
 import dev.qwxon.bitsntracks.content.SuspensionToolItem;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltTension;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackPlane;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.interaction.BntCogwheelInteraction;
 import dev.qwxon.bitsntracks.interaction.BntToolMessages;
@@ -36,6 +37,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -193,6 +195,47 @@ public final class BntToolHud {
                         boolean allowed = BntToolState.axisAllowed(level, shown, blockAxis, axes[i]);
                         int colour = !allowed ? DIM : i == current ? ACCENT : selected == null ? LABEL : TEXT;
                         rows.add(Row.value(Component.translatable(BntToolState.axisKey(blockAxis, axes[i])), pixels(offset(access, axes[i])), colour, i == current));
+                    }
+                    if (BntToolState.hasTrackRow(level, shown)) {
+                        boolean onRow = current == axes.length;
+                        Component plane = Component.translatable(BntTrackPlane.straight(level, shown)
+                            ? "bits_n_tracks.tool_panel.track.straight"
+                            : "bits_n_tracks.tool_panel.track.follows");
+                        rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.track"), plane,
+                            onRow ? ACCENT : selected == null ? LABEL : TEXT, onRow));
+                    }
+                    if (BntToolState.hasFitRow(level, shown)) {
+                        boolean onRow = current == axes.length + 1;
+                        Component fit = Component.translatable(BntTrackPlane.ignored(level, shown)
+                            ? "bits_n_tracks.tool_panel.fit.ignored"
+                            : "bits_n_tracks.tool_panel.fit.counted");
+                        rows.add(Row.value(Component.translatable("bits_n_tracks.tool_panel.row.fit"), fit,
+                            onRow ? ACCENT : selected == null ? LABEL : TEXT, onRow));
+                    }
+                    if (selected != null && current >= axes.length) {
+                        actions.add(action("switch", SCROLL));
+                        actions.add(action("axis", SHIFT, SCROLL));
+                    } else if (selected != null) {
+                        actions.add(action("move", SCROLL));
+                        actions.add(action("axis", SHIFT, SCROLL));
+                    } else {
+                        actions.add(action("select", RMB));
+                    }
+                }
+            }
+            case PIVOT -> {
+                BlockPos selected = BntToolState.leverCog;
+                BlockPos shown = selected != null ? selected : BntToolInput.aimedPivot(level);
+                Axis blockAxis = shown == null ? null : BntToolState.blockAxis(level, shown);
+                if (blockAxis == null || !CogAlignmentLeverItem.pivotable(level.getBlockEntity(shown))) {
+                    rows.add(none("arm"));
+                } else {
+                    Axis[] axes = BntToolState.axes(blockAxis);
+                    int current = selected == null ? -1 : BntToolState.pivotRow(level, selected);
+                    Vec3 pivot = BntSuspension.pivotOffset(level.getBlockEntity(shown));
+                    for (int i = 0; i < axes.length; i++) {
+                        int colour = i == current ? ACCENT : selected == null ? LABEL : TEXT;
+                        rows.add(Row.value(Component.translatable(BntToolState.axisKey(blockAxis, axes[i])), pixels((float)pivot.get(axes[i])), colour, i == current));
                     }
                     if (selected != null) {
                         actions.add(action("move", SCROLL));

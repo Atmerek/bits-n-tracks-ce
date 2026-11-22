@@ -141,6 +141,7 @@ public final class BntToolInput {
     private static boolean consumes(ItemStack stack, boolean lever, boolean tuner, boolean focused) {
         return focused
             || lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.OFFSET && BntToolState.leverCog != null
+            || lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.PIVOT && BntToolState.leverCog != null
             || lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.TENSION && BntToolState.leverChain != null
             || tuner && BntToolState.tunerCog != null;
     }
@@ -152,6 +153,13 @@ public final class BntToolInput {
         } else if (lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.OFFSET) {
             if (Screen.hasShiftDown()) {
                 BntToolState.cycleAxis(level, BntToolState.leverCog, steps < 0 ? 1 : -1);
+                BntToolCues.navigate(BntToolCues.AXIS);
+            } else {
+                BntToolState.addOffsetSteps(steps);
+            }
+        } else if (lever && CogAlignmentLeverItem.mode(stack) == BntLeverMode.PIVOT) {
+            if (Screen.hasShiftDown()) {
+                BntToolState.cyclePivot(level, BntToolState.leverCog, steps < 0 ? 1 : -1);
                 BntToolCues.navigate(BntToolCues.AXIS);
             } else {
                 BntToolState.addOffsetSteps(steps);
@@ -184,6 +192,17 @@ public final class BntToolInput {
                 }
                 if (fresh) {
                     BntToolState.selectLeverCog(cog == null || cog.equals(BntToolState.leverCog) ? null : cog.immutable());
+                    BntToolCues.select(BntToolState.leverCog != null);
+                }
+                return true;
+            }
+            case PIVOT -> {
+                BlockPos arm = aimedPivot(level);
+                if (arm == null && BntToolState.leverCog == null) {
+                    return false;
+                }
+                if (fresh) {
+                    BntToolState.selectLeverCog(arm == null || arm.equals(BntToolState.leverCog) ? null : arm.immutable());
                     BntToolCues.select(BntToolState.leverCog != null);
                 }
                 return true;
@@ -318,6 +337,16 @@ public final class BntToolInput {
     static BlockPos aimedCog(ClientLevel level) {
         BlockPos pos = aimedBlock(level);
         return pos != null && BntCogwheels.isOwnCogwheel(level, pos) ? pos : null;
+    }
+
+    @Nullable
+    static BlockPos aimedPivot(ClientLevel level) {
+        BlockPos piece = BntPiecePicker.aimed(level);
+        if (piece != null) {
+            return piece;
+        }
+        BlockPos cog = aimedCog(level);
+        return cog != null && CogAlignmentLeverItem.pivotable(level.getBlockEntity(cog)) ? cog : null;
     }
 
     @Nullable

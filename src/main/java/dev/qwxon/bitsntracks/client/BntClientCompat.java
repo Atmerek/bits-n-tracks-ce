@@ -4,11 +4,11 @@ import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.RenderedChainPathNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.render.CogwheelChainRenderGeometryBuilder.ChainSegment;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import dev.qwxon.bitsntracks.access.KineticBlockEntityPhysicsAccess;
 import dev.qwxon.bitsntracks.content.BntCogwheelPairing;
 import dev.qwxon.bitsntracks.content.BntCogwheels;
 import dev.qwxon.bitsntracks.content.suspension.BntSuspension;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntBeltLinks;
+import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntTrackPlane;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -132,12 +132,7 @@ public class BntClientCompat {
             return Vec3.ZERO;
         }
 
-        Vec3 displacement = Vec3.ZERO;
-        if (nodeBe instanceof KineticBlockEntityPhysicsAccess access) {
-            displacement = new Vec3(
-                access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ()
-            );
-        }
+        Vec3 displacement = BntTrackPlane.alignment(level, controllerBe.getBlockPos(), nodeBe);
 
         if (level.isClientSide && BntCogwheels.isPhysicsEnabled(nodeBe)) {
             float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);

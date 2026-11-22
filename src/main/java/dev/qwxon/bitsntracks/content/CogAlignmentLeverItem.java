@@ -236,8 +236,13 @@ public class CogAlignmentLeverItem extends Item {
                 nodeAccess.bnt$setAlignmentOffsetX(0.0F);
                 nodeAccess.bnt$setAlignmentOffsetY(0.0F);
                 nodeAccess.bnt$setAlignmentOffsetZ(0.0F);
+                nodeAccess.bnt$setPivotOffset(0.0F, 0.0F, 0.0F);
                 nodeAccess.bnt$setHiddenByLever(false);
                 nodeAccess.bnt$setTrackRouteSide(-1);
+                nodeAccess.bnt$setTrackFitIgnored(false);
+                if (wholeTrack) {
+                    nodeAccess.bnt$setTrackStraight(false);
+                }
                 for (BntTuning setting : BntTuning.values()) {
                     nodeAccess.bnt$setTuning(setting, BntTuning.DEFAULT);
                 }
@@ -252,6 +257,55 @@ public class CogAlignmentLeverItem extends Item {
         BntToolMessages.send(player, Component.translatable(wholeTrack
             ? "bits_n_tracks.tool_panel.message.reset"
             : "bits_n_tracks.tool_panel.message.reset.single"));
+    }
+
+    public static boolean pivotable(BlockEntity be) {
+        return BntSuspension.hasPiece(be);
+    }
+
+    public static void movePivot(Level level, Player player, BlockPos pos, Axis moveAxis, int steps, boolean wholeTrack) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (steps == 0 || !pivotable(be)) {
+            BntToolSounds.refuse(player);
+            return;
+        }
+        float delta = STEP * steps;
+        Set<BlockPos> targets = withWidePartners(level, wholeTrack ? collectChainPositions(level, pos) : Set.of(pos));
+        Map<BlockPos, Integer> engagementBefore = BntChainEngagement.snapshot(level, pos);
+        boolean changed = false;
+        for (BlockPos nodePos : targets) {
+            BlockEntity nodeBe = level.getBlockEntity(nodePos);
+            if (!pivotable(nodeBe) || !(nodeBe instanceof KineticBlockEntity kinetic)
+                || !(nodeBe instanceof KineticBlockEntityPhysicsAccess access)) {
+                continue;
+            }
+            Vec3 before = BntSuspension.pivotOffset(nodeBe);
+            Vec3 after = before.with(moveAxis, Mth.clamp(before.get(moveAxis) + delta, -LIMIT, LIMIT));
+            access.bnt$setPivotOffset((float)after.x, (float)after.y, (float)after.z);
+            if (BntSuspension.isBogie(nodeBe) && moveAxis != Axis.Y && moveAxis != BntSuspension.axis(nodeBe.getBlockState())) {
+                float moved = (float)(after.get(moveAxis) - before.get(moveAxis));
+                if (moveAxis == Axis.X) {
+                    access.bnt$setAlignmentOffsetX(access.bnt$getAlignmentOffsetX() + moved);
+                } else {
+                    access.bnt$setAlignmentOffsetZ(access.bnt$getAlignmentOffsetZ() + moved);
+                }
+            }
+            if (!after.equals(before)) {
+                changed = true;
+                kinetic.setChanged();
+                kinetic.sendData();
+            }
+        }
+        BntChainEngagement.refresh(level, pos, engagementBefore);
+        BntBeltRefit.refit(level, pos);
+        if (!changed) {
+            BntToolSounds.refuse(player);
+            return;
+        }
+        BntToolSounds.adjust(level, pos, (float)((BntSuspension.pivotOffset(be).get(moveAxis) + LIMIT) / (2.0F * LIMIT)));
+        if (wholeTrack) {
+            BntToolMessages.send(player, Component.translatable("bits_n_tracks.tool_panel.message.moved", BntCogwheelPairing.countWheels(level, targets)));
+        }
     }
 
     private static boolean shiftAxis(KineticBlockEntityPhysicsAccess access, Axis axis, float delta, float limit, boolean bogie) {

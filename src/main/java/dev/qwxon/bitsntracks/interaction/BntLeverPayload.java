@@ -14,6 +14,9 @@ public record BntLeverPayload(BlockPos pos, int action, int axis, int steps, boo
     public static final int RESET = 3;
     public static final int WIDTH = 4;
     public static final int SHAFT = 5;
+    public static final int TRACK_PLANE = 6;
+    public static final int PIVOT = 7;
+    public static final int TRACK_FIT = 8;
 
     public static final CustomPacketPayload.Type<BntLeverPayload> TYPE =
         new CustomPacketPayload.Type<>(BitsNTracks.asResource("lever"));

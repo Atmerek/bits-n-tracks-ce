@@ -453,6 +453,7 @@ public final class BntSuspension {
 
     private static void clear(KineticBlockEntity kinetic) {
         ((KineticBlockEntityPhysicsAccess)kinetic).bnt$setSuspension(0, 0);
+        ((KineticBlockEntityPhysicsAccess)kinetic).bnt$setPivotOffset(0.0F, 0.0F, 0.0F);
         kinetic.setChanged();
         kinetic.sendData();
     }
@@ -487,8 +488,9 @@ public final class BntSuspension {
         Vec3 across = across(axis(be.getBlockState()));
         KineticBlockEntityPhysicsAccess access = (KineticBlockEntityPhysicsAccess)be;
         Vec3 alignment = new Vec3(access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
-        double reachAcross = alignment.dot(across) - side * PIVOT;
-        double reachUp = alignment.y - PIVOT;
+        Vec3 pivot = pivotOffset(be);
+        double reachAcross = alignment.subtract(pivot).dot(across) - side * PIVOT;
+        double reachUp = alignment.y - pivot.y - PIVOT;
         double length = Math.hypot(reachAcross, reachUp);
         double downCap = length + reachUp;
         double ride = 0.0;
@@ -500,6 +502,12 @@ public final class BntSuspension {
             ride = Math.max(0.0, SAG - downCap);
         }
         return new Arm(across, side, reachAcross, reachUp, length, -reachUp, downCap, ride);
+    }
+
+    public static Vec3 pivotOffset(BlockEntity be) {
+        return be instanceof KineticBlockEntityPhysicsAccess access
+            ? new Vec3(access.bnt$getPivotOffsetX(), access.bnt$getPivotOffsetY(), access.bnt$getPivotOffsetZ())
+            : Vec3.ZERO;
     }
 
     private static double halfwayToFacing(BlockEntity be, int side) {
@@ -519,11 +527,13 @@ public final class BntSuspension {
 
     private static Arm bogieArm(BlockEntity be, int side) {
         int toward = Integer.signum(side);
-        double reach = BOGIE_REACH + bogieSpread(be);
-        double length = Math.hypot(reach, BOGIE_RISE);
+        Vec3 across = across(axis(be.getBlockState()));
+        double reachAcross = -toward * (BOGIE_REACH + bogieSpread(be));
+        double reachUp = -BOGIE_RISE - pivotOffset(be).y;
+        double length = Math.hypot(reachAcross, reachUp);
         double radius = drawnRadius(be.getBlockState());
-        double droop = Math.max(0.0, Math.sqrt(Math.max(0.0, length * length - radius * radius)) - BOGIE_RISE);
-        return new Arm(across(axis(be.getBlockState())), toward, -toward * reach, -BOGIE_RISE, length, 2.0 * BOGIE_RISE, droop, SAG);
+        double droop = Math.max(0.0, Math.sqrt(Math.max(0.0, length * length - radius * radius)) + reachUp);
+        return new Arm(across, toward, reachAcross, reachUp, length, Math.max(0.0, BOGIE_RISE - reachUp), droop, SAG);
     }
 
     private static double drawnRadius(BlockState state) {
@@ -536,7 +546,7 @@ public final class BntSuspension {
         }
         Vec3 across = across(axis(be.getBlockState()));
         int toward = Integer.signum(access.bnt$getSuspensionSide());
-        return -toward * (across.x * access.bnt$getAlignmentOffsetX() + across.z * access.bnt$getAlignmentOffsetZ());
+        return -toward * (across.x * access.bnt$getAlignmentOffsetX() + across.z * access.bnt$getAlignmentOffsetZ() - across.dot(pivotOffset(be)));
     }
 
     public static double closestBogieSpread(BlockState state) {
@@ -549,7 +559,7 @@ public final class BntSuspension {
         for (KineticBlockEntity cog : cogs) {
             if (cog instanceof KineticBlockEntityPhysicsAccess access) {
                 Vec3 across = across(axis(cog.getBlockState()));
-                double offset = -Integer.signum(access.bnt$getSuspensionSide()) * spread;
+                double offset = -Integer.signum(access.bnt$getSuspensionSide()) * spread + across.dot(pivotOffset(cog));
                 access.bnt$setAlignmentOffsetX((float)(across.x * offset));
                 access.bnt$setAlignmentOffsetZ((float)(across.z * offset));
                 cog.setChanged();

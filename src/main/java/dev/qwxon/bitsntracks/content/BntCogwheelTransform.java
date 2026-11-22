@@ -26,6 +26,8 @@ public final class BntCogwheelTransform {
         access.bnt$setAlignmentOffsetX((float)offset.x);
         access.bnt$setAlignmentOffsetY((float)offset.y);
         access.bnt$setAlignmentOffsetZ((float)offset.z);
+        Vec3 pivot = moved(transform, new Vec3(access.bnt$getPivotOffsetX(), access.bnt$getPivotOffsetY(), access.bnt$getPivotOffsetZ()));
+        access.bnt$setPivotOffset((float)pivot.x, (float)pivot.y, (float)pivot.z);
 
         int route = access.bnt$getTrackRouteSide();
         if (route >= 0 && route < Direction.values().length) {

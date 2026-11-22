@@ -90,6 +90,22 @@ public interface KineticBlockEntityPhysicsAccess {
 
     void bnt$setGrousers(int grousers);
 
+    boolean bnt$isTrackStraight();
+
+    void bnt$setTrackStraight(boolean straight);
+
+    boolean bnt$isTrackFitIgnored();
+
+    void bnt$setTrackFitIgnored(boolean ignored);
+
+    float bnt$getPivotOffsetX();
+
+    float bnt$getPivotOffsetY();
+
+    float bnt$getPivotOffsetZ();
+
+    void bnt$setPivotOffset(float x, float y, float z);
+
     long bnt$getDrawnDropTick();
 
     void bnt$advanceDrawnDrop(long gameTime, double sample, double rate);

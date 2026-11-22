@@ -226,9 +226,8 @@ public final class BntBeltLinks {
         BlockState state = level.getBlockState(nodePos);
         Vec3 centre = nodePos.getCenter().add(BntCogwheelPairing.seamOffset(state));
         BlockEntity be = level.getBlockEntity(nodePos);
-        if (be instanceof KineticBlockEntityPhysicsAccess access) {
-            centre = centre.add(
-                access.bnt$getAlignmentOffsetX(), access.bnt$getAlignmentOffsetY(), access.bnt$getAlignmentOffsetZ());
+        if (be != null) {
+            centre = centre.add(BntTrackPlane.alignment(level, controllerPos, be));
         }
         if (be instanceof KineticBlockEntity kinetic && parked) {
             centre = centre.add(BntSuspension.restDisplacement(kinetic));

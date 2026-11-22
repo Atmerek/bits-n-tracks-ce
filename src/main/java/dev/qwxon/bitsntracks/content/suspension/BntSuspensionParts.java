@@ -54,7 +54,8 @@ public final class BntSuspensionParts {
         Vec3 across = BntSuspension.across(axis);
         BlockPos end = be.getLevel() == null ? be.getBlockPos() : BntSuspension.armEnd(be.getLevel(), be.getBlockPos(), axis, facing);
         Vec3 shift = Vec3.atLowerCornerOf(end.subtract(be.getBlockPos()));
-        Vec3 pivot = CENTRE.add(shift).add(0.0, BntSuspension.PIVOT, 0.0).add(across.scale(side * BntSuspension.PIVOT));
+        Vec3 pivot = CENTRE.add(shift).add(0.0, BntSuspension.PIVOT, 0.0).add(across.scale(side * BntSuspension.PIVOT))
+            .add(BntSuspension.pivotOffset(be));
         boolean holder = side > 0 || be.getLevel() == null || !BntSuspension.sharesPivot(be.getLevel(), end, axis, side);
         arm(cog.add(shift), pivot, across, BntSuspension.along(axis), side, facing, holder, sink);
     }
@@ -101,11 +102,17 @@ public final class BntSuspensionParts {
             : BntSuspension.displacement(partner, BntCogwheels.getHeldVisualDrop(partner, partialTicks));
         double drop = Math.max(0.0, -access.bnt$getAlignmentOffsetY());
         double spread = away.x * access.bnt$getAlignmentOffsetX() + away.z * access.bnt$getAlignmentOffsetZ();
-        BntBogiePose pose = new BntBogiePose(spread + lead.dot(away), lead.y, trailing.dot(away) - spread, trailing.y, drop);
-        bogie(be, away, access.bnt$getSuspensionFacing(), wide, Vec3.ZERO, pose, sink);
+        double trailingSpread = partner instanceof KineticBlockEntityPhysicsAccess other
+            ? away.x * other.bnt$getAlignmentOffsetX() + away.z * other.bnt$getAlignmentOffsetZ()
+            : -spread;
+        Vec3 pivot = BntSuspension.pivotOffset(be);
+        Vec3 along = BntSuspension.along(axis);
+        BntBogiePose pose = new BntBogiePose(
+            spread + lead.dot(away), lead.y, trailing.dot(away) + trailingSpread, trailing.y, drop, pivot.dot(away), pivot.y);
+        bogie(be, away, access.bnt$getSuspensionFacing(), wide, Vec3.ZERO, pose, along.scale(pivot.dot(along)), sink);
     }
 
-    static void bogie(KineticBlockEntity be, Vec3 away, int facing, boolean wide, Vec3 shift, BntBogiePose bogie, Sink sink) {
+    static void bogie(KineticBlockEntity be, Vec3 away, int facing, boolean wide, Vec3 shift, BntBogiePose bogie, Vec3 axial, Sink sink) {
         Vec3 depth = BntSuspension.along(BntSuspension.axis(be.getBlockState())).scale(wide ? facing : -facing);
         Vec3 origin = CENTRE.add(shift);
         int model = wide ? WIDE_BOGIE : BOGIE;
@@ -119,13 +126,18 @@ public final class BntSuspensionParts {
             double b = bogie.affine[at + 1];
             double c = bogie.affine[at + 2];
             double d = bogie.affine[at + 3];
+            double tx = bogie.affine[at + 4];
+            double ty = bogie.affine[at + 5];
             double cos = bogie.turn[part * 2];
             double sin = bogie.turn[part * 2 + 1];
+            int follow = part * 3;
+            double fx = bogie.follow[follow];
+            double fy = bogie.follow[follow + 1];
             sink.part(model, part,
-                away.scale(a).add(UP.scale(c)),
-                away.scale(b).add(UP.scale(d)),
+                away.scale(a).add(UP.scale(c)).add(axial.scale(fx * a + fy * c)),
+                away.scale(b).add(UP.scale(d)).add(axial.scale(fx * b + fy * d)),
                 depth,
-                origin.add(away.scale(bogie.affine[at + 4])).add(UP.scale(bogie.affine[at + 5])),
+                origin.add(away.scale(tx)).add(UP.scale(ty)).add(axial.scale(fx * tx + fy * ty + bogie.follow[follow + 2])),
                 away.scale(cos).add(UP.scale(sin)),
                 away.scale(-sin).add(UP.scale(cos)));
         }
