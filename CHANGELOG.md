@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.0.4
+
+### Added
+
+- Pivot mode for the Cog Alignment Lever, which moves the hinge of a suspension arm or bogie.
+- A Track row in the lever's Offset mode, which runs a track straight down the middle of its cogwheels and wide enough to cover them, for interleaved road wheels. A Fit row leaves single cogwheels out of that width and centre.
+- Vehicle weight now matters: a track pushes only as hard as the stress impact of its cogwheels allows, so heavy vehicles accelerate and climb more slowly. The new Drive Force per Stress setting adjusts it.
+
+### Changed
+
+- Tracked vehicles take much less time to simulate and draw, most of all when parked or out of view.
+- Tracked vehicles no longer spin out when turning at speed, and run wide instead.
+- Turning in place is limited by the new Max Turn Rate setting, 120 degrees per second by default.
+- A vehicle coming out of a turn stops sliding sideways before it speeds back up.
+- Marked as incompatible with the original Create: Bits 'n' Tracks on Modrinth and CurseForge, since this mod replaces it.
+
+### Fixed
+
+- A track no longer passes through a large cogwheel set between two smaller ones after physics is switched or a cogwheel is moved.
+- A track no longer folds into a spike where two cogwheels are moved onto the same spot, and both keep turning.
+
 ## 3.0.3
 
 ### Changed

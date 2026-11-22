@@ -55,7 +55,24 @@ Every track is strung between cogwheels like a Bits 'n' Bobs chain.
 A track grips by the weight resting on it, and less on dirt, sand, gravel, clay, snow and mud than on stone.
 Datapacks can change the grip of any block.
 The run of track between cogwheels drapes over terrain and carries the vehicle over obstacles.
+
+## Driving
+
+A track runs at the speed of its links, set by the size and rotational speed of its cogwheels, and pushes the vehicle to match it.
+How hard it can push is limited by its grip on the ground and by the stress impact of the cogwheels it wraps.
+A heavy vehicle on few or small cogwheels therefore speeds up slowly and struggles up slopes, while more or bigger cogwheels on a track push harder.
+The Drive Force per Stress setting sets how much push each point of stress impact gives, and 0 removes that limit.
+Braking and holding still on a slope only depend on grip.
 A redstone brake on any of a track's cogwheels brakes the whole track.
+
+Steer by running the tracks at different speeds, for example by slowing, stopping or reversing one side.
+The vehicle turns at the rate that speed difference asks for, within two limits:
+
+* While moving, it turns no tighter than its tracks' sideways grip can hold, so a fast vehicle runs wide instead of spinning out.
+* In place, it spins no faster than the Max Turn Rate setting, 120 degrees per second by default.
+
+Past those limits the tracks slip on the ground instead of turning the vehicle harder.
+When the tracks run straight again, they first stop the vehicle sliding sideways, then speed it back up.
 
 ## Wide wheels
 
@@ -81,7 +98,7 @@ That cogwheel then turns the other way, like a belt crossed over a pulley.
 
 A **Suspension Piece** gives a physics cogwheel a sprung mount.
 
-* **Arm**: right-click a physics cogwheel of any size to select it, then look beside it and right-click where the green preview fits. The arm pivots on the cogwheel's top corner, which needs a block touching it along the axle. If blocks on both sides could hold it, it mounts on the side you are looking toward. Uses one piece.
+* **Arm**: right-click a physics cogwheel of any size to select it, then look beside it and right-click where the green preview fits. The arm pivots on the cogwheel's top corner, which needs a block touching it along the axle, and the lever's Pivot mode can move that hinge. If blocks on both sides could hold it, it mounts on the side you are looking toward. Uses one piece.
 * **Bogie**: select a small, intermediate or tiny physics cogwheel, then right-click the one of the same size next to it. The bogie hangs from a block right above either cogwheel, or one next to that spot along the axle, and blocks can sit on top of it. Uses two pieces.
 * **Wide bogie**: the same between two two-wide small, intermediate or tiny cogwheels, each pair turning into two separate wheels with the bogie between them. Uses two pieces.
 
@@ -107,16 +124,17 @@ While you hold it, a panel beside the hotbar shows the current mode, the values 
 Hold Alt (Create's tool menu key) and scroll to switch modes.
 Without a scroll wheel, bind Next and Previous Tool Mode and Scroll Up and Down with a Tool under Bits 'n' Tracks in Controls; they work with both tools.
 
-* **Offset**: right-click a cogwheel to select it, then scroll to move it one pixel at a time. Shift + scroll picks the axis: along the axle, across, or up and down.
+* **Offset**: right-click a cogwheel to select it, then scroll to move it one pixel at a time. Shift + scroll picks the axis: along the axle, across, or up and down. The last row, Track, switches the whole track between following its cogwheels and staying straight: a straight track runs down the middle of its cogwheels and widens to cover all of them, so they can slide along their axles beneath it, as interleaved road wheels need. On a straight track, one more row, Fit, leaves the selected cogwheel out of that width and centre, so thinner interleaved wheels can sit inside a track sized by the wheels at its ends.
+* **Pivot**: right-click the hinge of a suspension arm or bogie to select it, then scroll to move it one pixel at a time, up to a block each way. Shift + scroll picks the axis. Moving an arm's hinge up, down or across changes the arm's length and angle, and so the path its wheel travels. Moving a bogie's hinge up or down changes the angle of its arms, and moving it across shifts the whole bogie with its wheels. Moving either along the axle only shifts where it meets its mount.
 * **Route**: right-click a face to bring the far run of track around the cogwheel, so clicking the top wraps the bottom track over it, and reverses its spin. The centre puts its routing back to automatic.
 * **Tension**: right-click a track to select it, then scroll to tighten it, so it holds its line, or slacken it, so it sags and follows the ground.
 * **Visibility**: right-click a cogwheel to show or hide it.
 * **Physics**: right-click a cogwheel to switch its physics on or off.
 * **Width**: right-click a cogwheel to narrow it a quarter at a time, and Shift + right-click to widen it. A track is as wide as its widest cogwheel.
 * **Shaft**: right-click either end of a cogwheel to hide or show its shaft there. A hidden shaft connects to nothing, so a cogwheel without shafts only turns with its track.
-* **Reset**: right-click a cogwheel twice to reset alignment, visibility, track routing and suspension tuning.
+* **Reset**: right-click a cogwheel twice to reset alignment, hinges, the Track and Fit rows, visibility, track routing and suspension tuning.
 
-Ctrl + left-click switches Offset, Width, Shaft and Reset between one cogwheel and the whole track. On the whole track, Offset only moves the cogwheels that share the clicked one's physics setting.
+Ctrl + left-click switches Offset, Pivot, Width, Shaft and Reset between one cogwheel and the whole track. On the whole track, Offset only moves the cogwheels that share the clicked one's physics setting.
 
 ## The Suspension Tool
 
