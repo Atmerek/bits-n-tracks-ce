@@ -150,6 +150,7 @@ configurations {
 
 dependencies {
     testMods "maven.modrinth:create-aeronautics:${aeronautics_version}"
+    testMods "maven.modrinth:spark:1.10.124-neoforge"
 }
 
 def installTestMods = tasks.register('installTestMods', Sync) {
