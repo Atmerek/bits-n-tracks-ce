@@ -404,7 +404,7 @@ public final class BntBeltSolver {
             int deepest = -1;
             double deepestPenetration = CLIP_TOLERANCE;
             for (int candidate = 0; candidate < xs.length; candidate++) {
-                if (candidate == from || candidate == to || sequence.contains(candidate)) {
+                if (candidate == from || candidate == to) {
                     continue;
                 }
                 double along = ((xs[candidate] - startX) * dx + (ys[candidate] - startY) * dy) / lengthSquared;

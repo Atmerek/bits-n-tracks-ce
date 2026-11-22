@@ -652,7 +652,7 @@ public final class BntChainGeometry {
                 continue;
             }
             for (int candidate = 0; candidate < count; candidate++) {
-                if (onPath[candidate]) {
+                if (candidate == from || candidate == to) {
                     continue;
                 }
                 double along = ((xs[candidate] - startX) * dx + (ys[candidate] - startY) * dy) / lengthSquared;
@@ -661,7 +661,8 @@ public final class BntChainGeometry {
                 }
                 double offsetX = xs[candidate] - (startX + dx * along);
                 double offsetY = ys[candidate] - (startY + dy * along);
-                if (radii[candidate] - Math.sqrt(offsetX * offsetX + offsetY * offsetY) > -BntBeltSolver.CONTACT_REACH) {
+                double reach = onPath[candidate] ? -BntBeltSolver.CONTACT_REACH : BntBeltSolver.CONTACT_REACH;
+                if (radii[candidate] - Math.sqrt(offsetX * offsetX + offsetY * offsetY) > -reach) {
                     if (BntDebugLog.enabled()) {
                         BntDebugLog.LOG.info("belt no longer holds: {} touches the run from {} to {}",
                             pathNodes.get(candidate).localPos().toShortString(), pathNodes.get(from).localPos().toShortString(),
