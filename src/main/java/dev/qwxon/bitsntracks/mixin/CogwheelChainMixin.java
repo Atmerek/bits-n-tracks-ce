@@ -148,6 +148,10 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     private BntChainGeometry.Layout bnt$appliedLayout;
 
     @Unique
+    private boolean[] bnt$appliedEngaged;
+
+
+    @Unique
     private long bnt$latchedAt = Long.MIN_VALUE;
 
     @Unique
@@ -353,7 +357,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
             return;
         }
 
-        boolean[] engaged = BntChainEngagement.engagement(layout, nodes.size());
+        boolean[] engaged = BntChainEngagement.engagement(level, controllerPos, layout, nodes);
         boolean changed = this.bnt$sidesPending
             || applied == null
             || !Arrays.equals(applied, engaged)
@@ -374,6 +378,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$sidesPending = false;
         this.bnt$adoptSides(nodes, layout.sides());
         this.bnt$appliedLayout = layout;
+        this.bnt$appliedEngaged = engaged;
         BntChainEngagement.restore(level, stopped);
         if (BntDebugLog.enabled()) {
             BntDebugLog.LOG.info("server chain {} rebuilt its drive for {}", controllerPos, BntDebugLog.layout(nodes, layout));
@@ -383,9 +388,10 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
     @Unique
     private boolean[] bnt$appliedEngagement(int count) {
         BntChainGeometry.Layout applied = this.bnt$appliedLayout;
-        return applied == null || applied.sides().length != count
+        boolean[] engaged = this.bnt$appliedEngaged;
+        return applied == null || applied.sides().length != count || engaged == null || engaged.length != count
             ? null
-            : BntChainEngagement.engagement(applied, count);
+            : engaged;
     }
 
     @Inject(
@@ -428,6 +434,7 @@ public abstract class CogwheelChainMixin implements BntChainGeometryRefresh {
         this.bnt$holdsCheckedAt = Long.MIN_VALUE;
         this.bnt$sidesPending = false;
         this.bnt$appliedLayout = null;
+        this.bnt$appliedEngaged = null;
         this.bnt$engagedDisplacements = null;
         this.bnt$restoredSignature = kept != null ? this.bnt$preReadSignature : null;
         this.bnt$preReadSignature = null;

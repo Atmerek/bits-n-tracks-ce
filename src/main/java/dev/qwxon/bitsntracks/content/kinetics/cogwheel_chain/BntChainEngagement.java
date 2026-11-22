@@ -3,6 +3,7 @@ package dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.behaviour.CogwheelChainBehaviour;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.block.IExclusiveCogwheelChainBlock;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.CogwheelChain;
+import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.ICogwheelNode;
 import com.kipti.bnb.content.kinetics.cogwheel_chain.graph.PathedCogwheelNode;
 import com.simibubi.create.content.kinetics.KineticNetwork;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
@@ -249,6 +250,25 @@ public final class BntChainEngagement {
         return engaged;
     }
 
+    public static boolean[] engagement(Level level, BlockPos controllerPos, BntChainGeometry.Layout layout, List<? extends ICogwheelNode> nodes) {
+        boolean[] engaged = engagement(layout, nodes.size());
+        if (layout == null) {
+            return engaged;
+        }
+        boolean[] riding;
+        Function<BlockPos, Vec3> previous = BntChainMotion.swapDisplacementSource(
+            localPos -> alignmentDisplacement(level, controllerPos.offset(localPos)));
+        try (BntRadiusProvider.Scope ignored = BntRadiusProvider.at(level, controllerPos)) {
+            riding = BntChainGeometry.riders(nodes, engaged);
+        } finally {
+            BntChainMotion.swapDisplacementSource(previous);
+        }
+        for (int i = 0; i < engaged.length; i++) {
+            engaged[i] |= riding[i];
+        }
+        return engaged;
+    }
+
     public static Map<BlockPos, Integer> snapshot(Level level, BlockPos pos) {
         BlockPos controllerPos = BntChains.controllerPos(level, pos);
         CogwheelChain chain = BntChains.chainAt(level, controllerPos);
@@ -258,7 +278,7 @@ public final class BntChainEngagement {
 
         List<PathedCogwheelNode> nodes = chain.getChainPathCogwheelNodes();
         BntChainGeometry.Layout layout = layout(level, controllerPos, nodes);
-        boolean[] engaged = engagement(layout, nodes.size());
+        boolean[] engaged = engagement(level, controllerPos, layout, nodes);
         int reference = 1;
         for (int i = 0; i < nodes.size(); i++) {
             if (engaged[i]) {

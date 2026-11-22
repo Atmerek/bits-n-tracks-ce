@@ -8,6 +8,7 @@ import java.util.PriorityQueue;
 public final class BntBeltSolver {
     private static final double TAU = Math.PI * 2.0;
     static final double CONTACT_REACH = 1.0 / 32.0;
+    static final double COVER_TOLERANCE = 1.0E-3;
     private static final double TANGENT_TOLERANCE = 1.0E-6;
     private static final int MAX_CANDIDATES = 48;
     private static final double CLIP_TOLERANCE = 1.0E-4;
@@ -61,6 +62,13 @@ public final class BntBeltSolver {
                 if (force[i]) {
                     touched[i] = true;
                 }
+            }
+        }
+
+        int[] coverer = coverers(xs, ys, radii, COVER_TOLERANCE);
+        for (int i = 0; i < count; i++) {
+            if (coverer[i] >= 0) {
+                touched[i] = false;
             }
         }
 
@@ -130,7 +138,37 @@ public final class BntBeltSolver {
                 result[i] = fill;
             }
         }
+        int[] coverer = coverers(xs, ys, radii, COVER_TOLERANCE);
+        for (int i = 0; i < count; i++) {
+            int root = i;
+            for (int step = 0; step < count && coverer[root] >= 0; step++) {
+                root = coverer[root];
+            }
+            result[i] = result[root];
+        }
         return result;
+    }
+
+    static int[] coverers(double[] xs, double[] ys, double[] radii, double tolerance) {
+        int count = xs.length;
+        int[] coverer = new int[count];
+        Arrays.fill(coverer, -1);
+        for (int i = 0; i < count; i++) {
+            for (int j = 0; j < count; j++) {
+                if (i == j) {
+                    continue;
+                }
+                double distance = Math.hypot(xs[i] - xs[j], ys[i] - ys[j]);
+                if (distance + radii[i] > radii[j] + tolerance) {
+                    continue;
+                }
+                if (j < i || distance + radii[j] > radii[i] + tolerance) {
+                    coverer[i] = j;
+                    break;
+                }
+            }
+        }
+        return coverer;
     }
 
     static int[] hullOrder(double[] xs, double[] ys, double[] radii, boolean[] touched) {
@@ -176,13 +214,16 @@ public final class BntBeltSolver {
             int owner = -1;
             double best = Double.NEGATIVE_INFINITY;
             for (int node = 0; node < count; node++) {
+                if (touched != null && !touched[node]) {
+                    continue;
+                }
                 double support = xs[node] * ux + ys[node] * uy + radii[node];
                 if (support > best) {
                     best = support;
                     owner = node;
                 }
             }
-            if (owners.isEmpty() || owners.get(owners.size() - 1) != owner) {
+            if (owner >= 0 && (owners.isEmpty() || owners.get(owners.size() - 1) != owner)) {
                 owners.add(owner);
             }
         }
@@ -369,7 +410,8 @@ public final class BntBeltSolver {
         }
 
         int budget = count * 2 + 4;
-        while (budget-- > 0 && insertClippedCog(xs, ys, radii, sides, sequence)) {
+        int[] coverer = coverers(xs, ys, radii, COVER_TOLERANCE);
+        while (budget-- > 0 && insertClippedCog(xs, ys, radii, sides, sequence, coverer)) {
             continue;
         }
 
@@ -380,7 +422,7 @@ public final class BntBeltSolver {
         return indices;
     }
 
-    private static boolean insertClippedCog(double[] xs, double[] ys, double[] radii, int[] sides, List<Integer> sequence) {
+    private static boolean insertClippedCog(double[] xs, double[] ys, double[] radii, int[] sides, List<Integer> sequence, int[] coverer) {
         int size = sequence.size();
         for (int position = 0; position < size; position++) {
             int from = sequence.get(position);
@@ -404,7 +446,7 @@ public final class BntBeltSolver {
             int deepest = -1;
             double deepestPenetration = CLIP_TOLERANCE;
             for (int candidate = 0; candidate < xs.length; candidate++) {
-                if (candidate == from || candidate == to) {
+                if (candidate == from || candidate == to || coverer[candidate] >= 0) {
                     continue;
                 }
                 double along = ((xs[candidate] - startX) * dx + (ys[candidate] - startY) * dy) / lengthSquared;

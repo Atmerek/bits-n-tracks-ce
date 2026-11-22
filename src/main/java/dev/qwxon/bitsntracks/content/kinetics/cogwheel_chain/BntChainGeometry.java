@@ -117,6 +117,31 @@ public final class BntChainGeometry {
         return BntBeltSolver.contacts(xs, ys, radii);
     }
 
+    public static boolean[] riders(List<? extends ICogwheelNode> nodes, boolean[] onPath) {
+        int count = nodes.size();
+        boolean[] riding = new boolean[count];
+        Axis axis = sharedAxis(nodes);
+        if (axis == null || onPath.length != count) {
+            return riding;
+        }
+        double[] xs = new double[count];
+        double[] ys = new double[count];
+        double[] radii = new double[count];
+        fillLive(nodes, axis, xs, ys, radii);
+        for (int i = 0; i < count; i++) {
+            if (onPath[i]) {
+                continue;
+            }
+            for (int j = 0; j < count; j++) {
+                if (onPath[j] && Math.hypot(xs[i] - xs[j], ys[i] - ys[j]) + radii[i] <= radii[j] + BntBeltSolver.CONTACT_REACH) {
+                    riding[i] = true;
+                    break;
+                }
+            }
+        }
+        return riding;
+    }
+
     public static void fill(List<? extends ICogwheelNode> nodes, Axis axis, double[] xs, double[] ys, double[] radii) {
         for (int i = 0; i < nodes.size(); i++) {
             ICogwheelNode node = nodes.get(i);
@@ -592,6 +617,7 @@ public final class BntChainGeometry {
 
         int[] sequence = layout.sequence();
         int[] sides = layout.sides();
+        int[] coverer = BntBeltSolver.coverers(xs, ys, radii, BntBeltSolver.COVER_TOLERANCE);
         boolean[] onPath = new boolean[count];
         for (int node : sequence) {
             onPath[node] = true;
@@ -652,7 +678,7 @@ public final class BntChainGeometry {
                 continue;
             }
             for (int candidate = 0; candidate < count; candidate++) {
-                if (candidate == from || candidate == to) {
+                if (candidate == from || candidate == to || coverer[candidate] >= 0 && !onPath[candidate]) {
                     continue;
                 }
                 double along = ((xs[candidate] - startX) * dx + (ys[candidate] - startY) * dy) / lengthSquared;
