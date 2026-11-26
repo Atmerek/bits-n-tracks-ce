@@ -53,8 +53,20 @@ public class BntClientCompat {
             cache.tick = tick;
             cache.started = false;
             cache.cells.clear();
+            cache.fallback = UNLIT;
         }
         lights.current = cache;
+    }
+
+    public static int fallbackLight(BlockEntity be) {
+        ChainLight cache = CHAIN_LIGHTS.get().current;
+        if (cache == null) {
+            return net.minecraft.client.renderer.LevelRenderer.getLightColor(be.getLevel(), be.getBlockPos());
+        }
+        if (cache.fallback == UNLIT) {
+            cache.fallback = net.minecraft.client.renderer.LevelRenderer.getLightColor(be.getLevel(), be.getBlockPos());
+        }
+        return cache.fallback;
     }
 
     public static void endChainLight() {
@@ -232,5 +244,6 @@ public class BntClientCompat {
         private int originX;
         private int originY;
         private int originZ;
+        private int fallback = UNLIT;
     }
 }
