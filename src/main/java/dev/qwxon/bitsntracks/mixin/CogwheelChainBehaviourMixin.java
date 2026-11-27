@@ -15,6 +15,8 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntGrousers;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -33,6 +35,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
     remap = false
 )
 public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviourAccess {
+    @Unique
+    private boolean bnt$controlsChain;
+
     @Override
     public boolean bnt$isTrackModel() {
         CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
@@ -172,6 +177,22 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
             if (chain.bnt$isOwn()) {
                 BntBeltLinks.latchIfUnset(level, self.getBlockEntity().getBlockPos());
             }
+        }
+    }
+
+    @Inject(
+        method = {"read"},
+        at = {@At("RETURN")}
+    )
+    private void bnt$redrawNewChain(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket, CallbackInfo ci) {
+        CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
+        boolean controls = self.getControlledChain() != null;
+        boolean appeared = controls && !this.bnt$controlsChain;
+        this.bnt$controlsChain = controls;
+        BlockEntity be = self.getBlockEntity();
+        Level level = be == null ? null : be.getLevel();
+        if (appeared && clientPacket && level != null && level.isClientSide && !BntVisualized.ownType(be)) {
+            level.sendBlockUpdated(be.getBlockPos(), be.getBlockState(), be.getBlockState(), Block.UPDATE_CLIENTS);
         }
     }
 
