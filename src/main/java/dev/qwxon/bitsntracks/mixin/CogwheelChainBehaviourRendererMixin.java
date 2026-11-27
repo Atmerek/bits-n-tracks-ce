@@ -42,7 +42,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import net.createmod.catnip.animation.AnimationTickHolder;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
@@ -167,7 +166,7 @@ public abstract class CogwheelChainBehaviourRendererMixin {
         Vector3f vec = (Vector3f)vecObj;
         int light = BntClientCompat.chainLight(lighter, vec);
         if (light == 0 && be != null && be.getLevel() != null) {
-            light = LevelRenderer.getLightColor(be.getLevel(), be.getBlockPos());
+            light = BntClientCompat.fallbackLight(be);
         }
 
         return light;

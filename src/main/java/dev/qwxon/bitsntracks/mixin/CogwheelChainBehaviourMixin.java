@@ -15,6 +15,8 @@ import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntChains;
 import dev.qwxon.bitsntracks.content.kinetics.cogwheel_chain.BntGrousers;
 import dev.qwxon.bitsntracks.physics.CogwheelSizeHelper;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -33,6 +35,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
     remap = false
 )
 public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviourAccess {
+    @Unique
+    private boolean bnt$controlsChain;
+
     @Override
     public boolean bnt$isTrackModel() {
         CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
@@ -176,17 +181,38 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
     }
 
     @Inject(
+        method = {"read"},
+        at = {@At("RETURN")}
+    )
+    private void bnt$redrawNewChain(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket, CallbackInfo ci) {
+        CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
+        boolean controls = self.getControlledChain() != null;
+        boolean appeared = controls && !this.bnt$controlsChain;
+        this.bnt$controlsChain = controls;
+        BlockEntity be = self.getBlockEntity();
+        Level level = be == null ? null : be.getLevel();
+        if (appeared && clientPacket && level != null && level.isClientSide && !BntVisualized.ownType(be)) {
+            level.sendBlockUpdated(be.getBlockPos(), be.getBlockState(), be.getBlockState(), Block.UPDATE_CLIENTS);
+        }
+    }
+
+    @Inject(
         method = {"rendersWhenVisualizationAvailable"},
         at = {@At("HEAD")},
         cancellable = true
     )
     private void bnt$forceDynamicRenderer(CallbackInfoReturnable<Boolean> cir) {
-        BlockEntity be = ((CogwheelChainBehaviour)(Object)this).getBlockEntity();
+        CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
+        BlockEntity be = self.getBlockEntity();
         if (BntVisualized.ownType(be)) {
             cir.setReturnValue(!BntVisualized.drawn(be));
             return;
         }
-        if (this.bnt$isTrackModel() || BntCogwheels.shouldForceDynamicRenderer((CogwheelChainBehaviour)(Object)this)) {
+        if (this.bnt$isTrackModel()) {
+            cir.setReturnValue(true);
+            return;
+        }
+        if (self.getControlledChain() != null && BntCogwheels.shouldForceDynamicRenderer(self)) {
             cir.setReturnValue(true);
         }
     }
