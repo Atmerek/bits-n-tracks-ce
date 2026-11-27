@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.5
+
+### Changed
+
+- Vehicles with many kinetic blocks, such as cogwheels and mechanical arms, take less time to draw.
+
 ## 3.0.4
 
 ### Added
