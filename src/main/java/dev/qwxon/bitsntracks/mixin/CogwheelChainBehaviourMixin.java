@@ -196,7 +196,11 @@ public abstract class CogwheelChainBehaviourMixin implements TrackModelBehaviour
         }
     }
 
-    @Inject(method = {"rendersWhenVisualizationAvailable"}, at = {@At("HEAD")}, cancellable = true)
+    @Inject(
+        method = {"rendersWhenVisualizationAvailable"},
+        at = {@At("HEAD")},
+        cancellable = true
+    )
     private void bnt$forceDynamicRenderer(CallbackInfoReturnable<Boolean> cir) {
         CogwheelChainBehaviour self = (CogwheelChainBehaviour)(Object)this;
         BlockEntity be = self.getBlockEntity();

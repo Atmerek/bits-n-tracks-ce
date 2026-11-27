@@ -22,6 +22,7 @@ import java.util.WeakHashMap;
 import java.util.function.Function;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -61,10 +62,10 @@ public class BntClientCompat {
     public static int fallbackLight(BlockEntity be) {
         ChainLight cache = CHAIN_LIGHTS.get().current;
         if (cache == null) {
-            return net.minecraft.client.renderer.LevelRenderer.getLightColor(be.getLevel(), be.getBlockPos());
+            return LevelRenderer.getLightColor(be.getLevel(), be.getBlockPos());
         }
         if (cache.fallback == UNLIT) {
-            cache.fallback = net.minecraft.client.renderer.LevelRenderer.getLightColor(be.getLevel(), be.getBlockPos());
+            cache.fallback = LevelRenderer.getLightColor(be.getLevel(), be.getBlockPos());
         }
         return cache.fallback;
     }

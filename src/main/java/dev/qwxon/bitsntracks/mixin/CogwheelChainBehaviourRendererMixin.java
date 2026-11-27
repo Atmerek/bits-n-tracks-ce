@@ -42,7 +42,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import net.createmod.catnip.animation.AnimationTickHolder;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
